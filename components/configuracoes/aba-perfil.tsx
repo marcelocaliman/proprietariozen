@@ -140,7 +140,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#059669] text-white shadow-md hover:bg-[#047857] transition-colors disabled:opacity-50"
                 >
                   {uploadingAvatar ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -156,7 +156,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="mt-2 text-xs text-primary hover:underline disabled:opacity-50"
+                  className="mt-2 text-xs text-[#059669] hover:underline disabled:opacity-50"
                 >
                   {uploadingAvatar ? 'Enviando...' : 'Alterar foto'}
                 </button>
@@ -192,7 +192,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
                   não editável
                 </Badge>
               </div>
-              <Input id="email" value={profile.email} disabled className="bg-muted/50" readOnly />
+              <Input id="email" value={profile.email} disabled className="bg-[#F1F5F9]" readOnly />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -247,8 +247,9 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-muted-foreground">Plano atual</span>
               <Badge
-                variant={profile.plano === 'pago' ? 'default' : 'outline'}
-                className={profile.plano === 'pago' ? 'bg-purple-600 hover:bg-purple-600' : ''}
+                className={profile.plano === 'pago'
+                  ? 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold border-0'
+                  : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#F1F5F9] border-0'}
               >
                 {profile.plano === 'pago' ? 'Pro' : 'Grátis'}
               </Badge>
@@ -267,7 +268,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
         </Card>
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving} className="gap-2">
+          <Button type="submit" disabled={saving} className="gap-2 bg-[#059669] hover:bg-[#047857]">
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             Salvar perfil
           </Button>

@@ -29,7 +29,7 @@ function ItemSwitch({ id, label, descricao, checked, onCheckedChange }: ItemSwit
     <div className="flex items-start justify-between gap-4 py-3">
       <div className="flex-1 min-w-0">
         <Label htmlFor={id} className="text-sm font-medium cursor-pointer">{label}</Label>
-        {descricao && <p className="text-xs text-muted-foreground mt-0.5">{descricao}</p>}
+        {descricao && <p className="text-xs text-[#94A3B8] mt-0.5">{descricao}</p>}
       </div>
       <Switch
         id={id}
@@ -80,7 +80,7 @@ export function AbaNotificacoes({ config: configInicial }: Props) {
             Receba lembretes antes do vencimento dos aluguéis
           </CardDescription>
         </CardHeader>
-        <CardContent className="divide-y divide-border/60">
+        <CardContent className="divide-y divide-[#F1F5F9]">
           <ItemSwitch
             id="venc_5_dias"
             label="Lembrete 5 dias antes"
@@ -116,7 +116,7 @@ export function AbaNotificacoes({ config: configInicial }: Props) {
             Notificações quando pagamentos ficam em aberto
           </CardDescription>
         </CardHeader>
-        <CardContent className="divide-y divide-border/60">
+        <CardContent className="divide-y divide-[#F1F5F9]">
           <ItemSwitch
             id="atraso_notificar"
             label="Notificar quando aluguel atrasa"
@@ -127,7 +127,7 @@ export function AbaNotificacoes({ config: configInicial }: Props) {
           <div className="flex items-start justify-between gap-4 py-3">
             <div className="flex-1 min-w-0">
               <Label className="text-sm font-medium">Repetir alerta de atraso a cada</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-[#94A3B8] mt-0.5">
                 Reenvia o alerta enquanto o pagamento continuar em aberto
               </p>
             </div>
@@ -157,7 +157,7 @@ export function AbaNotificacoes({ config: configInicial }: Props) {
             Lembretes antes das datas de reajuste dos contratos
           </CardDescription>
         </CardHeader>
-        <CardContent className="divide-y divide-border/60">
+        <CardContent className="divide-y divide-[#F1F5F9]">
           <ItemSwitch
             id="reajuste_60_dias"
             label="Lembrete 60 dias antes"
@@ -202,7 +202,7 @@ export function AbaNotificacoes({ config: configInicial }: Props) {
       <Separator />
 
       <div className="flex justify-end">
-        <Button onClick={handleSalvar} disabled={saving} className="gap-2">
+        <Button onClick={handleSalvar} disabled={saving} className="gap-2 bg-[#059669] hover:bg-[#047857]">
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           Salvar preferências
         </Button>

@@ -171,7 +171,7 @@ export function AbaSeguranca({ email }: Props) {
                 <button
                   type="button"
                   onClick={() => setMostrarNova(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
                 >
                   {mostrarNova ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -181,14 +181,14 @@ export function AbaSeguranca({ email }: Props) {
               {/* Barra de força */}
               {novaSenha && (
                 <div className="space-y-1.5 pt-1">
-                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div className="relative h-2 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                     <div
                       className={`h-full transition-all ${forca.cor}`}
                       style={{ width: `${forca.score}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Força: <span className="font-medium text-foreground">{forca.label}</span>
+                  <p className="text-xs text-[#94A3B8]">
+                    Força: <span className="font-medium text-[#0F172A]">{forca.label}</span>
                   </p>
                 </div>
               )}
@@ -207,7 +207,7 @@ export function AbaSeguranca({ email }: Props) {
                 <button
                   type="button"
                   onClick={() => setMostrarConf(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
                 >
                   {mostrarConf ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -215,7 +215,7 @@ export function AbaSeguranca({ email }: Props) {
               {errors.confirmar && <p className="text-xs text-destructive">{errors.confirmar.message}</p>}
             </div>
 
-            <Button type="submit" disabled={loadingSenha} className="gap-2">
+            <Button type="submit" disabled={loadingSenha} className="gap-2 bg-[#059669] hover:bg-[#047857]">
               {loadingSenha && <Loader2 className="h-4 w-4 animate-spin" />}
               Alterar senha
             </Button>
@@ -230,15 +230,15 @@ export function AbaSeguranca({ email }: Props) {
           <CardDescription>Gerencie os dispositivos com acesso à sua conta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+          <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
             <div className="flex items-center gap-3">
               <Monitor className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium">Navegador atual</p>
-                <p className="text-xs text-muted-foreground">Sessão ativa agora</p>
+                <p className="text-xs text-[#94A3B8]">Sessão ativa agora</p>
               </div>
             </div>
-            <Badge variant="default" className="text-xs">Este dispositivo</Badge>
+            <Badge className="text-xs bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold">Este dispositivo</Badge>
           </div>
           <Button
             variant="outline"
