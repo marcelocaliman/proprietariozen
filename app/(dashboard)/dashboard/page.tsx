@@ -98,6 +98,12 @@ export default async function DashboardPage() {
     atrasado: { label: 'Atrasado', variant: 'destructive' },
   }
 
+  function diasAtraso(dataVencimento: string): number {
+    const venc = new Date(dataVencimento + 'T00:00:00')
+    const agora = new Date(); agora.setHours(0, 0, 0, 0)
+    return Math.max(0, Math.floor((agora.getTime() - venc.getTime()) / 86_400_000))
+  }
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Cabeçalho */}
@@ -168,15 +174,23 @@ export default async function DashboardPage() {
                   inquilino: { nome: string } | null
                 }>).map((aluguel) => {
                   const st = labelsStatus[aluguel.status] ?? labelsStatus.pendente
+                  const atraso = aluguel.status === 'atrasado' ? diasAtraso(aluguel.data_vencimento) : 0
                   return (
                     <div key={aluguel.id} className="flex items-center justify-between gap-3 py-1">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">
-                          {aluguel.imovel?.apelido ?? 'Imóvel'}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium truncate">
+                            {aluguel.imovel?.apelido ?? 'Imóvel'}
+                          </p>
+                          {atraso > 0 && (
+                            <span className="text-xs text-destructive font-medium">
+                              {atraso} dia{atraso !== 1 ? 's' : ''} em atraso
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
-                          {aluguel.inquilino?.nome ?? 'Sem inquilino'} · vence em{' '}
-                          {formatarData(aluguel.data_vencimento)}
+                          {aluguel.inquilino?.nome ?? 'Sem inquilino'} · vence{' '}
+                          {atraso > 0 ? 'em ' : 'em '}{formatarData(aluguel.data_vencimento)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

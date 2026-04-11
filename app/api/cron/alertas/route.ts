@@ -62,7 +62,18 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const resultados = { vencimento: 0, atraso: 0, reajuste: 0, erros: 0 }
+  const resultados = { atualizados: 0, vencimento: 0, atraso: 0, reajuste: 0, erros: 0 }
+
+  // ── 0. Marcar como atrasado todos os pendentes com vencimento passado ────────
+  const hoje = dateOffset(0)
+  const { data: pendentesVencidos, error: errUpdate } = await admin
+    .from('alugueis')
+    .update({ status: 'atrasado' })
+    .eq('status', 'pendente')
+    .lt('data_vencimento', hoje)
+    .select('id')
+
+  if (!errUpdate) resultados.atualizados = pendentesVencidos?.length ?? 0
 
   // ── Carrega perfis (uma vez) ─────────────────────────────────────────────────
   async function getProfiles(userIds: string[]): Promise<Map<string, Profile>> {
@@ -183,7 +194,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     executado_em: new Date().toISOString(),
-    enviados: resultados,
+    atualizados: resultados.atualizados,
+    enviados: { vencimento: resultados.vencimento, atraso: resultados.atraso, reajuste: resultados.reajuste },
     total: resultados.vencimento + resultados.atraso + resultados.reajuste,
+    erros: resultados.erros,
   })
 }
