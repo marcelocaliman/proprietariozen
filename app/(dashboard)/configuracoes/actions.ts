@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import type { NotificacoesConfig } from './types'
 
 // ── Perfil ────────────────────────────────────────────────────────────────────
@@ -32,18 +32,29 @@ export async function atualizarPerfil(input: {
 // ── Avatar / foto de perfil ───────────────────────────────────────────────────
 
 export async function obterUrlUploadAvatar(): Promise<{ url?: string; path?: string; error?: string }> {
+  // Verifica autenticação com o client normal
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
-  const path = `avatars/${user.id}/avatar.jpg`
+  // Usa o admin client para bypassar as RLS do Storage
+  // (policies de INSERT no bucket avatars não precisam existir)
+  const admin = createAdminClient()
+  const objectPath = `${user.id}/avatar.jpg`
 
-  const { data, error } = await supabase.storage
+  // Garante que o bucket existe (idempotente — ignora erro de duplicata)
+  await admin.storage.createBucket('avatars', {
+    public: true,
+    fileSizeLimit: 2 * 1024 * 1024,
+    allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  })
+
+  const { data, error } = await admin.storage
     .from('avatars')
-    .createSignedUploadUrl(path)
+    .createSignedUploadUrl(objectPath)
 
   if (error) return { error: error.message }
-  return { url: data.signedUrl, path }
+  return { url: data.signedUrl, path: objectPath }
 }
 
 export async function salvarFotoPerfilUrl(publicUrl: string): Promise<{ error?: string }> {
