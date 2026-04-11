@@ -21,7 +21,7 @@ export default async function DashboardLayout({
     .single()
 
   return (
-    <div className="flex h-screen bg-muted/30">
+    <div className="flex h-screen bg-background">
       {/* Sidebar desktop — fixa */}
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border">
         <Sidebar profile={profile as Profile | null} />

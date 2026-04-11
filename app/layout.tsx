@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin'] })
 
 export const viewport: Viewport = {
-  themeColor: '#534AB7',
+  themeColor: '#059669',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,

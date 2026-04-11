@@ -10,10 +10,10 @@ import { AbaSeguranca } from './aba-seguranca'
 import type { NotificacoesConfig } from '@/app/(dashboard)/configuracoes/types'
 
 const ABAS = [
-  { id: 'perfil',        label: 'Perfil',        icon: User },
-  { id: 'assinatura',    label: 'Assinatura',     icon: CreditCard },
-  { id: 'notificacoes',  label: 'Notificações',   icon: Bell },
-  { id: 'seguranca',     label: 'Segurança',      icon: ShieldCheck },
+  { id: 'perfil',       label: 'Perfil',        icon: User },
+  { id: 'assinatura',   label: 'Assinatura',    icon: CreditCard },
+  { id: 'notificacoes', label: 'Notificações',  icon: Bell },
+  { id: 'seguranca',    label: 'Segurança',     icon: ShieldCheck },
 ] as const
 
 type AbaId = typeof ABAS[number]['id']
@@ -34,7 +34,6 @@ interface Props {
 export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificacoesConfig }: Props) {
   const [abaAtiva, setAbaAtiva] = useState<AbaId>('perfil')
 
-  // Lê o hash da URL ao montar e ao navegar
   useEffect(() => {
     function lerHash() {
       const hash = window.location.hash.replace('#', '') as AbaId
@@ -52,51 +51,40 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Cabeçalho */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Gerencie sua conta e preferências</p>
+        <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Configurações</h1>
+        <p className="text-sm text-[#475569] mt-0.5">Gerencie sua conta e preferências</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* ── Navegação lateral (desktop) / horizontal (mobile) ── */}
+        {/* Tabs laterais */}
         <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible lg:w-52 shrink-0 pb-1 lg:pb-0">
           {ABAS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => trocarAba(id)}
               className={cn(
-                'flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-left',
-                'hover:bg-muted hover:text-foreground',
+                'relative flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-left',
                 abaAtiva === id
-                  ? 'bg-muted text-foreground shadow-sm'
-                  : 'text-muted-foreground',
+                  ? 'bg-[#D1FAE5] text-[#065F46]'
+                  : 'text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0F172A]',
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {abaAtiva === id && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#059669]" />
+              )}
+              <Icon className={cn('h-4 w-4 shrink-0', abaAtiva === id ? 'text-[#059669]' : 'text-[#94A3B8]')} />
               {label}
             </button>
           ))}
         </nav>
 
-        {/* ── Conteúdo da aba ── */}
+        {/* Conteúdo */}
         <div className="flex-1 min-w-0">
-          {abaAtiva === 'perfil' && (
-            <AbaPerfil
-              profile={profile}
-              avatarUrl={avatarUrl}
-              qtdImoveis={qtdImoveis}
-            />
-          )}
-          {abaAtiva === 'assinatura' && (
-            <AbaAssinatura plano={profile.plano} />
-          )}
-          {abaAtiva === 'notificacoes' && (
-            <AbaNotificacoes config={notificacoesConfig} />
-          )}
-          {abaAtiva === 'seguranca' && (
-            <AbaSeguranca email={profile.email} />
-          )}
+          {abaAtiva === 'perfil' && <AbaPerfil profile={profile} avatarUrl={avatarUrl} qtdImoveis={qtdImoveis} />}
+          {abaAtiva === 'assinatura' && <AbaAssinatura plano={profile.plano} />}
+          {abaAtiva === 'notificacoes' && <AbaNotificacoes config={notificacoesConfig} />}
+          {abaAtiva === 'seguranca' && <AbaSeguranca email={profile.email} />}
         </div>
       </div>
     </div>

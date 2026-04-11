@@ -8,10 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 
 interface RecursoItemProps { ok: boolean; children: React.ReactNode }
@@ -20,9 +17,9 @@ function RecursoItem({ ok, children }: RecursoItemProps) {
   return (
     <li className="flex items-center gap-2 text-sm">
       {ok
-        ? <Check className="h-4 w-4 shrink-0 text-green-500" />
-        : <X className="h-4 w-4 shrink-0 text-muted-foreground/40" />}
-      <span className={ok ? 'text-foreground' : 'text-muted-foreground line-through'}>{children}</span>
+        ? <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+        : <X className="h-4 w-4 shrink-0 text-[#94A3B8]" />}
+      <span className={ok ? 'text-[#0F172A]' : 'text-[#94A3B8]'}>{children}</span>
     </li>
   )
 }
@@ -49,9 +46,7 @@ const recursosPro = [
   { label: 'Suporte prioritário', ok: true },
 ]
 
-interface Props {
-  plano: 'gratis' | 'pago'
-}
+interface Props { plano: 'gratis' | 'pago' }
 
 export function AbaAssinatura({ plano }: Props) {
   const [loading, setLoading] = useState(false)
@@ -64,11 +59,8 @@ export function AbaAssinatura({ plano }: Props) {
       const json = await res.json()
       if (!res.ok || !json.url) { toast.error(json.error ?? 'Erro ao iniciar pagamento'); return }
       window.location.href = json.url
-    } catch {
-      toast.error('Erro ao conectar com o servidor de pagamento')
-    } finally {
-      setLoading(false)
-    }
+    } catch { toast.error('Erro ao conectar com o servidor de pagamento') }
+    finally { setLoading(false) }
   }
 
   async function handlePortal() {
@@ -78,25 +70,20 @@ export function AbaAssinatura({ plano }: Props) {
       const json = await res.json()
       if (!res.ok || !json.url) { toast.error(json.error ?? 'Erro ao abrir portal'); return }
       window.location.href = json.url
-    } catch {
-      toast.error('Erro ao conectar com o servidor')
-    } finally {
-      setLoading(false)
-    }
+    } catch { toast.error('Erro ao conectar com o servidor') }
+    finally { setLoading(false) }
   }
 
-  // ── Plano Grátis ────────────────────────────────────────────────────────────
   if (plano === 'gratis') {
     return (
       <div className="space-y-6">
-        {/* Banner */}
-        <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30">
+        <Card className="border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
           <CardContent className="pt-5">
             <div className="flex gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0 mt-0.5" />
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Você está no plano Grátis</p>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-[#475569] mt-1">
                   Limitado a 1 imóvel. Sem recibos PDF, sem alertas automáticos e sem reajuste.
                 </p>
               </div>
@@ -104,7 +91,6 @@ export function AbaAssinatura({ plano }: Props) {
           </CardContent>
         </Card>
 
-        {/* Comparação */}
         <div className="grid gap-4 sm:grid-cols-2">
           <Card className="border-dashed opacity-75">
             <CardHeader className="pb-3">
@@ -112,7 +98,7 @@ export function AbaAssinatura({ plano }: Props) {
                 <CardTitle className="text-base">Grátis</CardTitle>
                 <Badge variant="outline">Atual</Badge>
               </div>
-              <p className="text-2xl font-bold">R$ 0<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
+              <p className="text-2xl font-bold">R$ 0<span className="text-sm font-normal text-[#94A3B8]">/mês</span></p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-1.5">
@@ -121,16 +107,16 @@ export function AbaAssinatura({ plano }: Props) {
             </CardContent>
           </Card>
 
-          <Card className="border-purple-300 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20 relative">
+          <Card className="border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/20 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-purple-600 hover:bg-purple-600 px-3">
+              <Badge className="bg-emerald-600 hover:bg-emerald-600 px-3">
                 <Zap className="h-3 w-3 mr-1" />Recomendado
               </Badge>
             </div>
             <CardHeader className="pb-3 pt-6">
               <CardTitle className="text-base">Pro</CardTitle>
-              <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
-                R$ 29,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                R$ 29,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -138,7 +124,7 @@ export function AbaAssinatura({ plano }: Props) {
                 {recursosPro.map(r => <RecursoItem key={r.label} ok={r.ok}>{r.label}</RecursoItem>)}
               </ul>
               <Button
-                className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
                 onClick={handleAssinar}
                 disabled={loading}
               >
@@ -152,26 +138,23 @@ export function AbaAssinatura({ plano }: Props) {
     )
   }
 
-  // ── Plano Pro ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Status */}
-      <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30">
+      <Card className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/30">
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
             <div className="flex gap-3">
-              <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+              <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Plano Pro ativo</p>
-                <p className="text-sm text-muted-foreground mt-0.5">Todos os recursos estão disponíveis.</p>
+                <p className="text-sm text-[#475569] mt-0.5">Todos os recursos estão disponíveis.</p>
               </div>
             </div>
-            <Badge className="bg-purple-600 hover:bg-purple-600">Pro</Badge>
+            <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold">Pro</Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Detalhes */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Detalhes da assinatura</CardTitle>
@@ -179,13 +162,13 @@ export function AbaAssinatura({ plano }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-muted-foreground">Valor mensal</span>
+            <span className="text-sm text-[#475569]">Valor mensal</span>
             <span className="text-sm font-medium">R$ 29,90/mês</span>
           </div>
           <Separator />
           <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-muted-foreground">Próxima cobrança e faturas</span>
-            <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={handlePortal} disabled={loading}>
+            <span className="text-sm text-[#475569]">Próxima cobrança e faturas</span>
+            <Button variant="link" size="sm" className="h-auto p-0 text-sm text-emerald-600" onClick={handlePortal} disabled={loading}>
               Ver no Stripe
             </Button>
           </div>
@@ -207,7 +190,6 @@ export function AbaAssinatura({ plano }: Props) {
         </CardContent>
       </Card>
 
-      {/* Modal cancelamento */}
       <Dialog open={cancelarOpen} onOpenChange={setCancelarOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -216,7 +198,7 @@ export function AbaAssinatura({ plano }: Props) {
           <div className="space-y-4 py-2">
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
               <p className="text-sm text-destructive font-medium">Atenção</p>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-[#475569] mt-1">
                 Você perderá acesso ao plano Pro <strong>no final do período pago</strong>.
                 Seus dados ficam preservados mas recursos exclusivos serão desativados.
               </p>
@@ -226,11 +208,7 @@ export function AbaAssinatura({ plano }: Props) {
               <Button
                 variant="destructive"
                 disabled={loading}
-                onClick={async () => {
-                  setCancelarOpen(false)
-                  // Redireciona para o Stripe Portal onde o usuário cancela
-                  await handlePortal()
-                }}
+                onClick={async () => { setCancelarOpen(false); await handlePortal() }}
               >
                 Ir para cancelamento
               </Button>

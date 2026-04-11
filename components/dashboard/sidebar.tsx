@@ -3,29 +3,22 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Receipt,
-  Settings,
-  LogOut,
-  Zap,
+  LayoutDashboard, Building2, Users, Receipt,
+  Settings, LogOut, Star, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
-
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import type { Profile } from '@/types'
 
 const navItems = [
   { href: '/dashboard',     label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/imoveis',       label: 'Imóveis',       icon: Building2 },
-  { href: '/inquilinos',    label: 'Inquilinos',    icon: Users },
-  { href: '/alugueis',      label: 'Aluguéis',      icon: Receipt },
+  { href: '/imoveis',       label: 'Imóveis',      icon: Building2 },
+  { href: '/inquilinos',    label: 'Inquilinos',   icon: Users },
+  { href: '/alugueis',      label: 'Aluguéis',     icon: Receipt },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
@@ -55,13 +48,13 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5">
-        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center font-bold text-white text-sm shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center font-bold text-white text-sm shrink-0">
           PZ
         </div>
-        <span className="font-semibold text-base tracking-tight">ProprietárioZen</span>
+        <span className="font-semibold text-base text-white tracking-tight">ProprietárioZen</span>
       </div>
 
-      <Separator className="bg-sidebar-border" />
+      <div className="h-px bg-sidebar-border mx-3" />
 
       {/* Navegação */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
@@ -73,64 +66,74 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
               href={href}
               onClick={onClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 ativo
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+                  ? 'bg-sidebar-accent text-white'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-[#E2E8F0]',
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {ativo && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-sidebar-primary" />
+              )}
+              <Icon className={cn('h-4 w-4 shrink-0', ativo ? 'text-sidebar-primary' : 'text-[#64748B]')} />
               {label}
             </Link>
           )
         })}
-
-        {/* Link para /planos — destaque para usuários Grátis */}
-        {!isPro && (
-          <Link
-            href="/planos"
-            onClick={onClose}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mt-1',
-              pathname === '/planos'
-                ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300'
-                : 'text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950/30',
-            )}
-          >
-            <Zap className="h-4 w-4 shrink-0" />
-            Fazer upgrade Pro
-          </Link>
-        )}
       </nav>
 
-      <Separator className="bg-sidebar-border" />
+      {/* Card upgrade — plano Grátis */}
+      {!isPro && (
+        <div className="px-3 pb-3">
+          <div className="rounded-xl border border-sidebar-primary/20 bg-sidebar-accent/50 p-3 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-sidebar-primary/20 flex items-center justify-center">
+                <Star className="h-3.5 w-3.5 text-sidebar-primary" />
+              </div>
+              <span className="text-xs font-semibold text-[#E2E8F0]">Plano Grátis</span>
+            </div>
+            <p className="text-[11px] text-sidebar-foreground leading-relaxed">
+              Desbloqueie até 5 imóveis, recibos PDF e alertas automáticos.
+            </p>
+            <Link
+              href="/planos"
+              onClick={onClose}
+              className="flex items-center justify-between w-full rounded-lg bg-sidebar-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#047857] transition-colors"
+            >
+              Fazer upgrade Pro
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <div className="h-px bg-sidebar-border mx-3" />
 
       {/* Usuário */}
       <div className="px-3 py-4 space-y-1">
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="bg-primary text-white text-xs font-semibold">
+            <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-primary text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="text-sm font-medium truncate">{profile?.nome ?? 'Usuário'}</p>
+              <p className="text-sm font-medium text-white truncate">{profile?.nome ?? 'Usuário'}</p>
               {isPro && (
-                <Badge className="bg-purple-600 hover:bg-purple-600 text-[10px] h-4 px-1.5 shrink-0">
+                <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] text-[10px] h-4 px-1.5 shrink-0 font-semibold">
                   Pro
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-sidebar-foreground/50 truncate">{profile?.email}</p>
+            <p className="text-xs text-sidebar-foreground/70 truncate">{profile?.email}</p>
           </div>
         </div>
-
         <Button
           variant="ghost"
           size="sm"
           onClick={handleLogout}
-          className="w-full justify-start gap-3 px-3 text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
+          className="w-full justify-start gap-3 px-3 text-sidebar-foreground hover:text-white hover:bg-sidebar-accent/60"
         >
           <LogOut className="h-4 w-4" />
           Sair

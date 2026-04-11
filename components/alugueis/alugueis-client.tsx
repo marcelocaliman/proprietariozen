@@ -4,17 +4,17 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   CheckCircle2, Clock, AlertTriangle, Receipt, FileText,
-  TrendingUp, Banknote, Building2,
+  Banknote, Building2, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { StatCard } from '@/components/dashboard/stat-card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/dashboard/empty-state'
 import { PagarModal } from './pagar-modal'
 import { marcarReciboGerado } from '@/app/(dashboard)/alugueis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
+import { cn } from '@/lib/utils'
 
 export type AluguelItem = {
   id: string
@@ -31,10 +31,25 @@ export type AluguelItem = {
 
 type Profile = { nome: string; email: string; telefone: string | null }
 
-const STATUS = {
-  pago:     { label: 'Pago',     icon: CheckCircle2,    color: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-950/30',  variant: 'default'      as const },
-  pendente: { label: 'Pendente', icon: Clock,           color: 'text-yellow-600', bg: 'bg-yellow-50 dark:bg-yellow-950/30', variant: 'outline'      as const },
-  atrasado: { label: 'Atrasado', icon: AlertTriangle,   color: 'text-red-600',    bg: 'bg-red-50 dark:bg-red-950/30',       variant: 'destructive'  as const },
+const STATUS_CONFIG = {
+  pago:     { label: 'Pago',     icon: CheckCircle2,  badgeCls: 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5]' },
+  pendente: { label: 'Pendente', icon: Clock,          badgeCls: 'bg-[#FEF3C7] text-[#92400E] hover:bg-[#FEF3C7]' },
+  atrasado: { label: 'Atrasado', icon: AlertTriangle,  badgeCls: 'bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2]' },
+}
+
+const CORES_AVATAR = [
+  'bg-emerald-100 text-emerald-700',
+  'bg-blue-100 text-blue-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-violet-100 text-violet-700',
+  'bg-cyan-100 text-cyan-700',
+]
+
+function corAvatar(nome: string): string {
+  let hash = 0
+  for (let i = 0; i < nome.length; i++) hash = nome.charCodeAt(i) + ((hash << 5) - hash)
+  return CORES_AVATAR[Math.abs(hash) % CORES_AVATAR.length]
 }
 
 function diasAtraso(dataVencimento: string): number {
@@ -43,17 +58,17 @@ function diasAtraso(dataVencimento: string): number {
   return Math.max(0, Math.floor((hoje.getTime() - venc.getTime()) / 86400000))
 }
 
-function gerarMeses() {
-  const hoje = new Date()
-  return Array.from({ length: 13 }, (_, i) => {
-    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
-    const valor = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    const label = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d)
-    return { valor, label: label.charAt(0).toUpperCase() + label.slice(1) }
-  })
+function labelMes(valor: string): string {
+  const [ano, mes] = valor.split('-').map(Number)
+  const label = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(new Date(ano, mes - 1, 1))
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
-const sel = "h-8 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus:border-ring"
+function navegarMes(atual: string, delta: number): string {
+  const [ano, mes] = atual.split('-').map(Number)
+  const d = new Date(ano, mes - 1 + delta, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
 
 export function AlugueisClient({
   alugueis,
@@ -69,18 +84,14 @@ export function AlugueisClient({
   const [pagando, setPagando] = useState<AluguelItem | null>(null)
   const [loadingRecibo, setLoadingRecibo] = useState<string | null>(null)
 
-  const meses = gerarMeses()
-
-  // Totais
   const totalPago     = alugueis.filter(a => a.status === 'pago').reduce((s, a) => s + a.valor, 0)
   const totalPendente = alugueis.filter(a => a.status === 'pendente').reduce((s, a) => s + a.valor, 0)
   const totalAtrasado = alugueis.filter(a => a.status === 'atrasado').reduce((s, a) => s + a.valor, 0)
   const qtdPago       = alugueis.filter(a => a.status === 'pago').length
+  const qtdPendente   = alugueis.filter(a => a.status === 'pendente').length
+  const qtdAtrasado   = alugueis.filter(a => a.status === 'atrasado').length
 
-  function handlePagar(aluguel: AluguelItem) {
-    setPagando(aluguel)
-    setModalOpen(true)
-  }
+  function handlePagar(aluguel: AluguelItem) { setPagando(aluguel); setModalOpen(true) }
 
   async function handleGerarRecibo(aluguel: AluguelItem) {
     setLoadingRecibo(aluguel.id)
@@ -88,13 +99,9 @@ export function AlugueisClient({
       const { gerarReciboPDF } = await import('@/lib/pdf')
       gerarReciboPDF({
         pagamento: {
-          id: aluguel.id,
-          valor: aluguel.valor,
-          mes_referencia: aluguel.mes_referencia,
-          data_vencimento: aluguel.data_vencimento,
-          data_pagamento: aluguel.data_pagamento,
-          status: aluguel.status,
-          observacao: aluguel.observacao,
+          id: aluguel.id, valor: aluguel.valor, mes_referencia: aluguel.mes_referencia,
+          data_vencimento: aluguel.data_vencimento, data_pagamento: aluguel.data_pagamento,
+          status: aluguel.status, observacao: aluguel.observacao,
           imovel: { apelido: aluguel.imovel?.apelido ?? '', endereco: aluguel.imovel?.endereco ?? '' },
           inquilino: aluguel.inquilino ?? { nome: 'Sem inquilino', cpf: null, email: null, telefone: null },
         },
@@ -103,102 +110,145 @@ export function AlugueisClient({
       const result = await marcarReciboGerado(aluguel.id)
       if (result.error) toast.error(result.error)
       else toast.success('Recibo gerado!')
-    } finally {
-      setLoadingRecibo(null)
-    }
+    } finally { setLoadingRecibo(null) }
   }
 
   return (
     <>
-      {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Aluguéis</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {alugueis.length} registro{alugueis.length !== 1 ? 's' : ''} · {qtdPago}/{alugueis.length} pagos
+          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Aluguéis</h1>
+          <p className="text-sm text-[#475569] mt-0.5">
+            {alugueis.length} registro{alugueis.length !== 1 ? 's' : ''} · {qtdPago} pago{qtdPago !== 1 ? 's' : ''} · {qtdPendente} pendente{qtdPendente !== 1 ? 's' : ''}
+            {qtdAtrasado > 0 && ` · ${qtdAtrasado} em atraso`}
           </p>
         </div>
-        <select
-          value={mesSelecionado}
-          onChange={e => router.push(`/alugueis?mes=${e.target.value}`)}
-          className={sel}
-        >
-          {meses.map(m => (
-            <option key={m.valor} value={m.valor}>{m.label}</option>
-          ))}
-        </select>
+        {/* Navegação de mês */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => router.push(`/alugueis?mes=${navegarMes(mesSelecionado, -1)}`)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-semibold text-[#0F172A] w-40 text-center select-none">
+            {labelMes(mesSelecionado)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => router.push(`/alugueis?mes=${navegarMes(mesSelecionado, +1)}`)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Resumo */}
+      {/* Cards de resumo */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatCard titulo="Recebido"  valor={formatarMoeda(totalPago)}     descricao={`${qtdPago} pago${qtdPago !== 1 ? 's' : ''}`}                                   icon={CheckCircle2} cor="verde"  />
-        <StatCard titulo="Pendente"  valor={formatarMoeda(totalPendente)} descricao={`${alugueis.filter(a => a.status === 'pendente').length} aguardando`}            icon={Clock}        cor="padrao" />
-        <StatCard titulo="Atrasado"  valor={formatarMoeda(totalAtrasado)} descricao={`${alugueis.filter(a => a.status === 'atrasado').length} em atraso`}             icon={AlertTriangle} cor="vermelho" />
-        <StatCard titulo="Total mês" valor={formatarMoeda(totalPago + totalPendente + totalAtrasado)} descricao={`${alugueis.length} imóve${alugueis.length !== 1 ? 'is' : 'l'}`} icon={Banknote} cor="padrao" />
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Recebido</p>
+          <p className="text-xl font-bold text-[#0F172A] mt-1">{formatarMoeda(totalPago)}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{qtdPago} pago{qtdPago !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Pendente</p>
+          <p className="text-xl font-bold text-[#0F172A] mt-1">{formatarMoeda(totalPendente)}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{qtdPendente} aguardando</p>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Atrasado</p>
+          <p className="text-xl font-bold text-[#0F172A] mt-1">{formatarMoeda(totalAtrasado)}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{qtdAtrasado} em atraso</p>
+        </div>
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+          <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Total mês</p>
+          <p className="text-xl font-bold text-[#0F172A] mt-1">{formatarMoeda(totalPago + totalPendente + totalAtrasado)}</p>
+          <p className="text-xs text-[#94A3B8] mt-0.5">{alugueis.length} imóve{alugueis.length !== 1 ? 'is' : 'l'}</p>
+        </div>
       </div>
 
-      {/* Lista */}
+      {/* Lista estilo tabela */}
       {alugueis.length === 0 ? (
-        <EmptyState
-          icon={Building2}
-          titulo="Nenhum aluguel neste mês"
-          descricao="Cadastre imóveis ativos para gerar os registros automaticamente."
-        />
+        <EmptyState icon={Building2} titulo="Nenhum aluguel neste mês" descricao="Cadastre imóveis ativos para gerar os registros automaticamente." />
       ) : (
-        <div className="space-y-2">
-          {alugueis.map(aluguel => {
-            const st = STATUS[aluguel.status]
-            const Icon = st.icon
-            const atraso = aluguel.status === 'atrasado' ? diasAtraso(aluguel.data_vencimento) : 0
+        <Card>
+          <CardHeader className="pb-0 pt-4 px-5">
+            <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
+              <Banknote className="h-4 w-4" />Registros do mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 mt-2">
+            <div className="divide-y divide-[#F1F5F9]">
+              {alugueis.map(aluguel => {
+                const st = STATUS_CONFIG[aluguel.status]
+                const atraso = aluguel.status === 'atrasado' ? diasAtraso(aluguel.data_vencimento) : 0
+                const nomeInq = aluguel.inquilino?.nome ?? 'Sem inquilino'
+                const iniciais = nomeInq.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 
-            return (
-              <Card key={aluguel.id} className={`transition-colors ${st.bg}`}>
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-4">
-                    {/* Ícone status */}
-                    <Icon className={`h-5 w-5 shrink-0 ${st.color}`} />
+                return (
+                  <div
+                    key={aluguel.id}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#F8FAFC] transition-colors"
+                  >
+                    {/* Avatar inquilino */}
+                    <div className={cn('h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0', corAvatar(nomeInq))}>
+                      {iniciais}
+                    </div>
 
-                    {/* Info */}
+                    {/* Nome + imóvel */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">
-                          {aluguel.imovel?.apelido ?? 'Imóvel'}
-                        </span>
-                        <Badge variant={st.variant} className="text-xs">{st.label}</Badge>
-                        {atraso > 0 && (
-                          <span className="text-xs text-destructive font-medium">
-                            {atraso} dia{atraso !== 1 ? 's' : ''} em atraso
-                          </span>
-                        )}
+                      <p className="text-sm font-medium text-[#0F172A] truncate">{nomeInq}</p>
+                      <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+                        <span className="truncate">{aluguel.imovel?.apelido}</span>
                         {aluguel.recibo_gerado && (
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <FileText className="h-2.5 w-2.5" />
-                            Recibo gerado
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground flex-wrap">
-                        {aluguel.inquilino?.nome && <span>{aluguel.inquilino.nome}</span>}
-                        <span>Vence {formatarData(aluguel.data_vencimento)}</span>
-                        {aluguel.data_pagamento && (
-                          <span className="text-green-600">Pago em {formatarData(aluguel.data_pagamento)}</span>
+                          <span className="flex items-center gap-0.5 shrink-0">
+                            <FileText className="h-3 w-3" />recibo
+                          </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Valor + Ações */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="font-semibold text-sm">{formatarMoeda(aluguel.valor)}</span>
-                      {(aluguel.status === 'pendente' || aluguel.status === 'atrasado') && (
-                        <Button size="sm" className="h-7 text-xs gap-1" onClick={() => handlePagar(aluguel)}>
-                          <TrendingUp className="h-3 w-3" />
+                    {/* Data vencimento */}
+                    <div className="hidden sm:block text-xs text-[#94A3B8] shrink-0 w-20 text-right">
+                      {aluguel.data_pagamento
+                        ? <span className="text-[#059669]">Pago {formatarData(aluguel.data_pagamento)}</span>
+                        : formatarData(aluguel.data_vencimento)
+                      }
+                    </div>
+
+                    {/* Badge status + dias */}
+                    <div className="shrink-0 flex flex-col items-end gap-0.5">
+                      <Badge className={cn('text-xs font-semibold', st.badgeCls)}>{st.label}</Badge>
+                      {atraso > 0 && (
+                        <span className="text-[10px] text-[#991B1B] font-medium">{atraso}d em atraso</span>
+                      )}
+                    </div>
+
+                    {/* Valor */}
+                    <div className="text-sm font-bold text-[#0F172A] shrink-0 w-20 text-right hidden xs:block">
+                      {formatarMoeda(aluguel.valor)}
+                    </div>
+
+                    {/* Ação */}
+                    <div className="shrink-0">
+                      {(aluguel.status === 'pendente') && (
+                        <Button size="sm" className="h-7 text-xs gap-1 bg-[#059669] hover:bg-[#047857]" onClick={() => handlePagar(aluguel)}>
+                          Pagar
+                        </Button>
+                      )}
+                      {aluguel.status === 'atrasado' && (
+                        <Button size="sm" className="h-7 text-xs gap-1 bg-[#DC2626] hover:bg-red-700" onClick={() => handlePagar(aluguel)}>
                           Pagar
                         </Button>
                       )}
                       {aluguel.status === 'pago' && (
                         <Button
-                          size="sm"
-                          variant="outline"
+                          size="sm" variant="outline"
                           className="h-7 text-xs gap-1"
                           disabled={loadingRecibo === aluguel.id}
                           onClick={() => handleGerarRecibo(aluguel)}
@@ -209,11 +259,11 @@ export function AlugueisClient({
                       )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <PagarModal open={modalOpen} onOpenChange={setModalOpen} aluguel={pagando} />
