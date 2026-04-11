@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const rotasPublicas = ['/login', '/cadastro', '/recuperar-senha', '/api/auth']
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -25,24 +27,29 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/cadastro')
+  const pathname = request.nextUrl.pathname
+  const isPublica = rotasPublicas.some(r => pathname.startsWith(r))
 
-  // Redireciona usuário não autenticado para login
-  if (!user && !isAuthRoute) {
+  // Redireciona para /login se não autenticado e não está em rota pública
+  if (!user && !isPublica) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Redireciona usuário autenticado para dashboard se tentar acessar login/cadastro
-  if (user && isAuthRoute) {
+  // Redireciona para /dashboard se autenticado e tenta acessar rota pública de auth
+  if (user && (pathname === '/login' || pathname === '/cadastro' || pathname === '/recuperar-senha')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
+  // Redireciona / para /dashboard
+  if (pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = user ? '/dashboard' : '/login'
     return NextResponse.redirect(url)
   }
 

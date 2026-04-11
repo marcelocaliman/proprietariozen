@@ -1,4 +1,3 @@
-import { type ClassValue } from 'clsx'
 import { StatusImovel, StatusPagamento, TipoImovel } from '@/types'
 
 // Formata valor monetário para BRL
