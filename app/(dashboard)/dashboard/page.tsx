@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { EmptyState } from '@/components/dashboard/empty-state'
+import { ReajusteAlertas } from '@/components/dashboard/reajuste-alertas'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -10,7 +11,6 @@ import {
   AlertCircle,
   Building2,
   Calendar,
-  RefreshCw,
 } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
     // Próximos reajustes (30 dias)
     supabase
       .from('imoveis')
-      .select('id, apelido, data_proximo_reajuste, valor_aluguel, indice_reajuste')
+      .select('id, apelido, data_proximo_reajuste, valor_aluguel, indice_reajuste, percentual_fixo')
       .eq('user_id', user.id)
       .eq('ativo', true)
       .not('data_proximo_reajuste', 'is', null)
@@ -91,10 +91,6 @@ export default async function DashboardPage() {
     .reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
 
   const qtdImoveisAtivos = imoveisAtivos?.length ?? 0
-
-  const labelsIndice: Record<string, string> = {
-    igpm: 'IGPM', ipca: 'IPCA', fixo: 'Fixo',
-  }
 
   const labelsStatus: Record<string, { label: string; variant: 'default' | 'destructive' | 'outline' }> = {
     pago:     { label: 'Pago',     variant: 'default' },
@@ -196,48 +192,7 @@ export default async function DashboardPage() {
         </Card>
 
         {/* Próximos reajustes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-primary" />
-              Reajustes próximos
-              <span className="text-xs font-normal text-muted-foreground ml-auto">
-                próximos 30 dias
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!proximosReajustes?.length ? (
-              <EmptyState
-                icon={RefreshCw}
-                titulo="Nenhum reajuste próximo"
-                descricao="Não há contratos com reajuste nos próximos 30 dias."
-              />
-            ) : (
-              <div className="space-y-3">
-                {(proximosReajustes as Array<{
-                  id: string; apelido: string; data_proximo_reajuste: string
-                  valor_aluguel: number; indice_reajuste: string
-                }>).map((imovel) => (
-                  <div key={imovel.id} className="flex items-center justify-between gap-3 py-1">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{imovel.apelido}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Reajuste em {formatarData(imovel.data_proximo_reajuste)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm font-semibold">{formatarMoeda(imovel.valor_aluguel)}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {labelsIndice[imovel.indice_reajuste] ?? imovel.indice_reajuste}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <ReajusteAlertas imoveis={(proximosReajustes ?? []) as import('@/components/dashboard/reajuste-alertas').ImovelReajuste[]} />
       </div>
     </div>
   )
