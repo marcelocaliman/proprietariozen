@@ -28,157 +28,173 @@ interface DadosRecibo {
   }
 }
 
+// Número estável do recibo baseado no UUID (não muda entre gerações)
+function numeroRecibo(id: string): string {
+  const ano = new Date().getFullYear()
+  const codigo = id.replace(/-/g, '').slice(-8).toUpperCase()
+  return `REC-${ano}-${codigo}`
+}
+
 export function gerarReciboPDF({ pagamento, proprietario }: DadosRecibo): void {
   const doc = new jsPDF()
   const { imovel, inquilino } = pagamento
 
-  const margemEsq = 20
-  const larguraUtil = 170
-  let y = 20
+  const mEsq  = 20   // margem esquerda
+  const mDir  = 190  // margem direita
+  const lUtil = 170  // largura útil
+  const azul  = [30, 64, 175] as const   // blue-800
+  const cinza = [107, 114, 128] as const // gray-500
+  const preta = [17, 24, 39] as const    // gray-900
 
-  // Cabeçalho
-  doc.setFontSize(22)
+  // ── Cabeçalho ───────────────────────────────────────────────
+  doc.setFillColor(...azul)
+  doc.rect(0, 0, 210, 36, 'F')
+
   doc.setFont('helvetica', 'bold')
-  doc.text('RECIBO DE ALUGUEL', 105, y, { align: 'center' })
+  doc.setFontSize(20)
+  doc.setTextColor(255, 255, 255)
+  doc.text('RECIBO DE ALUGUEL', 105, 16, { align: 'center' })
 
-  y += 8
-  doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(100)
-  doc.text(`ProprietárioZen — Gestão de Imóveis`, 105, y, { align: 'center' })
-
-  // Linha divisória
-  y += 6
-  doc.setDrawColor(200)
-  doc.setLineWidth(0.5)
-  doc.line(margemEsq, y, margemEsq + larguraUtil, y)
-
-  // Número e data
-  y += 10
-  doc.setTextColor(0)
-  doc.setFontSize(10)
-  doc.setFont('helvetica', 'bold')
-  doc.text(`Recibo nº: ${pagamento.id.slice(0, 8).toUpperCase()}`, margemEsq, y)
-  doc.text(`Data de emissão: ${formatarData(new Date())}`, 190, y, { align: 'right' })
-
-  // Caixa de valor
-  y += 12
-  doc.setFillColor(245, 247, 250)
-  doc.roundedRect(margemEsq, y, larguraUtil, 18, 3, 3, 'F')
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(30, 64, 175)
-  doc.text(
-    `Valor: ${formatarMoeda(pagamento.valor)}  —  Ref.: ${formatarMesReferencia(pagamento.mes_referencia)}`,
-    105,
-    y + 11,
-    { align: 'center' }
-  )
-
-  // Seção: Locatário
-  y += 26
-  doc.setFontSize(11)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(0)
-  doc.text('LOCATÁRIO', margemEsq, y)
-
-  y += 6
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.text(`Nome: ${inquilino.nome}`, margemEsq, y)
-  y += 6
-  if (inquilino.cpf) { doc.text(`CPF: ${formatarCPF(inquilino.cpf)}`, margemEsq, y); y += 6 }
-  if (inquilino.email) { doc.text(`E-mail: ${inquilino.email}`, margemEsq, y); y += 6 }
-  if (inquilino.telefone) { doc.text(`Telefone: ${inquilino.telefone}`, margemEsq, y) }
-
-  // Seção: Imóvel
-  y += 12
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.text('IMÓVEL', margemEsq, y)
-
-  y += 6
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.text(`${imovel.apelido}`, margemEsq, y)
-  y += 6
-  doc.text(`Endereço: ${imovel.endereco}`, margemEsq, y)
-
-  // Seção: Pagamento
-  y += 12
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.text('DADOS DO PAGAMENTO', margemEsq, y)
-
-  y += 6
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.text(`Mês de referência: ${formatarMesReferencia(pagamento.mes_referencia)}`, margemEsq, y)
-  y += 6
-  doc.text(`Vencimento: ${formatarData(pagamento.data_vencimento)}`, margemEsq, y)
-  y += 6
-  if (pagamento.data_pagamento) {
-    doc.text(`Data de pagamento: ${formatarData(pagamento.data_pagamento)}`, margemEsq, y)
-    y += 6
-  }
-  doc.text(`Status: ${pagamento.status.toUpperCase()}`, margemEsq, y)
-
-  if (pagamento.observacao) {
-    y += 6
-    doc.text(`Observação: ${pagamento.observacao}`, margemEsq, y)
-  }
-
-  // Seção: Locador
-  y += 14
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
-  doc.text('LOCADOR', margemEsq, y)
-
-  y += 6
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(10)
-  doc.text(`Nome: ${proprietario.nome}`, margemEsq, y)
-  y += 6
-  doc.text(`E-mail: ${proprietario.email}`, margemEsq, y)
-  if (proprietario.telefone) {
-    y += 6
-    doc.text(`Telefone: ${proprietario.telefone}`, margemEsq, y)
-  }
-
-  // Linha divisória e declaração
-  y += 12
-  doc.setDrawColor(200)
-  doc.line(margemEsq, y, margemEsq + larguraUtil, y)
-
-  y += 8
   doc.setFontSize(9)
-  doc.setTextColor(80)
-  const declaracao = `Declaro que recebi a quantia de ${formatarMoeda(pagamento.valor)} referente ao aluguel do imóvel acima descrito, ` +
-    `relativo ao período de ${formatarMesReferencia(pagamento.mes_referencia)}, dando plena quitação.`
-  const linhas = doc.splitTextToSize(declaracao, larguraUtil)
-  doc.text(linhas, margemEsq, y)
+  doc.setTextColor(200, 210, 240)
+  doc.text('ProprietárioZen — Gestão de Imóveis', 105, 24, { align: 'center' })
 
-  // Assinatura
-  y += linhas.length * 5 + 16
+  // ── Número e data de emissão ─────────────────────────────────
+  let y = 46
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(...preta)
+  doc.text(`Nº ${numeroRecibo(pagamento.id)}`, mEsq, y)
+  doc.text(`Emitido em: ${formatarData(new Date())}`, mDir, y, { align: 'right' })
+
+  // ── Caixa de destaque — valor + referência ───────────────────
+  y += 8
+  doc.setFillColor(239, 246, 255)  // blue-50
+  doc.setDrawColor(...azul)
+  doc.setLineWidth(0.5)
+  doc.roundedRect(mEsq, y, lUtil, 22, 3, 3, 'FD')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(14)
+  doc.setTextColor(...azul)
+  doc.text(`Valor Pago: ${formatarMoeda(pagamento.valor)}`, 105, y + 9, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(...cinza)
+  doc.text(`Referência: ${formatarMesReferencia(pagamento.mes_referencia)}`, 105, y + 17, { align: 'center' })
+
+  // ── Divisória ────────────────────────────────────────────────
+  y += 30
+  doc.setDrawColor(229, 231, 235)  // gray-200
+  doc.setLineWidth(0.3)
+  doc.line(mEsq, y, mDir, y)
+
+  // Função auxiliar para seção
+  function secao(titulo: string, yPos: number): number {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(...azul)
+    doc.text(titulo, mEsq, yPos)
+    doc.setLineWidth(0.2)
+    doc.setDrawColor(...azul)
+    doc.line(mEsq, yPos + 1.5, mEsq + 30, yPos + 1.5)
+    return yPos + 6
+  }
+
+  function linha(label: string, valor: string, yPos: number): number {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9)
+    doc.setTextColor(...cinza)
+    doc.text(label, mEsq, yPos)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(...preta)
+    doc.text(valor, mEsq + 32, yPos)
+    return yPos + 6
+  }
+
+  // ── LOCATÁRIO ────────────────────────────────────────────────
+  y += 8
+  y = secao('LOCATÁRIO', y)
+  y = linha('Nome:', inquilino.nome, y)
+  if (inquilino.cpf) y = linha('CPF:', formatarCPF(inquilino.cpf), y)
+  if (inquilino.email) y = linha('E-mail:', inquilino.email, y)
+  if (inquilino.telefone) y = linha('Telefone:', inquilino.telefone, y)
+
+  // ── IMÓVEL ───────────────────────────────────────────────────
+  y += 4
+  doc.setDrawColor(229, 231, 235)
+  doc.setLineWidth(0.3)
+  doc.line(mEsq, y, mDir, y)
+  y += 8
+  y = secao('IMÓVEL', y)
+  y = linha('Apelido:', imovel.apelido, y)
+  y = linha('Endereço:', imovel.endereco, y)
+
+  // ── DADOS DO PAGAMENTO ───────────────────────────────────────
+  y += 4
+  doc.line(mEsq, y, mDir, y)
+  y += 8
+  y = secao('DADOS DO PAGAMENTO', y)
+  y = linha('Referência:', formatarMesReferencia(pagamento.mes_referencia), y)
+  y = linha('Vencimento:', formatarData(pagamento.data_vencimento), y)
+  if (pagamento.data_pagamento)
+    y = linha('Pagamento:', formatarData(pagamento.data_pagamento), y)
+  y = linha('Status:', pagamento.status.toUpperCase(), y)
+  if (pagamento.observacao) y = linha('Observação:', pagamento.observacao, y)
+
+  // ── LOCADOR ──────────────────────────────────────────────────
+  y += 4
+  doc.line(mEsq, y, mDir, y)
+  y += 8
+  y = secao('LOCADOR', y)
+  y = linha('Nome:', proprietario.nome, y)
+  y = linha('E-mail:', proprietario.email, y)
+  if (proprietario.telefone) y = linha('Telefone:', proprietario.telefone, y)
+
+  // ── Declaração ───────────────────────────────────────────────
+  y += 4
+  doc.setDrawColor(200, 200, 200)
+  doc.setLineWidth(0.4)
+  doc.line(mEsq, y, mDir, y)
+  y += 8
+
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(9)
+  doc.setTextColor(80, 80, 80)
+  const declaracao =
+    `Declaro que recebi a quantia de ${formatarMoeda(pagamento.valor)} referente ao aluguel do imóvel ` +
+    `"${imovel.apelido}" (${imovel.endereco}), relativo ao período de ` +
+    `${formatarMesReferencia(pagamento.mes_referencia)}, dando plena quitação.`
+  const linhasDecl = doc.splitTextToSize(declaracao, lUtil)
+  doc.text(linhasDecl, mEsq, y)
+
+  // ── Assinatura ───────────────────────────────────────────────
+  y += linhasDecl.length * 5 + 14
   doc.setDrawColor(0)
   doc.setLineWidth(0.3)
-  doc.line(margemEsq, y, margemEsq + 70, y)
+  doc.line(mEsq, y, mEsq + 75, y)
   y += 5
+  doc.setFont('helvetica', 'bold')
   doc.setFontSize(9)
-  doc.setTextColor(0)
-  doc.text(proprietario.nome, margemEsq, y)
+  doc.setTextColor(...preta)
+  doc.text(proprietario.nome, mEsq, y)
   y += 4
-  doc.text('Locador', margemEsq, y)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...cinza)
+  doc.text('Locador', mEsq, y)
 
-  // Rodapé
+  // ── Rodapé ───────────────────────────────────────────────────
+  doc.setFillColor(249, 250, 251)  // gray-50
+  doc.rect(0, 275, 210, 22, 'F')
+  doc.setFont('helvetica', 'italic')
   doc.setFontSize(8)
-  doc.setTextColor(150)
-  doc.text(
-    `Documento gerado pelo ProprietárioZen em ${formatarData(new Date())}`,
-    105,
-    285,
-    { align: 'center' }
-  )
+  doc.setTextColor(150, 150, 150)
+  doc.text('Este recibo foi gerado eletronicamente pelo ProprietárioZen.', 105, 282, { align: 'center' })
+  doc.text(`Emitido em ${formatarData(new Date())} — ${numeroRecibo(pagamento.id)}`, 105, 288, { align: 'center' })
 
-  doc.save(`recibo_${pagamento.mes_referencia}_${inquilino.nome.replace(/\s+/g, '_')}.pdf`)
+  // Nome do arquivo seguro
+  const inquilinoSlug = inquilino.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_')
+  doc.save(`recibo_${pagamento.mes_referencia}_${inquilinoSlug}.pdf`)
 }
