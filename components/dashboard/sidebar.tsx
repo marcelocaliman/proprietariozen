@@ -9,10 +9,12 @@ import {
   Receipt,
   Settings,
   LogOut,
+  Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -20,10 +22,10 @@ import { createClient } from '@/lib/supabase'
 import type { Profile } from '@/types'
 
 const navItems = [
-  { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/imoveis',      label: 'Imóveis',       icon: Building2 },
-  { href: '/inquilinos',   label: 'Inquilinos',    icon: Users },
-  { href: '/alugueis',     label: 'Aluguéis',      icon: Receipt },
+  { href: '/dashboard',     label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/imoveis',       label: 'Imóveis',       icon: Building2 },
+  { href: '/inquilinos',    label: 'Inquilinos',    icon: Users },
+  { href: '/alugueis',      label: 'Aluguéis',      icon: Receipt },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
@@ -35,6 +37,7 @@ interface SidebarProps {
 export function Sidebar({ profile, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const isPro = profile?.plano === 'pago'
 
   async function handleLogout() {
     const supabase = createClient()
@@ -73,7 +76,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 ativo
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -81,6 +84,23 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
             </Link>
           )
         })}
+
+        {/* Link para /planos — destaque para usuários Grátis */}
+        {!isPro && (
+          <Link
+            href="/planos"
+            onClick={onClose}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mt-1',
+              pathname === '/planos'
+                ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300'
+                : 'text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950/30',
+            )}
+          >
+            <Zap className="h-4 w-4 shrink-0" />
+            Fazer upgrade Pro
+          </Link>
+        )}
       </nav>
 
       <Separator className="bg-sidebar-border" />
@@ -88,13 +108,20 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
       {/* Usuário */}
       <div className="px-3 py-4 space-y-1">
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="bg-primary text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{profile?.nome ?? 'Usuário'}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium truncate">{profile?.nome ?? 'Usuário'}</p>
+              {isPro && (
+                <Badge className="bg-purple-600 hover:bg-purple-600 text-[10px] h-4 px-1.5 shrink-0">
+                  Pro
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-sidebar-foreground/50 truncate">{profile?.email}</p>
           </div>
         </div>

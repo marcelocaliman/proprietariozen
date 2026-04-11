@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Zap, X, ExternalLink, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { Check, Zap, X, ExternalLink, AlertTriangle, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,86 +13,83 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
 
-// TODO (Semana 3): importar utilitários do Stripe
-// import { criarCheckoutSession, criarPortalSession } from '@/lib/stripe'
+interface RecursoItemProps { ok: boolean; children: React.ReactNode }
 
-interface Props {
-  plano: 'gratis' | 'pago'
+function RecursoItem({ ok, children }: RecursoItemProps) {
+  return (
+    <li className="flex items-center gap-2 text-sm">
+      {ok
+        ? <Check className="h-4 w-4 shrink-0 text-green-500" />
+        : <X className="h-4 w-4 shrink-0 text-muted-foreground/40" />}
+      <span className={ok ? 'text-foreground' : 'text-muted-foreground line-through'}>{children}</span>
+    </li>
+  )
 }
 
 const recursosGratis = [
   { label: '1 imóvel cadastrado', ok: true },
   { label: 'Controle de inquilinos', ok: true },
   { label: 'Histórico de aluguéis', ok: true },
-  { label: 'Recibos PDF', ok: false },
+  { label: 'Dashboard de resumo', ok: true },
+  { label: 'Recibos PDF ilimitados', ok: false },
   { label: 'Alertas por e-mail', ok: false },
-  { label: 'Reajuste automático', ok: false },
-  { label: 'Imóveis ilimitados', ok: false },
-  { label: 'Suporte prioritário', ok: false },
+  { label: 'Reajuste automático (IGPM/IPCA)', ok: false },
+  { label: 'Até 5 imóveis', ok: false },
 ]
 
 const recursosPro = [
-  { label: 'Imóveis ilimitados', ok: true },
+  { label: 'Até 5 imóveis cadastrados', ok: true },
   { label: 'Controle de inquilinos', ok: true },
   { label: 'Histórico de aluguéis', ok: true },
+  { label: 'Dashboard de resumo', ok: true },
   { label: 'Recibos PDF ilimitados', ok: true },
   { label: 'Alertas por e-mail', ok: true },
   { label: 'Reajuste automático (IGPM/IPCA)', ok: true },
-  { label: 'Relatórios e exportação', ok: true },
   { label: 'Suporte prioritário', ok: true },
 ]
 
-function RecursoItem({ label, ok }: { label: string; ok: boolean }) {
-  return (
-    <li className="flex items-center gap-2 text-sm">
-      {ok ? (
-        <Check className="h-4 w-4 shrink-0 text-green-500" />
-      ) : (
-        <X className="h-4 w-4 shrink-0 text-muted-foreground/40" />
-      )}
-      <span className={ok ? 'text-foreground' : 'text-muted-foreground line-through'}>{label}</span>
-    </li>
-  )
-}
-
-function BotaoEmBreve({ children, variant = 'default' }: {
-  children: React.ReactNode
-  variant?: 'default' | 'outline' | 'destructive'
-}) {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button variant={variant} disabled className="cursor-not-allowed opacity-60">
-              {children}
-            </Button>
-          }
-        />
-        <TooltipContent>Em breve</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )
+interface Props {
+  plano: 'gratis' | 'pago'
 }
 
 export function AbaAssinatura({ plano }: Props) {
+  const [loading, setLoading] = useState(false)
   const [cancelarOpen, setCancelarOpen] = useState(false)
 
-  // TODO (Semana 3): buscar dados reais da assinatura Stripe
-  // const proximaCobranca = '15/05/2025'
-  // const valorProximaCobranca = 'R$ 29,90'
+  async function handleAssinar() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok || !json.url) { toast.error(json.error ?? 'Erro ao iniciar pagamento'); return }
+      window.location.href = json.url
+    } catch {
+      toast.error('Erro ao conectar com o servidor de pagamento')
+    } finally {
+      setLoading(false)
+    }
+  }
 
+  async function handlePortal() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/portal', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok || !json.url) { toast.error(json.error ?? 'Erro ao abrir portal'); return }
+      window.location.href = json.url
+    } catch {
+      toast.error('Erro ao conectar com o servidor')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Plano Grátis ────────────────────────────────────────────────────────────
   if (plano === 'gratis') {
     return (
       <div className="space-y-6">
-        {/* Banner limitações */}
+        {/* Banner */}
         <Card className="border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30">
           <CardContent className="pt-5">
             <div className="flex gap-3">
@@ -100,18 +97,16 @@ export function AbaAssinatura({ plano }: Props) {
               <div>
                 <p className="font-medium text-sm">Você está no plano Grátis</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Limitado a 1 imóvel, sem geração de recibos PDF, sem alertas automáticos
-                  por e-mail e sem reajuste automático.
+                  Limitado a 1 imóvel. Sem recibos PDF, sem alertas automáticos e sem reajuste.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Comparação de planos */}
+        {/* Comparação */}
         <div className="grid gap-4 sm:grid-cols-2">
-          {/* Plano Grátis */}
-          <Card className="border-dashed">
+          <Card className="border-dashed opacity-75">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Grátis</CardTitle>
@@ -120,37 +115,36 @@ export function AbaAssinatura({ plano }: Props) {
               <p className="text-2xl font-bold">R$ 0<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
-                {recursosGratis.map(r => <RecursoItem key={r.label} {...r} />)}
+              <ul className="space-y-1.5">
+                {recursosGratis.map(r => <RecursoItem key={r.label} ok={r.ok}>{r.label}</RecursoItem>)}
               </ul>
             </CardContent>
           </Card>
 
-          {/* Plano Pro */}
           <Card className="border-purple-300 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-purple-600 hover:bg-purple-600 px-3">
-                <Zap className="h-3 w-3 mr-1" />
-                Recomendado
+                <Zap className="h-3 w-3 mr-1" />Recomendado
               </Badge>
             </div>
-            <CardHeader className="pb-3 pt-5">
+            <CardHeader className="pb-3 pt-6">
               <CardTitle className="text-base">Pro</CardTitle>
               <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
                 R$ 29,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
               </p>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {recursosPro.map(r => <RecursoItem key={r.label} {...r} />)}
+            <CardContent className="space-y-4">
+              <ul className="space-y-1.5">
+                {recursosPro.map(r => <RecursoItem key={r.label} ok={r.ok}>{r.label}</RecursoItem>)}
               </ul>
-              <div className="mt-5">
-                {/* TODO (Semana 3): substituir pelo botão real que chama criarCheckoutSession() */}
-                <BotaoEmBreve>
-                  <Zap className="h-4 w-4 mr-2" />
-                  Fazer upgrade para Pro
-                </BotaoEmBreve>
-              </div>
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                onClick={handleAssinar}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                Assinar Pro — R$ 29,90/mês
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -158,10 +152,10 @@ export function AbaAssinatura({ plano }: Props) {
     )
   }
 
-  // ── Plano Pro ativo ─────────────────────────────────────────────────────────
+  // ── Plano Pro ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      {/* Status Pro */}
+      {/* Status */}
       <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/30">
         <CardContent className="pt-5">
           <div className="flex items-center justify-between">
@@ -169,9 +163,7 @@ export function AbaAssinatura({ plano }: Props) {
               <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Plano Pro ativo</p>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Todos os recursos estão disponíveis.
-                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">Todos os recursos estão disponíveis.</p>
               </div>
             </div>
             <Badge className="bg-purple-600 hover:bg-purple-600">Pro</Badge>
@@ -179,49 +171,38 @@ export function AbaAssinatura({ plano }: Props) {
         </CardContent>
       </Card>
 
-      {/* Detalhes da assinatura */}
+      {/* Detalhes */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Detalhes da assinatura</CardTitle>
-          <CardDescription>
-            Gerencie seu plano e método de pagamento
-          </CardDescription>
+          <CardDescription>Gerencie seu plano e método de pagamento</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-muted-foreground">Próxima cobrança</span>
-            {/* TODO (Semana 3): exibir data real da Stripe */}
-            <span className="text-sm font-medium">—</span>
-          </div>
-          <Separator />
-          <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-muted-foreground">Valor</span>
-            {/* TODO (Semana 3): exibir valor real da Stripe */}
+            <span className="text-sm text-muted-foreground">Valor mensal</span>
             <span className="text-sm font-medium">R$ 29,90/mês</span>
           </div>
           <Separator />
-          <div className="flex gap-3 pt-2">
-            {/* TODO (Semana 3): substituir pelo portal real da Stripe */}
-            <BotaoEmBreve variant="outline">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Gerenciar assinatura
-            </BotaoEmBreve>
-            <BotaoEmBreve variant="outline">
-              Cancelar assinatura
-            </BotaoEmBreve>
+          <div className="flex items-center justify-between py-1.5">
+            <span className="text-sm text-muted-foreground">Próxima cobrança e faturas</span>
+            <Button variant="link" size="sm" className="h-auto p-0 text-sm" onClick={handlePortal} disabled={loading}>
+              Ver no Stripe
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Histórico de faturas */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Histórico de faturas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* TODO (Semana 3): listar faturas reais da Stripe */}
-          <div className="flex flex-col items-center py-8 text-muted-foreground gap-2">
-            <p className="text-sm">Histórico de faturas disponível em breve.</p>
+          <Separator />
+          <div className="flex gap-3 pt-1">
+            <Button variant="outline" className="gap-2" onClick={handlePortal} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              Gerenciar assinatura
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 text-destructive hover:text-destructive"
+              onClick={() => setCancelarOpen(true)}
+              disabled={loading}
+            >
+              Cancelar assinatura
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -236,24 +217,22 @@ export function AbaAssinatura({ plano }: Props) {
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
               <p className="text-sm text-destructive font-medium">Atenção</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Você perderá acesso ao plano Pro no final do período pago.
-                Seus dados serão mantidos, mas recursos exclusivos do Pro
-                serão desativados.
+                Você perderá acesso ao plano Pro <strong>no final do período pago</strong>.
+                Seus dados ficam preservados mas recursos exclusivos serão desativados.
               </p>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setCancelarOpen(false)}>
-                Manter Pro
-              </Button>
+              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter Pro</Button>
               <Button
                 variant="destructive"
-                onClick={() => {
-                  // TODO (Semana 3): chamar API de cancelamento da Stripe
-                  toast.info('Em breve')
+                disabled={loading}
+                onClick={async () => {
                   setCancelarOpen(false)
+                  // Redireciona para o Stripe Portal onde o usuário cancela
+                  await handlePortal()
                 }}
               >
-                Confirmar cancelamento
+                Ir para cancelamento
               </Button>
             </div>
           </div>

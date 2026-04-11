@@ -7,16 +7,26 @@ export default async function ImoveisPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
 
-  const { data } = await supabase
-    .from('imoveis')
-    .select('*, inquilinos(id, nome, ativo)')
-    .eq('user_id', user.id)
-    .eq('ativo', true)
-    .order('criado_em', { ascending: false })
+  const [{ data }, { data: profile }] = await Promise.all([
+    supabase
+      .from('imoveis')
+      .select('*, inquilinos(id, nome, ativo)')
+      .eq('user_id', user.id)
+      .eq('ativo', true)
+      .order('criado_em', { ascending: false }),
+
+    supabase
+      .from('profiles')
+      .select('plano')
+      .eq('id', user.id)
+      .single(),
+  ])
+
+  const plano = (profile?.plano ?? 'gratis') as 'gratis' | 'pago'
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <ImoveisClient imoveis={(data ?? []) as Imovel[]} />
+      <ImoveisClient imoveis={(data ?? []) as Imovel[]} plano={plano} />
     </div>
   )
 }
