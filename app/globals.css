@@ -6,6 +6,88 @@
   .text-balance { text-wrap: balance; }
 }
 
+/* ── Auth forms ──────────────────────────────────────────────────────────── */
+.auth-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: #0F172A;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auth-input::placeholder { color: #94A3B8; }
+.auth-input:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+.auth-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  background: #059669;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.auth-btn:hover { background: #047857; }
+.auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.auth-btn-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0F172A;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.auth-btn-google:hover { background: #F8FAFC; }
+.auth-btn-google:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Auth panel blobs */
+.auth-blob-1 {
+  position: absolute;
+  top: -100px;
+  right: -80px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,185,129,0.22) 0%, transparent 70%);
+  animation: auth-blob 9s ease-in-out infinite;
+  pointer-events: none;
+}
+.auth-blob-2 {
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,185,129,0.14) 0%, transparent 70%);
+  animation: auth-blob 13s ease-in-out infinite reverse;
+  pointer-events: none;
+}
+@keyframes auth-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(28px, -28px) scale(1.06); }
+}
+
 @layer base {
   :root {
     /* Base */

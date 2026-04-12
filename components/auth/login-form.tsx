@@ -7,11 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 const schema = z.object({
@@ -21,9 +17,22 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.017 17.64 11.71 17.64 9.2Z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18Z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A9 9 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
+    </svg>
+  )
+}
+
 export function LoginForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [loadingGoogle, setLoadingGoogle] = useState(false)
+  const [mostrarSenha, setMostrarSenha] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -37,16 +46,14 @@ export function LoginForm() {
         email: data.email,
         password: data.senha,
       })
-
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('E-mail ou senha incorretos')
-        } else {
-          toast.error(error.message)
-        }
+        toast.error(
+          error.message.includes('Invalid login credentials')
+            ? 'E-mail ou senha incorretos'
+            : error.message
+        )
         return
       }
-
       router.push('/dashboard')
       router.refresh()
     } finally {
@@ -54,55 +61,107 @@ export function LoginForm() {
     }
   }
 
+  async function handleGoogle() {
+    setLoadingGoogle(true)
+    try {
+      const supabase = createClient()
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+      })
+    } finally {
+      setLoadingGoogle(false)
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="space-y-1.5">
-        <Label htmlFor="email">E-mail</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="seu@email.com"
-          autoComplete="email"
-          {...register('email')}
-        />
-        {errors.email && (
-          <p className="text-destructive text-xs">{errors.email.message}</p>
-        )}
+    <div className="space-y-6">
+      {/* Heading */}
+      <div className="space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">Bem-vindo de volta</h2>
+        <p className="text-sm text-[#94A3B8]">Informe seus dados para entrar na conta.</p>
       </div>
 
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="senha">Senha</Label>
-          <Link
-            href="/recuperar-senha"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            Esqueci minha senha
-          </Link>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Email */}
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-[#0F172A]">E-mail</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            className="auth-input"
+            {...register('email')}
+          />
+          {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
         </div>
-        <Input
-          id="senha"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="current-password"
-          {...register('senha')}
-        />
-        {errors.senha && (
-          <p className="text-destructive text-xs">{errors.senha.message}</p>
-        )}
+
+        {/* Senha */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label htmlFor="senha" className="block text-sm font-medium text-[#0F172A]">Senha</label>
+            <Link
+              href="/recuperar-senha"
+              className="text-xs text-[#059669] hover:text-[#047857] transition-colors"
+            >
+              Esqueci minha senha
+            </Link>
+          </div>
+          <div className="relative">
+            <input
+              id="senha"
+              type={mostrarSenha ? 'text' : 'password'}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="auth-input pr-10"
+              {...register('senha')}
+            />
+            <button
+              type="button"
+              onClick={() => setMostrarSenha(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A] transition-colors"
+              aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.senha && <p className="text-xs text-red-500">{errors.senha.message}</p>}
+        </div>
+
+        <button type="submit" disabled={loading} className="auth-btn mt-2">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          Entrar
+        </button>
+      </form>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-[#E2E8F0]" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-white px-3 text-[#94A3B8]">ou continue com</span>
+        </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Entrar
-      </Button>
+      {/* Google */}
+      <button
+        type="button"
+        disabled={loadingGoogle}
+        onClick={handleGoogle}
+        className="auth-btn-google"
+      >
+        {loadingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+        Continuar com Google
+      </button>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-[#94A3B8]">
         Não tem conta?{' '}
-        <Link href="/cadastro" className="text-primary font-medium hover:underline">
+        <Link href="/cadastro" className="font-semibold text-[#059669] hover:text-[#047857] transition-colors">
           Criar conta grátis
         </Link>
       </p>
-    </form>
+    </div>
   )
 }
