@@ -6,7 +6,7 @@
   "id": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#059669",
+  "theme_color": "#3DBF79",
   "orientation": "portrait-primary",
   "categories": ["finance", "productivity"],
   "icons": [

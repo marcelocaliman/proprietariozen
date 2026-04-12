@@ -1,36 +1,41 @@
 import Link from 'next/link'
 
-// ── Logo colors ───────────────────────────────────────────────────────────────
+// ── Brand green — matches icon.svg exactly ────────────────────────────────────
 const LOGO_GREEN = '#3DBF79'
 
-// ── Circle mark ──────────────────────────────────────────────────────────────
-
+/**
+ * Smile mark SVG — identical path to /public/icons/icon.svg.
+ * Uses a filled shape (not a stroke) so it scales cleanly at any size.
+ *
+ * Color variant : green circle (#3DBF79) + white filled smile
+ * White variant : semi-transparent ring + green filled smile
+ */
 function SmileMark({ s, variant }: { s: number; variant: 'color' | 'white' }) {
-  const half = s / 2
-  const r = half - 1
-  // Smile arc: spans from 25% to 75% of width, control point at 88% height
-  const x1 = s * 0.25
-  const x2 = s * 0.75
-  const y0 = s * 0.63   // endpoints y
-  const yc = s * 0.87   // control point y (depth of curve)
-  const sw = Math.max(2.5, s * 0.094) // stroke-width
-
   return (
-    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" aria-hidden="true" focusable="false">
-      <circle
-        cx={half}
-        cy={half}
-        r={r}
-        fill={variant === 'color' ? LOGO_GREEN : 'rgba(255,255,255,0.13)'}
-        stroke={variant === 'white' ? 'rgba(255,255,255,0.35)' : 'none'}
-        strokeWidth={variant === 'white' ? 1.5 : 0}
-      />
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 100 100"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {variant === 'color' ? (
+        <circle cx="50" cy="50" r="50" fill={LOGO_GREEN} />
+      ) : (
+        <circle
+          cx="50"
+          cy="50"
+          r="48"
+          fill="rgba(255,255,255,0.12)"
+          stroke="rgba(255,255,255,0.35)"
+          strokeWidth="3"
+        />
+      )}
+      {/* Filled smile path — same coordinates as icon.svg */}
       <path
-        d={`M${x1} ${y0} Q${half} ${yc} ${x2} ${y0}`}
-        stroke={variant === 'color' ? 'white' : LOGO_GREEN}
-        strokeWidth={sw}
-        strokeLinecap="round"
-        fill="none"
+        d="M15 68C15 58 32 53 50 53C68 53 85 58 85 68C85 82 65 92 50 92C35 92 15 82 15 68Z"
+        fill={variant === 'color' ? 'white' : LOGO_GREEN}
       />
     </svg>
   )
@@ -41,7 +46,7 @@ function SmileMark({ s, variant }: { s: number; variant: 'color' | 'white' }) {
 interface LogoProps {
   /**
    * Height of the circle mark in px. Text scales automatically.
-   * Common values: 28 (sm), 32 (mobile), 36 (default), 40 (lg)
+   * Common: 28 (compact), 32 (mobile), 36 (default), 40 (large)
    */
   iconSize?: number
   href?: string
@@ -56,10 +61,7 @@ export function LogoColor({ iconSize = 36, href, className = '' }: LogoProps) {
   const mark = (
     <span className={`inline-flex items-center gap-2.5 ${className}`} aria-label="PropZen">
       <SmileMark s={iconSize} variant="color" />
-      <span
-        className="font-extrabold leading-none tracking-tight"
-        style={{ fontSize }}
-      >
+      <span className="font-extrabold leading-none tracking-tight" style={{ fontSize }}>
         <span style={{ color: '#111827' }}>Prop</span>
         <span style={{ color: LOGO_GREEN }}>Zen</span>
       </span>
