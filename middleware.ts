@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const rotasPublicas = ['/login', '/cadastro', '/recuperar-senha', '/api/auth']
+const rotasPublicas = ['/', '/login', '/cadastro', '/recuperar-senha', '/sucesso', '/cancelado', '/planos', '/api/auth']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -46,10 +46,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redireciona / para /dashboard
-  if (pathname === '/') {
+  // Usuário autenticado em / → dashboard
+  if (pathname === '/' && user) {
     const url = request.nextUrl.clone()
-    url.pathname = user ? '/dashboard' : '/login'
+    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
