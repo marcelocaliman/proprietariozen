@@ -31,7 +31,7 @@ interface SidebarProps {
 export function Sidebar({ profile, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const isPro = profile?.plano === 'pago'
+  const isPro = profile?.plano === 'pago' || profile?.role === 'admin'
 
   async function handleLogout() {
     const supabase = createClient()

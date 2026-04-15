@@ -14,12 +14,12 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 
 const navItems = [
-  { href: '/admin/visao-geral',  label: 'Visão geral',       icon: LayoutDashboard },
-  { href: '/admin/usuarios',     label: 'Usuários',           icon: Users },
-  { href: '/admin/financeiro',   label: 'Financeiro',         icon: TrendingUp },
-  { href: '/admin/imoveis',      label: 'Imóveis & Aluguéis', icon: Building2 },
-  { href: '/admin/logs',         label: 'Logs & Atividade',   icon: Activity },
-  { href: '/admin/configuracoes',label: 'Configurações',      icon: Settings },
+  { href: '/admin/visao-geral',   label: 'Visão geral',        icon: LayoutDashboard },
+  { href: '/admin/usuarios',      label: 'Usuários',            icon: Users },
+  { href: '/admin/financeiro',    label: 'Financeiro',          icon: TrendingUp },
+  { href: '/admin/imoveis',       label: 'Imóveis & Aluguéis',  icon: Building2 },
+  { href: '/admin/logs',          label: 'Logs & Atividade',    icon: Activity },
+  { href: '/admin/configuracoes', label: 'Configurações',       icon: Settings },
 ]
 
 interface AdminSidebarProps {
@@ -44,7 +44,7 @@ export function AdminSidebar({ adminNome, adminEmail, onClose }: AdminSidebarPro
     .split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 
   return (
-    <div className="flex flex-col h-full bg-[#0F172A] text-slate-300">
+    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground">
       {/* Logo */}
       <div className="px-5 py-5 flex items-center gap-2.5">
         <ShieldAlert className="h-6 w-6 text-red-400 shrink-0" />
@@ -56,7 +56,7 @@ export function AdminSidebar({ adminNome, adminEmail, onClose }: AdminSidebarPro
         </div>
       </div>
 
-      <div className="h-px bg-slate-700/60 mx-3" />
+      <div className="h-px bg-sidebar-border mx-3" />
 
       {/* Navegação */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
@@ -70,37 +70,35 @@ export function AdminSidebar({ adminNome, adminEmail, onClose }: AdminSidebarPro
               className={cn(
                 'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                 ativo
-                  ? 'bg-slate-700/70 text-white'
-                  : 'text-slate-400 hover:bg-slate-700/40 hover:text-slate-200',
+                  ? 'bg-sidebar-accent text-white'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-[#E2E8F0]',
               )}
             >
               {ativo && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-red-400" />
               )}
-              <Icon className={cn('h-4 w-4 shrink-0', ativo ? 'text-red-400' : 'text-slate-500')} />
+              <Icon className={cn('h-4 w-4 shrink-0', ativo ? 'text-red-400' : 'text-[#64748B]')} />
               {label}
             </Link>
           )
         })}
       </nav>
 
-      <div className="h-px bg-slate-700/60 mx-3" />
+      <div className="h-px bg-sidebar-border mx-3" />
 
       {/* Rodapé */}
       <div className="px-3 py-4 space-y-1">
-        {/* Link voltar ao app */}
         <Link
           href="/dashboard"
           onClick={onClose}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-700/40 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-[#E2E8F0] transition-colors"
         >
-          <LayoutDashboard className="h-4 w-4 text-slate-500" />
+          <LayoutDashboard className="h-4 w-4 text-[#64748B]" />
           Voltar ao app
         </Link>
 
-        <div className="h-px bg-slate-700/40 my-1" />
+        <div className="h-px bg-sidebar-border/50 my-1" />
 
-        {/* Admin info */}
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarFallback className="bg-red-500/20 text-red-400 text-xs font-semibold">
@@ -109,7 +107,7 @@ export function AdminSidebar({ adminNome, adminEmail, onClose }: AdminSidebarPro
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">{adminNome}</p>
-            <p className="text-xs text-slate-500 truncate">{adminEmail}</p>
+            <p className="text-xs text-sidebar-foreground/70 truncate">{adminEmail}</p>
           </div>
         </div>
 
@@ -117,7 +115,7 @@ export function AdminSidebar({ adminNome, adminEmail, onClose }: AdminSidebarPro
           variant="ghost"
           size="sm"
           onClick={handleLogout}
-          className="w-full justify-start gap-3 px-3 text-slate-400 hover:text-white hover:bg-slate-700/40"
+          className="w-full justify-start gap-3 px-3 text-sidebar-foreground hover:text-white hover:bg-sidebar-accent/60"
         >
           <LogOut className="h-4 w-4" />
           Sair

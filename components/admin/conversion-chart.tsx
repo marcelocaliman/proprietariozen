@@ -20,11 +20,11 @@ function CustomTooltip({ active, payload, label }: TipProps) {
   const total = payload.find(p => p.dataKey === 'total')?.value ?? 0
   const pro   = payload.find(p => p.dataKey === 'pro')?.value ?? 0
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs shadow-xl space-y-1">
-      <p className="font-semibold text-slate-300 mb-1.5">{label}</p>
-      <p className="text-indigo-400">Conversão: <span className="font-bold text-white">{Number(taxa).toFixed(1)}%</span></p>
-      <p className="text-slate-400">Cadastros: <span className="text-white">{total}</span></p>
-      <p className="text-emerald-400">Pro: <span className="text-white">{pro}</span></p>
+    <div className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-xs shadow-lg space-y-1">
+      <p className="font-semibold text-[#475569] mb-1.5">{label}</p>
+      <p className="text-indigo-600">Conversão: <span className="font-bold text-[#0F172A]">{Number(taxa).toFixed(1)}%</span></p>
+      <p className="text-[#64748B]">Cadastros: <span className="text-[#0F172A]">{total}</span></p>
+      <p className="text-emerald-600">Pro: <span className="text-[#0F172A]">{pro}</span></p>
     </div>
   )
 }
@@ -33,7 +33,7 @@ export function ConversionChart({ data, meta = 10 }: { data: ConversionPoint[]; 
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis
           dataKey="mes_label"
           tick={{ fill: '#64748b', fontSize: 11 }}

@@ -7,9 +7,9 @@ type TipProps = { active?: boolean; payload?: { name?: string; value?: number }[
 function CustomTooltip({ active, payload }: TipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-xl">
-      <p className="text-slate-300">
-        {payload[0]?.name}: <span className="font-bold text-white">{payload[0]?.value}</span>
+    <div className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="text-[#475569]">
+        {payload[0]?.name}: <span className="font-bold text-[#0F172A]">{payload[0]?.value}</span>
       </p>
     </div>
   )
@@ -49,12 +49,12 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
         </ResponsiveContainer>
         {/* Label central */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-white leading-none">{pct}%</span>
-          <span className="text-[11px] text-slate-400 mt-0.5">Pro</span>
+          <span className="text-2xl font-bold text-[#0F172A] leading-none">{pct}%</span>
+          <span className="text-[11px] text-[#64748B] mt-0.5">Pro</span>
         </div>
       </div>
       {/* Legenda */}
-      <div className="flex items-center gap-4 text-xs text-slate-400">
+      <div className="flex items-center gap-4 text-xs text-[#64748B]">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-[#475569]" />
           Grátis: <strong className="text-white">{gratis}</strong>

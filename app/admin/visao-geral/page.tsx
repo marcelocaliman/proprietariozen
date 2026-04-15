@@ -50,11 +50,11 @@ function fmtDt(iso: string) {
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded bg-slate-800', className)} />
+  return <div className={cn('animate-pulse rounded bg-slate-100', className)} />
 }
 function KpiSkeleton() {
   return (
-    <Card className="bg-slate-900 border-slate-700/60">
+    <Card>
       <CardContent className="pt-5 pb-4 space-y-3">
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-7 w-20" />
@@ -75,18 +75,18 @@ function KpiCard({
   const TrendIcon = trend == null ? Minus
     : trend > 0 ? ArrowUpRight
     : ArrowDownRight
-  const trendCls = trend == null ? 'text-slate-500'
-    : trend > 0 ? 'text-emerald-400'
-    : 'text-red-400'
+  const trendCls = trend == null ? 'text-slate-400'
+    : trend > 0 ? 'text-emerald-600'
+    : 'text-red-600'
 
   return (
-    <Card className="bg-slate-900 border-slate-700/60 text-white">
+    <Card>
       <CardContent className="pt-5 pb-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wide truncate">{title}</p>
-            <p className="text-2xl font-bold text-white mt-1 tabular-nums">{value}</p>
-            {sub && <p className="text-xs text-slate-500 mt-0.5 truncate">{sub}</p>}
+            <p className="text-[11px] text-[#94A3B8] font-medium uppercase tracking-wide truncate">{title}</p>
+            <p className="text-2xl font-bold text-[#0F172A] mt-1 tabular-nums">{value}</p>
+            {sub && <p className="text-xs text-[#64748B] mt-0.5 truncate">{sub}</p>}
           </div>
           <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', iconCls)}>
             <Icon className="h-[18px] w-[18px]" />
@@ -137,12 +137,12 @@ export default function AdminVisaoGeralPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-white">Visão Geral</h1>
+            <h1 className="text-2xl font-bold text-[#0F172A]">Visão Geral</h1>
             <Badge className="bg-red-500 hover:bg-red-500 text-white text-[10px] font-bold px-2">
               ADMIN MODE
             </Badge>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#64748B] mt-0.5">
             {now.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' })}
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function AdminVisaoGeralPage() {
           size="sm"
           onClick={fetchStats}
           disabled={loading}
-          className="gap-1.5 border-slate-700 bg-slate-800/50 text-slate-300 hover:text-white hover:bg-slate-700 self-start sm:self-auto"
+          className="gap-1.5 self-start sm:self-auto"
         >
           <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
           Atualizar dados
@@ -159,7 +159,7 @@ export default function AdminVisaoGeralPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-800 bg-red-950/50 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error} — <button onClick={fetchStats} className="underline">tentar novamente</button>
         </div>
       )}
@@ -173,14 +173,14 @@ export default function AdminVisaoGeralPage() {
             sub={`+${data.users.novos_hoje} hoje`}
             trend={data.users.crescimento_vs_mes_anterior}
             icon={Users}
-            iconCls="bg-blue-500/20 text-blue-400"
+            iconCls="bg-blue-50 text-blue-600"
           />
           <KpiCard
             title="Plano Pro"
             value={data.users.total_pro.toLocaleString('pt-BR')}
             sub={`${data.users.taxa_conversao}% de conversão`}
             icon={ShieldAlert}
-            iconCls="bg-emerald-500/20 text-emerald-400"
+            iconCls="bg-emerald-50 text-emerald-600"
           />
           <KpiCard
             title="MRR"
@@ -188,21 +188,21 @@ export default function AdminVisaoGeralPage() {
             sub={`ARR ${fmtCompact(data.mrr.arr)}`}
             trend={data.mrr.crescimento_mrr}
             icon={DollarSign}
-            iconCls="bg-amber-500/20 text-amber-400"
+            iconCls="bg-amber-50 text-amber-600"
           />
           <KpiCard
             title="Imóveis ativos"
             value={data.app.total_imoveis.toLocaleString('pt-BR')}
             sub={`${data.app.total_inquilinos} inquilinos`}
             icon={Building2}
-            iconCls="bg-violet-500/20 text-violet-400"
+            iconCls="bg-violet-50 text-violet-600"
           />
           <KpiCard
             title="Aluguéis este mês"
             value={data.app.total_alugueis_mes.toLocaleString('pt-BR')}
             sub={`${fmt(data.app.total_recebido_mes)} recebidos`}
             icon={Receipt}
-            iconCls="bg-cyan-500/20 text-cyan-400"
+            iconCls="bg-cyan-50 text-cyan-600"
           />
         </>)}
       </div>
@@ -210,14 +210,14 @@ export default function AdminVisaoGeralPage() {
       {/* ── Linha 2: Gráficos 60/40 ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Crescimento — 60% */}
-        <Card className="bg-slate-900 border-slate-700/60 lg:col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-400" />
+            <CardTitle className="text-sm font-semibold text-[#0F172A] flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-500" />
               Crescimento de usuários
-              <span className="text-[11px] text-slate-500 font-normal">últimos 30 dias</span>
+              <span className="text-[11px] text-[#94A3B8] font-normal">últimos 30 dias</span>
             </CardTitle>
-            <div className="flex items-center gap-4 text-[11px] text-slate-400 mt-1">
+            <div className="flex items-center gap-4 text-[11px] text-[#64748B] mt-1">
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-400" /> Total</span>
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" /> Pro</span>
             </div>
@@ -231,10 +231,10 @@ export default function AdminVisaoGeralPage() {
         </Card>
 
         {/* Distribuição — 40% */}
-        <Card className="bg-slate-900 border-slate-700/60 lg:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-              <Users className="h-4 w-4 text-emerald-400" />
+            <CardTitle className="text-sm font-semibold text-[#0F172A] flex items-center gap-2">
+              <Users className="h-4 w-4 text-emerald-500" />
               Distribuição de planos
             </CardTitle>
           </CardHeader>
@@ -253,9 +253,9 @@ export default function AdminVisaoGeralPage() {
 
         if (data.app.taxa_inadimplencia > 10) {
           alertas.push(
-            <div key="inadimp" className="flex items-start gap-3 rounded-lg border border-amber-700/50 bg-amber-950/40 px-4 py-3">
-              <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-300">
+            <div key="inadimp" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+              <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-amber-700">
                 Taxa de inadimplência em <strong>{data.app.taxa_inadimplencia}%</strong> este mês.
               </p>
             </div>
@@ -263,27 +263,27 @@ export default function AdminVisaoGeralPage() {
         }
         if (data.users.churn_mes > 5) {
           alertas.push(
-            <div key="churn" className="flex items-start gap-3 rounded-lg border border-red-700/50 bg-red-950/40 px-4 py-3">
-              <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-300">
+            <div key="churn" className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+              <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">
                 <strong>{data.users.churn_mes}</strong> usuários fizeram downgrade este mês.
               </p>
             </div>
           )
         }
         alertas.push(
-          <div key="novos" className="flex items-start gap-3 rounded-lg border border-blue-700/50 bg-blue-950/40 px-4 py-3">
-            <Info className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
-            <p className="text-sm text-blue-300">
+          <div key="novos" className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+            <p className="text-sm text-blue-700">
               <strong>{data.users.novos_semana}</strong> novos cadastros nos últimos 7 dias.
             </p>
           </div>
         )
         if (alertas.length === 1) {
           alertas.unshift(
-            <div key="ok" className="flex items-start gap-3 rounded-lg border border-emerald-700/50 bg-emerald-950/40 px-4 py-3">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
-              <p className="text-sm text-emerald-300">Tudo dentro do esperado — sem alertas críticos.</p>
+            <div key="ok" className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-emerald-700">Tudo dentro do esperado — sem alertas críticos.</p>
             </div>
           )
         }
@@ -296,9 +296,9 @@ export default function AdminVisaoGeralPage() {
       )}
 
       {/* ── Linha 4: Atividade recente ─────────────────────────────────────── */}
-      <Card className="bg-slate-900 border-slate-700/60">
+      <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-white">Atividade recente</CardTitle>
+          <CardTitle className="text-sm font-semibold text-[#0F172A]">Atividade recente</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           {loading ? (
@@ -306,30 +306,30 @@ export default function AdminVisaoGeralPage() {
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : !data?.recent_activity.length ? (
-            <div className="py-10 text-center text-sm text-slate-500">
-              Nenhum evento registrado. Aplique a migration <code className="text-slate-400">20260416_add_activity_logs.sql</code> e configure os hooks de log.
+            <div className="py-10 text-center text-sm text-[#64748B]">
+              Nenhum evento registrado. Aplique a migration <code className="text-[#475569]">20260416_add_activity_logs.sql</code> e configure os hooks de log.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-700/60">
+                  <tr className="border-b border-[#E2E8F0]">
                     {['Usuário', 'Ação', 'Detalhes', 'Data/hora'].map(col => (
-                      <th key={col} className="text-left py-2 px-3 text-slate-500 font-semibold uppercase tracking-wide text-[10px]">{col}</th>
+                      <th key={col} className="text-left py-2 px-3 text-[#94A3B8] font-semibold uppercase tracking-wide text-[10px]">{col}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-[#E2E8F0]">
                   {data.recent_activity.map(ev => (
-                    <tr key={ev.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-2.5 px-3 text-slate-300 truncate max-w-[160px]">{ev.user_email ?? '—'}</td>
-                      <td className="py-2.5 px-3 text-white font-medium">{ev.action}</td>
-                      <td className="py-2.5 px-3 text-slate-400 truncate max-w-[240px]">
+                    <tr key={ev.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3 text-[#475569] truncate max-w-[160px]">{ev.user_email ?? '—'}</td>
+                      <td className="py-2.5 px-3 text-[#0F172A] font-medium">{ev.action}</td>
+                      <td className="py-2.5 px-3 text-[#64748B] truncate max-w-[240px]">
                         {typeof ev.details === 'object' && ev.details !== null
                           ? JSON.stringify(ev.details)
                           : String(ev.details ?? '—')}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-500 whitespace-nowrap">{fmtDt(ev.created_at)}</td>
+                      <td className="py-2.5 px-3 text-[#94A3B8] whitespace-nowrap">{fmtDt(ev.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>

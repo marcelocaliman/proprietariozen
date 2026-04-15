@@ -10,7 +10,7 @@ export default async function ConfiguracoesPage() {
   const [{ data: profile }, { count: qtdImoveis }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('nome, email, telefone, plano, criado_em, asaas_account_id, asaas_account_status')
+      .select('nome, email, telefone, plano, role, criado_em, asaas_account_id, asaas_account_status')
       .eq('id', user.id)
       .single(),
 
@@ -28,6 +28,11 @@ export default async function ConfiguracoesPage() {
   const notificacoesConfig: NotificacoesConfig = {
     ...NOTIFICACOES_PADRAO,
     ...((user.user_metadata?.notificacoes_config as Partial<NotificacoesConfig>) ?? {}),
+  }
+
+  // Admin sempre tem acesso Pro
+  if (profile && profile.role === 'admin') {
+    (profile as typeof profile & { plano: 'pago' }).plano = 'pago'
   }
 
   const profileData = profile ?? {

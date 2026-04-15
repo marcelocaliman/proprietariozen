@@ -8,11 +8,11 @@ export default async function PlanosPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plano')
+    .select('plano, role')
     .eq('id', user.id)
     .single()
 
-  const plano = (profile?.plano ?? 'gratis') as 'gratis' | 'pago'
+  const plano = (profile?.role === 'admin' || profile?.plano === 'pago' ? 'pago' : 'gratis') as 'gratis' | 'pago'
 
   return <PlanosClient planoAtual={plano} />
 }

@@ -17,10 +17,10 @@ type TipProps = { active?: boolean; payload?: { value?: number }[]; label?: stri
 function CustomTooltip({ active, payload, label }: TipProps) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs shadow-xl">
-      <p className="font-semibold text-slate-300 mb-1">{label}</p>
-      <p className="text-blue-400">Total: <span className="font-bold text-white">{payload[0]?.value}</span></p>
-      <p className="text-amber-400">Pro: <span className="font-bold text-white">{payload[1]?.value}</span></p>
+    <div className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold text-[#475569] mb-1">{label}</p>
+      <p className="text-blue-600">Total: <span className="font-bold text-[#0F172A]">{payload[0]?.value}</span></p>
+      <p className="text-amber-600">Pro: <span className="font-bold text-[#0F172A]">{payload[1]?.value}</span></p>
     </div>
   )
 }
@@ -47,7 +47,7 @@ export function UserGrowthChart({ data }: { data: GrowthPoint[] }) {
             <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis
           dataKey="label"
           tick={{ fill: '#64748b', fontSize: 10 }}

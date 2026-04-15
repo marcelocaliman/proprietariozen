@@ -17,12 +17,12 @@ export default async function ImoveisPage() {
 
     supabase
       .from('profiles')
-      .select('plano')
+      .select('plano, role')
       .eq('id', user.id)
       .single(),
   ])
 
-  const plano = (profile?.plano ?? 'gratis') as 'gratis' | 'pago'
+  const plano = (profile?.role === 'admin' || profile?.plano === 'pago' ? 'pago' : 'gratis') as 'gratis' | 'pago'
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

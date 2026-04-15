@@ -25,13 +25,13 @@ function CustomTooltip({ active, payload, label }: TipProps) {
   const liquido = payload.find(p => p.dataKey === 'mrr_liquido')?.value ?? 0
   const churn   = payload.find(p => p.dataKey === 'churn_valor')?.value ?? 0
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs shadow-xl space-y-1">
-      <p className="font-semibold text-slate-300 mb-1.5">{label}</p>
-      <p className="text-emerald-400">MRR: <span className="font-bold text-white">{fmt(Number(bruto))}</span></p>
+    <div className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-xs shadow-lg space-y-1">
+      <p className="font-semibold text-[#475569] mb-1.5">{label}</p>
+      <p className="text-emerald-600">MRR: <span className="font-bold text-[#0F172A]">{fmt(Number(bruto))}</span></p>
       {Number(churn) > 0 && (
-        <p className="text-red-400">Churn: <span className="font-bold text-white">-{fmt(Number(churn))}</span></p>
+        <p className="text-red-600">Churn: <span className="font-bold text-[#0F172A]">-{fmt(Number(churn))}</span></p>
       )}
-      <p className="text-amber-400">Líquido: <span className="font-bold text-white">{fmt(Number(liquido))}</span></p>
+      <p className="text-amber-600">Líquido: <span className="font-bold text-[#0F172A]">{fmt(Number(liquido))}</span></p>
     </div>
   )
 }
@@ -40,7 +40,7 @@ export function MrrChart({ data }: { data: MrrMonth[] }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis
           dataKey="mes_label"
           tick={{ fill: '#64748b', fontSize: 11 }}

@@ -15,7 +15,6 @@ export default async function AdminLayout({
 
   if (!user) redirect('/login')
 
-  // Dupla verificação no layout (middleware já bloqueia, mas defense-in-depth)
   const ok = await isAdmin(user.id)
   if (!ok) redirect('/dashboard?acesso=negado')
 
@@ -29,17 +28,17 @@ export default async function AdminLayout({
   const email = profile?.email ?? user.email ?? ''
 
   return (
-    <div className="flex h-screen bg-[#0F172A]">
+    <div className="flex h-screen bg-background">
       {/* Sidebar desktop */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-slate-700/60">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-sidebar-border">
         <AdminSidebar adminNome={nome} adminEmail={email} />
       </aside>
 
       {/* Área principal */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header mobile */}
-        <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-700/60 bg-[#0F172A]">
-          <span className="text-white font-bold">PropZen</span>
+        <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-sidebar-border bg-sidebar">
+          <span className="text-white font-bold text-sm">PropZen</span>
           <span className="inline-flex items-center rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white tracking-wide">
             ADMIN
           </span>
