@@ -29,8 +29,7 @@ export const metadata: Metadata = {
     apple: [{ url: '/icons/icon.svg', sizes: '180x180' }],
     icon: [
       { url: '/icons/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '48x48' },
     ],
   },
 }
@@ -48,9 +47,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for analytics */}
         <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-        {/* Favicon PNG fallbacks */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        {/* Favicon — SVG para browsers modernos, ICO como fallback */}
+        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon.svg" />
         <link rel="manifest" href="/site.webmanifest" />
         {/* Preload hero visual — replace /hero-mockup.webp with your actual LCP image path */}

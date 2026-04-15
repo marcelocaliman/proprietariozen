@@ -59,10 +59,10 @@ export function LogoColor({ iconSize = 36, href, className = '' }: LogoProps) {
   const fontSize = Math.round(iconSize * 0.595)
 
   const mark = (
-    <span className={`inline-flex items-center gap-2.5 ${className}`} aria-label="PropZen">
+    <span className={`inline-flex items-center gap-2.5 ${className}`} aria-label="ProprietárioZen">
       <SmileMark s={iconSize} variant="color" />
       <span className="font-extrabold leading-none tracking-tight" style={{ fontSize }}>
-        <span style={{ color: '#111827' }}>Prop</span>
+        <span style={{ color: '#111827' }}>Proprietário</span>
         <span style={{ color: LOGO_GREEN }}>Zen</span>
       </span>
     </span>
@@ -70,7 +70,7 @@ export function LogoColor({ iconSize = 36, href, className = '' }: LogoProps) {
 
   if (href) {
     return (
-      <Link href={href} aria-label="PropZen — página inicial">
+      <Link href={href} aria-label="ProprietárioZen — página inicial">
         {mark}
       </Link>
     )
@@ -84,20 +84,20 @@ export function LogoWhite({ iconSize = 36, href, className = '' }: LogoProps) {
   const fontSize = Math.round(iconSize * 0.595)
 
   const mark = (
-    <span className={`inline-flex items-center gap-2.5 ${className}`} aria-label="PropZen">
+    <span className={`inline-flex items-center gap-2.5 ${className}`} aria-label="ProprietárioZen">
       <SmileMark s={iconSize} variant="white" />
       <span
         className="font-extrabold leading-none tracking-tight text-white"
         style={{ fontSize }}
       >
-        PropZen
+        ProprietárioZen
       </span>
     </span>
   )
 
   if (href) {
     return (
-      <Link href={href} aria-label="PropZen — página inicial">
+      <Link href={href} aria-label="ProprietárioZen — página inicial">
         {mark}
       </Link>
     )
