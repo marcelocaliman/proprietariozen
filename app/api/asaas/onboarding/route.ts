@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   // 2. Validação dos campos obrigatórios
   const body = await req.json()
-  const required = ['name', 'email', 'cpfCnpj', 'mobilePhone', 'address', 'addressNumber', 'province', 'postalCode']
+  const required = ['name', 'email', 'cpfCnpj', 'mobilePhone', 'address', 'addressNumber', 'province', 'postalCode', 'birthDate']
   const missing = required.filter(f => !body[f])
   if (missing.length > 0) {
     return NextResponse.json({ error: `Campos obrigatórios ausentes: ${missing.join(', ')}` }, { status: 422 })
@@ -64,7 +64,9 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.ASAAS_API_KEY_ROOT
   const baseUrl = process.env.ASAAS_BASE_URL ?? 'https://sandbox.asaas.com/api/v3'
-  if (!apiKey) return NextResponse.json({ error: 'Integração Asaas não configurada.' }, { status: 503 })
+  if (!apiKey) return NextResponse.json({
+    error: 'Variável de ambiente ASAAS_API_KEY_ROOT não configurada no servidor. Adicione-a nas variáveis de ambiente do Vercel.',
+  }, { status: 503 })
 
   // 3. Criar subconta no Asaas
   let asaasRes: Response

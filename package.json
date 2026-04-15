@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "testar-asaas": "tsx scripts/testar-asaas.ts"
+    "testar-asaas": "tsx scripts/testar-asaas.ts",
+    "testar-onboarding": "tsx scripts/testar-onboarding.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
