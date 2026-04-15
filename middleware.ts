@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const rotasPublicas = ['/', '/login', '/cadastro', '/recuperar-senha', '/sucesso', '/cancelado', '/planos', '/api/auth']
+const rotasPublicas = ['/', '/login', '/cadastro', '/recuperar-senha', '/sucesso', '/cancelado', '/planos', '/bloqueado', '/api/auth']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -31,6 +31,21 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const isPublica = rotasPublicas.some(r => pathname.startsWith(r))
+
+  // ── Bloqueio de usuários banidos ─────────────────────────────────────────
+  if (user && pathname !== '/bloqueado' && !pathname.startsWith('/api/') && !pathname.startsWith('/admin')) {
+    const { data: profileBan } = await supabase
+      .from('profiles')
+      .select('banned')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profileBan?.banned === true) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/bloqueado'
+      return NextResponse.redirect(url)
+    }
+  }
 
   // ── Proteção /admin/* ─────────────────────────────────────────────────────
   if (pathname.startsWith('/admin')) {

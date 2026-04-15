@@ -17,6 +17,10 @@ export type Database = {
           asaas_api_key_enc: string | null
           asaas_wallet_id: string | null
           asaas_customer_id: string | null
+          banned: boolean
+          banned_at: string | null
+          banned_reason: string | null
+          banned_by: string | null
         }
         Insert: {
           id: string
@@ -31,6 +35,10 @@ export type Database = {
           asaas_api_key_enc?: string | null
           asaas_wallet_id?: string | null
           asaas_customer_id?: string | null
+          banned?: boolean
+          banned_at?: string | null
+          banned_reason?: string | null
+          banned_by?: string | null
         }
         Update: {
           nome?: string
@@ -44,6 +52,10 @@ export type Database = {
           asaas_api_key_enc?: string | null
           asaas_wallet_id?: string | null
           asaas_customer_id?: string | null
+          banned?: boolean
+          banned_at?: string | null
+          banned_reason?: string | null
+          banned_by?: string | null
         }
         Relationships: []
       }
