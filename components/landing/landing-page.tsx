@@ -689,7 +689,7 @@ export function LandingPage() {
             {[
               ['Produto', [['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#precos','Preços'],['/cadastro','Criar conta']]],
               ['Suporte', [['#','Central de ajuda'],['#','Fale conosco'],['#','Status do sistema']]],
-              ['Legal',   [['#','Termos de uso'],['#','Privacidade'],['#','LGPD']]],
+              ['Legal',   [['/termos-de-uso','Termos de uso'],['/politica-de-privacidade','Privacidade'],['/politica-de-privacidade#seus-direitos','LGPD']]],
             ].map(([col, links]) => (
               <div key={col as string}>
                 <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>{col}</p>
@@ -702,7 +702,11 @@ export function LandingPage() {
             ))}
           </div>
           <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2025 ProprietárioZen. Todos os direitos reservados.</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2025 ProprietárioZen. Todos os direitos reservados.</p>
+              <a href="/termos-de-uso" className="text-xs transition-colors hover:text-[#10B981]" style={{ color: 'rgba(255,255,255,0.25)' }}>Termos de Uso</a>
+              <a href="/politica-de-privacidade" className="text-xs transition-colors hover:text-[#10B981]" style={{ color: 'rgba(255,255,255,0.25)' }}>Privacidade</a>
+            </div>
             <div className="flex gap-3">
               {[
                 ['Instagram', <svg key="ig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>],
