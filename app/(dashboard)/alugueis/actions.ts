@@ -115,6 +115,58 @@ export async function marcarComoPago(
 }
 
 // Marca recibo como gerado
+// Busca todos os dados necessários para geração do recibo PDF
+export async function buscarDetalhesAluguel(id: string): Promise<{
+  pagamento?: {
+    id: string; valor: number; mes_referencia: string
+    data_vencimento: string; data_pagamento: string | null
+    status: string; observacao: string | null
+    imovel: { apelido: string; endereco: string }
+    inquilino: { nome: string; cpf: string | null; email: string | null; telefone: string | null }
+  }
+  proprietario?: { nome: string; email: string; telefone: string | null }
+  error?: string
+}> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const [{ data: aluguel }, { data: profile }] = await Promise.all([
+    supabase
+      .from('alugueis')
+      .select(`
+        id, valor, mes_referencia, data_vencimento, data_pagamento, status, observacao,
+        imovel:imoveis!inner(apelido, endereco, user_id),
+        inquilino:inquilinos(nome, cpf, email, telefone)
+      `)
+      .eq('id', id)
+      .eq('imovel.user_id', user.id)
+      .single(),
+    supabase.from('profiles').select('nome, email, telefone').eq('id', user.id).single(),
+  ])
+
+  if (!aluguel) return { error: 'Aluguel não encontrado' }
+  if (!profile) return { error: 'Perfil não encontrado' }
+
+  const imovel = Array.isArray(aluguel.imovel) ? aluguel.imovel[0] : aluguel.imovel
+  const inquilino = Array.isArray(aluguel.inquilino) ? aluguel.inquilino[0] : aluguel.inquilino
+
+  return {
+    pagamento: {
+      id: aluguel.id,
+      valor: aluguel.valor,
+      mes_referencia: aluguel.mes_referencia,
+      data_vencimento: aluguel.data_vencimento,
+      data_pagamento: aluguel.data_pagamento,
+      status: aluguel.status,
+      observacao: aluguel.observacao,
+      imovel: { apelido: imovel?.apelido ?? '', endereco: imovel?.endereco ?? '' },
+      inquilino: inquilino ?? { nome: 'Sem inquilino', cpf: null, email: null, telefone: null },
+    },
+    proprietario: profile as { nome: string; email: string; telefone: string | null },
+  }
+}
+
 export async function marcarReciboGerado(id: string): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -376,6 +376,8 @@ export function AlugueisClient({
       const result = await marcarReciboGerado(aluguel.id)
       if (result.error) toast.error(result.error)
       else toast.success('Recibo gerado!')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao gerar recibo PDF')
     } finally { setLoadingRecibo(null) }
   }
 
