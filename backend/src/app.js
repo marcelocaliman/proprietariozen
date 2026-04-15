@@ -1,0 +1,46 @@
+'use strict'
+
+require('dotenv').config()
+const express = require('express')
+const mongoose = require('mongoose')
+
+const asaasRoutes = require('./routes/asaas')
+const webhookRoutes = require('./routes/webhooks')
+
+const app = express()
+
+// ── Body parsing ──────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true }))
+
+// ── Rotas ─────────────────────────────────────────────────────────────────────
+app.use('/api/asaas', asaasRoutes)
+app.use('/api/webhooks', webhookRoutes)
+
+app.get('/health', (_req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }))
+
+// ── Tratamento de erros global ────────────────────────────────────────────────
+app.use((err, _req, res, _next) => {
+  console.error('[Express] Erro não tratado:', err.message)
+  res.status(500).json({ error: 'Erro interno do servidor.' })
+})
+
+// ── Inicialização ─────────────────────────────────────────────────────────────
+async function start() {
+  await mongoose.connect(process.env.MONGODB_URI)
+  console.info('[MongoDB] Conectado.')
+
+  const PORT = process.env.PORT || 3001
+  app.listen(PORT, () => {
+    console.info(`[Server] Rodando na porta ${PORT} (${process.env.NODE_ENV})`)
+  })
+}
+
+if (require.main === module) {
+  start().catch(err => {
+    console.error('[Server] Falha ao iniciar:', err)
+    process.exit(1)
+  })
+}
+
+module.exports = app
