@@ -186,11 +186,13 @@ export default async function DashboardPage({
       .eq('mes_referencia', mesPrev)
       .eq('imovel.user_id', user.id) as unknown as Promise<{ data: AluguelTotais[] | null; error: unknown }>,
 
-    // Lista detalhada do mês selecionado
+    // Lista detalhada do mês selecionado (exclui cancelados/estornados)
     supabase.from('alugueis')
       .select('id, valor, status, data_vencimento, data_pagamento, imovel:imoveis!inner(apelido, user_id), inquilino:inquilinos(nome)')
       .eq('mes_referencia', mesAtual)
       .eq('imovel.user_id', user.id)
+      .neq('status', 'cancelado')
+      .neq('status', 'estornado')
       .order('data_vencimento', { ascending: true })
       .limit(8) as unknown as Promise<{ data: AluguelLista[] | null; error: unknown }>,
 
