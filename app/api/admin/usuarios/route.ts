@@ -59,9 +59,9 @@ export async function GET(req: NextRequest) {
   const allIds = profiles.map(p => p.id)
 
   // ── 2. Contar imóveis, inquilinos e aluguéis (via imoveis) ───────────────
-  let imoveisMap: Record<string, number> = {}
-  let inquilinosMap: Record<string, number> = {}
-  let alugueisMesMap: Record<string, number> = {}
+  const imoveisMap: Record<string, number> = {}
+  const inquilinosMap: Record<string, number> = {}
+  const alugueisMesMap: Record<string, number> = {}
 
   if (allIds.length > 0) {
     const inicioMes = new Date()

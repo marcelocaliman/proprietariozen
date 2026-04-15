@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Building2, Users, Ban, RefreshCw, KeyRound,
+  Building2, Ban, RefreshCw, KeyRound,
   TrendingUp, Copy, CheckCircle2, AlertTriangle, ShieldOff,
 } from 'lucide-react'
 import {

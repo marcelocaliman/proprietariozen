@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 
   // ── 3. Contar inquilinos ativos por imóvel ─────────────────────────────
   const imovelIds = imoveis.map(im => im.id)
-  let inquilinosMap: Record<string, number> = {}
+  const inquilinosMap: Record<string, number> = {}
   if (imovelIds.length > 0) {
     const { data: inq } = await admin
       .from('inquilinos')
