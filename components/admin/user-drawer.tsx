@@ -488,10 +488,7 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                 </div>
               ) : !detail?.recent_activity.length ? (
                 <div className="py-12 text-center">
-                  <p className="text-sm text-[#94A3B8]">Nenhum log encontrado.</p>
-                  <p className="text-xs text-[#CBD5E1] mt-1">
-                    Aplique a migration <code>20260416_add_activity_logs.sql</code>
-                  </p>
+                  <p className="text-sm text-[#94A3B8]">Nenhum evento registrado ainda.</p>
                 </div>
               ) : (
                 <div className="space-y-2">

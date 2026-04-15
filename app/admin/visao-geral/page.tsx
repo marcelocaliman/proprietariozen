@@ -306,8 +306,8 @@ export default function AdminVisaoGeralPage() {
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : !data?.recent_activity.length ? (
-            <div className="py-10 text-center text-sm text-[#64748B]">
-              Nenhum evento registrado. Aplique a migration <code className="text-[#475569]">20260416_add_activity_logs.sql</code> e configure os hooks de log.
+            <div className="py-10 text-center text-sm text-[#94A3B8]">
+              Nenhum evento registrado ainda.
             </div>
           ) : (
             <div className="overflow-x-auto">
