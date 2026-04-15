@@ -27,20 +27,29 @@ export type AluguelItem = {
   valor: number
   data_vencimento: string
   data_pagamento: string | null
-  status: 'pendente' | 'pago' | 'atrasado'
+  status: 'pendente' | 'pago' | 'atrasado' | 'cancelado' | 'estornado'
   mes_referencia: string
   observacao: string | null
   recibo_gerado: boolean
   imovel: { apelido: string; endereco: string } | null
   inquilino: { nome: string; cpf: string | null; email: string | null; telefone: string | null } | null
+  // Campos Asaas (preenchidos quando billing_mode = AUTOMATIC)
+  asaas_charge_id: string | null
+  asaas_pix_qrcode: string | null
+  asaas_pix_copiaecola: string | null
+  asaas_boleto_url: string | null
+  valor_pago: number | null
+  metodo_pagamento: string | null
 }
 
 type Profile = { nome: string; email: string; telefone: string | null }
 
 const STATUS_CONFIG = {
-  pago:     { label: 'Pago',     icon: CheckCircle2,  badgeCls: 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5]' },
-  pendente: { label: 'Pendente', icon: Clock,          badgeCls: 'bg-[#FEF3C7] text-[#92400E] hover:bg-[#FEF3C7]' },
-  atrasado: { label: 'Atrasado', icon: AlertTriangle,  badgeCls: 'bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2]' },
+  pago:      { label: 'Pago',      icon: CheckCircle2,  badgeCls: 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5]' },
+  pendente:  { label: 'Pendente',  icon: Clock,          badgeCls: 'bg-[#FEF3C7] text-[#92400E] hover:bg-[#FEF3C7]' },
+  atrasado:  { label: 'Atrasado',  icon: AlertTriangle,  badgeCls: 'bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2]' },
+  cancelado: { label: 'Cancelado', icon: X,              badgeCls: 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#F1F5F9]' },
+  estornado: { label: 'Estornado', icon: AlertCircle,    badgeCls: 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#F1F5F9]' },
 }
 
 const CORES_AVATAR = [
@@ -169,7 +178,7 @@ export function AlugueisClient({
   // Filter state
   const [filterOpen, setFilterOpen] = useState(false)
   const filterRef = useRef<HTMLDivElement>(null)
-  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente' | 'atrasado'>('todos')
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente' | 'atrasado' | 'cancelado' | 'estornado'>('todos')
   const [filtroImovel, setFiltroImovel] = useState<string>('todos')
 
   // Pagination state
@@ -342,7 +351,7 @@ export function AlugueisClient({
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1.5">Status</p>
                   <div className="flex flex-col gap-0.5">
-                    {(['todos', 'pago', 'pendente', 'atrasado'] as const).map(s => (
+                    {(['todos', 'pago', 'pendente', 'atrasado', 'cancelado', 'estornado'] as const).map(s => (
                       <button
                         key={s}
                         onClick={() => setFiltroStatus(s)}
@@ -506,6 +515,7 @@ export function AlugueisClient({
                 const nomeInq = aluguel.inquilino?.nome ?? 'Sem inquilino'
                 const iniciais = nomeInq.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
                 const isPago = aluguel.status === 'pago'
+                const isFinalizado = aluguel.status === 'cancelado' || aluguel.status === 'estornado'
                 const isSelected = selecionados.has(aluguel.id)
 
                 return (
@@ -569,7 +579,10 @@ export function AlugueisClient({
                     <div className="mb-2 md:mb-0">
                       <span className={cn(
                         'text-sm font-bold',
-                        isPago ? 'text-emerald-600' : aluguel.status === 'atrasado' ? 'text-red-600' : 'text-slate-700',
+                        isPago ? 'text-emerald-600'
+                          : aluguel.status === 'atrasado' ? 'text-red-600'
+                          : isFinalizado ? 'text-slate-400 line-through'
+                          : 'text-slate-700',
                       )}>
                         {formatarMoeda(aluguel.valor)}
                       </span>
@@ -594,6 +607,11 @@ export function AlugueisClient({
                                 {aluguel.recibo_gerado ? 'Ver recibo' : 'Gerar recibo'}
                               </DropdownMenuItem>
                             </>
+                          ) : isFinalizado ? (
+                            <DropdownMenuItem disabled>
+                              <AlertCircle className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                              {aluguel.status === 'cancelado' ? 'Cobrança cancelada' : 'Cobrança estornada'}
+                            </DropdownMenuItem>
                           ) : (
                             <>
                               <DropdownMenuItem onSelect={() => handlePagar(aluguel)}>

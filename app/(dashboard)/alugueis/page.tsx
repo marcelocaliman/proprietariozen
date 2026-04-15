@@ -29,6 +29,8 @@ export default async function AlugueisPage({
       .select(`
         id, valor, data_vencimento, data_pagamento, status,
         mes_referencia, observacao, recibo_gerado,
+        asaas_charge_id, asaas_pix_qrcode, asaas_pix_copiaecola,
+        asaas_boleto_url, valor_pago, metodo_pagamento,
         imovel:imoveis!inner(apelido, endereco, user_id),
         inquilino:inquilinos(nome, cpf, email, telefone)
       `)
