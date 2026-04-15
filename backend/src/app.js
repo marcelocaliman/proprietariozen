@@ -6,6 +6,8 @@ const mongoose = require('mongoose')
 
 const asaasRoutes = require('./routes/asaas')
 const webhookRoutes = require('./routes/webhooks')
+const chargesRoutes = require('./routes/charges')
+const { startChargeScheduler } = require('./jobs/chargeScheduler')
 
 const app = express()
 
@@ -16,6 +18,7 @@ app.use(express.urlencoded({ extended: true }))
 // ── Rotas ─────────────────────────────────────────────────────────────────────
 app.use('/api/asaas', asaasRoutes)
 app.use('/api/webhooks', webhookRoutes)
+app.use('/api/charges', chargesRoutes)
 
 app.get('/health', (_req, res) => res.json({ status: 'ok', env: process.env.NODE_ENV }))
 
@@ -29,6 +32,10 @@ app.use((err, _req, res, _next) => {
 async function start() {
   await mongoose.connect(process.env.MONGODB_URI)
   console.info('[MongoDB] Conectado.')
+
+  if (process.env.NODE_ENV !== 'test') {
+    startChargeScheduler()
+  }
 
   const PORT = process.env.PORT || 3001
   app.listen(PORT, () => {

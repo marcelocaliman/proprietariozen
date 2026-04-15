@@ -126,6 +126,31 @@ async function getPixQrCode(userId, chargeId) {
   return response.data
 }
 
+/**
+ * Cria uma assinatura recorrente mensal na subconta do proprietário.
+ *
+ * @param {string} userId
+ * @param {Object} subscriptionData
+ * @param {string} subscriptionData.customer     ID do cliente no Asaas
+ * @param {number} subscriptionData.value
+ * @param {string} subscriptionData.nextDueDate  YYYY-MM-DD
+ * @param {string} [subscriptionData.description]
+ * @param {string} [subscriptionData.externalReference]
+ * @param {Object} [subscriptionData.fine]
+ * @param {Object} [subscriptionData.interest]
+ * @param {Object} [subscriptionData.discount]
+ * @returns {Promise<Object>}
+ */
+async function createSubscription(userId, subscriptionData) {
+  const client = await getSubClient(userId)
+  const response = await client.post('/subscriptions', {
+    billingType: 'UNDEFINED',
+    cycle: 'MONTHLY',
+    ...subscriptionData,
+  })
+  return response.data
+}
+
 module.exports = {
   createCharge,
   getCharge,
@@ -133,4 +158,5 @@ module.exports = {
   cancelCharge,
   upsertCustomer,
   getPixQrCode,
+  createSubscription,
 }
