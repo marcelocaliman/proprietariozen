@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   // 2. Validação dos campos obrigatórios
   const body = await req.json()
-  const required = ['name', 'email', 'cpfCnpj', 'mobilePhone', 'address', 'addressNumber', 'province', 'postalCode', 'birthDate']
+  const required = ['name', 'email', 'cpfCnpj', 'mobilePhone', 'address', 'addressNumber', 'province', 'postalCode', 'birthDate', 'incomeValue']
   const missing = required.filter(f => !body[f])
   if (missing.length > 0) {
     return NextResponse.json({ error: `Campos obrigatórios ausentes: ${missing.join(', ')}` }, { status: 422 })
@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
         province:      body.province,
         postalCode:    body.postalCode,
         companyType:   body.companyType ?? undefined,
+        incomeValue:   Number(body.incomeValue),
       }),
     })
   } catch (err) {

@@ -64,6 +64,7 @@ const schema = z.object({
   addressNumber: z.string().min(1, 'Número obrigatório'),
   province:      z.string().min(2, 'Bairro obrigatório'),
   birthDate:     z.string().min(1, 'Data de nascimento obrigatória'),
+  incomeValue:   z.string().min(1, 'Renda mensal obrigatória'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -275,6 +276,13 @@ export function AbaAsaas({
                 <Input id="as-birth" type="date" {...register('birthDate')} />
                 {errors.birthDate && <p className="text-destructive text-xs">{errors.birthDate.message}</p>}
               </div>
+            </div>
+
+            {/* Renda */}
+            <div className="space-y-1.5">
+              <Label htmlFor="as-income" className="text-xs">Renda / faturamento mensal (R$)</Label>
+              <Input id="as-income" type="number" min="0" step="0.01" placeholder="3000.00" {...register('incomeValue')} />
+              {errors.incomeValue && <p className="text-destructive text-xs">{errors.incomeValue.message}</p>}
             </div>
 
             {/* Endereço */}
