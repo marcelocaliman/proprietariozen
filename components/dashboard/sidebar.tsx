@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Building2, Users, Receipt,
-  Settings, LogOut, Star, ChevronRight,
+  Settings, LogOut, Star, ChevronRight, Shield,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -127,6 +127,18 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
             <p className="text-xs text-sidebar-foreground/70 truncate">{profile?.email}</p>
           </div>
         </div>
+        {/* Link Admin — visível apenas para role = 'admin' */}
+        {profile?.role === 'admin' && (
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-red-400 hover:bg-sidebar-accent/40 transition-colors"
+          >
+            <Shield className="h-3.5 w-3.5" />
+            Painel Admin
+          </Link>
+        )}
+
         <Button
           variant="ghost"
           size="sm"

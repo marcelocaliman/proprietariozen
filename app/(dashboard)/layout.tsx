@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
+import { UnauthorizedToast } from '@/components/dashboard/unauthorized-toast'
 import type { Profile } from '@/types'
 import { LogoColor } from '@/components/ui/logo'
 
@@ -35,6 +37,11 @@ export default async function DashboardLayout({
           <MobileNav profile={profile as Profile | null} />
           <LogoColor iconSize={28} href="/dashboard" />
         </header>
+
+        {/* Toast de acesso negado (vindo de /admin/* sem permissão) */}
+        <Suspense>
+          <UnauthorizedToast />
+        </Suspense>
 
         {/* Conteúdo */}
         <main className="flex-1 overflow-y-auto p-6">

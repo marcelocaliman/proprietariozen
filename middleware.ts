@@ -32,6 +32,35 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isPublica = rotasPublicas.some(r => pathname.startsWith(r))
 
+  // ── Proteção /admin/* ─────────────────────────────────────────────────────
+  if (pathname.startsWith('/admin')) {
+    // Não autenticado → login
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+
+    // Verificar role = 'admin' no banco (RLS permite ler o próprio perfil)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profile?.role !== 'admin') {
+      // Autenticado mas não é admin → redireciona para /dashboard com flag
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      url.searchParams.set('acesso', 'negado')
+      return NextResponse.redirect(url)
+    }
+
+    return supabaseResponse
+  }
+
+  // ── Proteção geral ────────────────────────────────────────────────────────
+
   // Redireciona para /login se não autenticado e não está em rota pública
   if (!user && !isPublica) {
     const url = request.nextUrl.clone()

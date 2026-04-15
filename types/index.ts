@@ -62,6 +62,7 @@ export type Profile = {
   email: string
   telefone: string | null
   plano: 'gratis' | 'pago'
+  role: 'user' | 'admin'
   stripe_customer_id: string | null
   criado_em: string
   atualizado_em: string
