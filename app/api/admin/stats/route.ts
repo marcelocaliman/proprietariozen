@@ -39,6 +39,8 @@ export async function GET() {
   const inicioMesAtual = new Date(agora.getFullYear(), agora.getMonth(), 1)
   const inicioMesAnterior = new Date(agora.getFullYear(), agora.getMonth() - 1, 1)
   const fimMesAnterior = new Date(agora.getFullYear(), agora.getMonth(), 0, 23, 59, 59)
+  // String YYYY-MM-01 construída sem Date.toISOString() para evitar bug de timezone
+  const mesAtualStr = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`
 
   // ── activity_logs — graceful fallback se a tabela ainda não existir ──────────
   let activityData: ActivityRow[] = []
@@ -66,14 +68,16 @@ export async function GET() {
     admin.from('inquilinos').select('*', { count: 'exact', head: true }).eq('ativo', true),
     admin.from('alugueis')
       .select('*', { count: 'exact', head: true })
-      .gte('mes_referencia', inicioMesAtual.toISOString().slice(0, 10)),
+      .eq('mes_referencia', mesAtualStr)
+      .neq('status', 'cancelado')
+      .neq('status', 'estornado'),
     admin.from('alugueis')
       .select('*', { count: 'exact', head: true })
-      .gte('mes_referencia', inicioMesAtual.toISOString().slice(0, 10))
+      .eq('mes_referencia', mesAtualStr)
       .eq('status', 'atrasado'),
     admin.from('alugueis')
       .select('valor')
-      .gte('mes_referencia', inicioMesAtual.toISOString().slice(0, 10))
+      .eq('mes_referencia', mesAtualStr)
       .eq('status', 'pago'),
   ])
 

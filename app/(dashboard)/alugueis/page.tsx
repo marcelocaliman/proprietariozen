@@ -12,14 +12,16 @@ export default async function AlugueisPage({
   if (!user) return null
 
   const hoje = new Date()
-  const mesParam =
-    searchParams.mes ??
-    `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`
+  const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`
+  const mesParam = searchParams.mes ?? mesAtual
   const mesReferencia = `${mesParam}-01`
+
+  // Não gera registros para meses futuros (evita poluir o banco e as métricas admin)
+  const isMesAtualOuPassado = mesParam <= mesAtual
 
   // Gera registros faltantes + atualiza atrasados em paralelo
   await Promise.all([
-    gerarAlugueisMes(mesReferencia),
+    isMesAtualOuPassado ? gerarAlugueisMes(mesReferencia) : Promise.resolve({ criados: 0 }),
     atualizarStatusAtrasados(),
   ])
 

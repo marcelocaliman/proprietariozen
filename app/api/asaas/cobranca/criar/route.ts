@@ -194,8 +194,14 @@ export async function POST(req: NextRequest) {
     .eq('id', aluguelId)
 
   if (dbErr) {
-    console.error('[Asaas] CRÍTICO: cobrança criada mas falhou ao salvar:', dbErr.message)
-    return NextResponse.json({ error: 'Cobrança criada mas falhou ao salvar no banco' }, { status: 500 })
+    console.error('[Asaas] CRÍTICO: cobrança criada mas falhou ao salvar:', {
+      chargeId: charge.id, aluguelId, error: dbErr.message,
+    })
+    // Retorna chargeId para permitir recuperação manual
+    return NextResponse.json({
+      error: 'Cobrança criada mas falhou ao salvar no banco',
+      chargeId: charge.id,
+    }, { status: 500 })
   }
 
   return NextResponse.json({

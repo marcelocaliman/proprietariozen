@@ -77,7 +77,8 @@ export async function atualizarStatusAtrasados(): Promise<void> {
 
   const { data: pendentes } = await supabase
     .from('alugueis')
-    .select('id')
+    .select('id, imovel:imoveis!inner(user_id)')
+    .eq('imovel.user_id', user.id)
     .eq('status', 'pendente')
     .lt('data_vencimento', hoje)
 

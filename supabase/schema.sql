@@ -82,7 +82,7 @@ create table public.alugueis (
   mes_referencia  date        not null,  -- sempre dia 1: ex. 2025-04-01
   valor           numeric(10,2) not null check (valor > 0),
   data_vencimento date        not null,
-  status          text        not null default 'pendente' check (status in ('pendente', 'pago', 'atrasado')),
+  status          text        not null default 'pendente' check (status in ('pendente', 'pago', 'atrasado', 'cancelado', 'estornado')),
   data_pagamento  date,
   observacao      text,
   recibo_gerado   boolean     not null default false,

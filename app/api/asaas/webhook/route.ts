@@ -101,10 +101,20 @@ export async function POST(req: NextRequest) {
       const account = body.account
       if (!account?.id) break
 
+      // Sanitize IDs: Asaas IDs são alfanuméricos + hífen/underscore apenas
+      const safeAccountId = account.id.replace(/[^a-zA-Z0-9_-]/g, '')
+      if (!safeAccountId) break
+
+      const conditions = [`asaas_account_id.eq.${safeAccountId}`]
+      if (account.walletId) {
+        const safeWalletId = account.walletId.replace(/[^a-zA-Z0-9_-]/g, '')
+        if (safeWalletId) conditions.push(`asaas_wallet_id.eq.${safeWalletId}`)
+      }
+
       await admin
         .from('profiles')
         .update({ asaas_account_status: account.status })
-        .or(`asaas_account_id.eq.${account.id}${account.walletId ? `,asaas_wallet_id.eq.${account.walletId}` : ''}`)
+        .or(conditions.join(','))
 
       break
     }
