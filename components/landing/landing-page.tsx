@@ -4,81 +4,74 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LogoColor, LogoWhite } from '@/components/ui/logo'
 
-// ─── App mockup SVG ──────────────────────────────────────────────────────────
+// ─── Browser + Dashboard Mockup ──────────────────────────────────────────────
 
-function AppMockup() {
+function DashboardMockup() {
   return (
-    <svg
-      width="300"
-      height="560"
-      viewBox="0 0 300 560"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-2xl"
+    <div
+      className="rounded-[12px] overflow-hidden border border-slate-200/80 w-full"
+      style={{ boxShadow: '0 25px 60px rgba(0,0,0,0.12)' }}
       role="img"
-      aria-label="Interface do app ProprietárioZen mostrando o painel de gestão de imóveis com recebimentos e inquilinos"
+      aria-label="Interface do dashboard ProprietárioZen mostrando painel de gestão de imóveis com recebimentos, pendências e inquilinos"
     >
-      <rect width="300" height="560" rx="32" fill="#1E293B" />
-      <rect x="6" y="6" width="288" height="548" rx="27" fill="#0F172A" />
-      <rect x="10" y="10" width="280" height="540" rx="24" fill="#F8FAFC" />
-      {/* Header */}
-      <rect x="10" y="10" width="280" height="54" rx="24" fill="#059669" />
-      <rect x="10" y="34" width="280" height="30" fill="#059669" />
-      <text x="30" y="42" fontFamily="Inter,sans-serif" fontSize="13" fontWeight="700" fill="white">Dashboard</text>
-      <text x="200" y="42" fontFamily="Inter,sans-serif" fontSize="10" fill="rgba(255,255,255,0.65)">Abril 2025</text>
-      {/* Notch */}
-      <rect x="105" y="10" width="90" height="20" rx="10" fill="#0F172A" />
-      {/* Stat cards */}
-      <rect x="18" y="72" width="124" height="66" rx="12" fill="white" />
-      <rect x="18" y="72" width="124" height="2" rx="1" fill="#D1FAE5" />
-      <text x="30" y="90" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8" fontWeight="600">RECEBIDO</text>
-      <text x="30" y="112" fontFamily="Inter,sans-serif" fontSize="17" fontWeight="700" fill="#0F172A">R$ 5.400</text>
-      <text x="30" y="128" fontFamily="Inter,sans-serif" fontSize="8" fill="#059669">↑ 3 pagamentos</text>
-      <rect x="154" y="72" width="128" height="66" rx="12" fill="white" />
-      <rect x="154" y="72" width="128" height="2" rx="1" fill="#FEF3C7" />
-      <text x="166" y="90" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8" fontWeight="600">PENDENTE</text>
-      <text x="166" y="112" fontFamily="Inter,sans-serif" fontSize="17" fontWeight="700" fill="#0F172A">R$ 1.800</text>
-      <text x="166" y="128" fontFamily="Inter,sans-serif" fontSize="8" fill="#F59E0B">1 aguardando</text>
-      <rect x="18" y="148" width="124" height="66" rx="12" fill="white" />
-      <text x="30" y="166" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8" fontWeight="600">EM ATRASO</text>
-      <text x="30" y="188" fontFamily="Inter,sans-serif" fontSize="17" fontWeight="700" fill="#EF4444">R$ 0</text>
-      <text x="30" y="204" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8">Tudo em dia ✓</text>
-      <rect x="154" y="148" width="128" height="66" rx="12" fill="white" />
-      <text x="166" y="166" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8" fontWeight="600">IMÓVEIS</text>
-      <text x="166" y="192" fontFamily="Inter,sans-serif" fontSize="22" fontWeight="700" fill="#0F172A">4</text>
-      <text x="166" y="206" fontFamily="Inter,sans-serif" fontSize="8" fill="#94A3B8">cadastrados</text>
-      {/* Section label */}
-      <text x="18" y="236" fontFamily="Inter,sans-serif" fontSize="8" fontWeight="600" fill="#94A3B8" letterSpacing="0.08em">REGISTROS DO MÊS</text>
-      {/* List items */}
-      {[
-        { y: 246, initials: 'MC', color: '#D1FAE5', textColor: '#059669', name: 'Maria Costa', sub: 'Apto 101', badge: 'Pago', badgeBg: '#D1FAE5', badgeText: '#065F46' },
-        { y: 306, initials: 'JS', color: '#FEF3C7', textColor: '#D97706', name: 'João Silva', sub: 'Casa 2', badge: 'Pendente', badgeBg: '#FEF3C7', badgeText: '#92400E' },
-        { y: 366, initials: 'AL', color: '#D1FAE5', textColor: '#059669', name: 'Ana Lima', sub: 'Apto 203', badge: 'Pago', badgeBg: '#D1FAE5', badgeText: '#065F46' },
-      ].map(({ y, initials, color, textColor, name, sub, badge, badgeBg, badgeText }) => (
-        <g key={y}>
-          <rect x="18" y={y} width="264" height="50" rx="10" fill="white" />
-          <circle cx="43" cy={y + 25} r="13" fill={color} />
-          <text x={initials.length === 2 ? 37 : 39} y={y + 29} fontFamily="Inter,sans-serif" fontSize="9" fontWeight="700" fill={textColor}>{initials}</text>
-          <text x="63" y={y + 18} fontFamily="Inter,sans-serif" fontSize="11" fontWeight="600" fill="#0F172A">{name}</text>
-          <text x="63" y={y + 33} fontFamily="Inter,sans-serif" fontSize="9" fill="#94A3B8">{sub}</text>
-          <rect x={badge === 'Pendente' ? 213 : 224} y={y + 16} width={badge === 'Pendente' ? 55 : 44} height="18" rx="9" fill={badgeBg} />
-          <text x={badge === 'Pendente' ? 219 : 230} y={y + 28} fontFamily="Inter,sans-serif" fontSize="8" fontWeight="600" fill={badgeText}>{badge}</text>
-        </g>
-      ))}
-      {/* Bottom nav */}
-      <rect x="10" y="492" width="280" height="58" rx="24" fill="white" />
-      {[
-        { x: 42, label: 'Dashboard', active: true },
-        { x: 102, label: 'Imóveis', active: false },
-        { x: 158, label: 'Inquilinos', active: false },
-        { x: 216, label: 'Aluguéis', active: false },
-      ].map(({ x, label, active }) => (
-        <g key={label}>
-          <circle cx={x + 10} cy={510} r="4" fill={active ? '#059669' : '#E2E8F0'} />
-          <text x={x} y={530} fontFamily="Inter,sans-serif" fontSize="7" fill={active ? '#059669' : '#94A3B8'} fontWeight={active ? '600' : '400'}>{label}</text>
-        </g>
-      ))}
-    </svg>
+      {/* Browser chrome */}
+      <div className="bg-[#F1F5F9] px-4 py-2.5 flex items-center gap-3 border-b border-slate-200">
+        <div className="flex gap-1.5 shrink-0" aria-hidden="true">
+          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+          <div className="w-3 h-3 rounded-full bg-[#28CA41]" />
+        </div>
+        <div className="flex-1 bg-white rounded-md px-3 py-1 text-[11px] text-slate-400 font-mono text-center border border-slate-200" aria-hidden="true">
+          proprietariozen.com.br
+        </div>
+      </div>
+      {/* Dashboard UI */}
+      <div className="bg-[#F8FAFC] p-4" aria-hidden="true">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Dashboard</p>
+            <p className="text-[14px] font-bold text-slate-900 leading-tight">Abril 2025</p>
+          </div>
+          <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center">
+            <span className="text-[9px] font-bold text-emerald-700">MC</span>
+          </div>
+        </div>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {[
+            { label: 'Recebido', value: 'R$ 7.200', sub: '↑ 3 pagos', subColor: '#059669', topColor: '#D1FAE5' },
+            { label: 'Pendente', value: 'R$ 1.800', sub: '1 aguardando', subColor: '#D97706', topColor: '#FEF3C7' },
+            { label: 'Imóveis',  value: '4',        sub: 'ativos',      subColor: '#0284C7', topColor: '#DBEAFE' },
+          ].map(({ label, value, sub, subColor, topColor }) => (
+            <div key={label} className="bg-white rounded-lg p-2.5 border border-slate-100 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-lg" style={{ background: topColor }} />
+              <p className="text-[8px] text-slate-400 font-semibold uppercase tracking-wide mb-1 mt-0.5">{label}</p>
+              <p className="text-[13px] font-bold text-slate-900 leading-none mb-1">{value}</p>
+              <p className="text-[8px] font-medium" style={{ color: subColor }}>{sub}</p>
+            </div>
+          ))}
+        </div>
+        {/* Recent list */}
+        <div className="bg-white rounded-lg border border-slate-100">
+          <p className="text-[8px] text-slate-400 font-semibold uppercase tracking-wider px-3 pt-2 pb-1.5">Registros do mês</p>
+          {[
+            { initials: 'MC', bg: '#D1FAE5', color: '#059669', name: 'Maria Costa',  sub: 'Apto 101 · R$ 2.400', badge: 'Pago',    badgeBg: '#D1FAE5', badgeColor: '#065F46' },
+            { initials: 'JS', bg: '#FEF3C7', color: '#D97706', name: 'João Silva',   sub: 'Casa 2 · R$ 3.200',   badge: 'Pendente', badgeBg: '#FEF3C7', badgeColor: '#92400E' },
+            { initials: 'AL', bg: '#D1FAE5', color: '#059669', name: 'Ana Lima',     sub: 'Apto 203 · R$ 1.600', badge: 'Pago',    badgeBg: '#D1FAE5', badgeColor: '#065F46' },
+          ].map(({ initials, bg, color, name, sub, badge, badgeBg, badgeColor }) => (
+            <div key={name} className="flex items-center px-3 py-2 gap-2.5 border-t border-slate-50 first:border-t-0">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[8px] font-bold" style={{ background: bg, color }}>{initials}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold text-slate-800 leading-none mb-0.5">{name}</p>
+                <p className="text-[9px] text-slate-400">{sub}</p>
+              </div>
+              <div className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: badgeBg, color: badgeColor }}>{badge}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -86,34 +79,57 @@ function AppMockup() {
 
 const FEATURES = [
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-    title: 'Controle de aluguel',
-    desc: 'Acompanhe pagamentos, vencimentos e status em tempo real, com resumo financeiro mensal automático.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>,
+    title: 'Nunca mais esqueça um vencimento',
+    desc: 'O app avisa você 3 dias antes. Se não pagar, avisa de novo. Você só precisa confirmar o recebimento.',
   },
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-    title: 'Gerenciar contratos de locação',
-    desc: 'Cadastre contratos com vigência e reajuste automático por IGPM ou IPCA — sem precisar lembrar.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+    title: 'Seus inquilinos recebem o lembrete. Não você.',
+    desc: 'Email automático no dia certo, com o valor certo. Você para de ser o chato que fica cobrando.',
   },
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-    title: 'Dashboard financeiro',
-    desc: 'Controle de inadimplência de aluguel: visualize recebidos, pendentes e locatários em atraso num painel limpo.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+    title: 'Quanto entrou esse mês? Resposta em 2 segundos',
+    desc: 'Total recebido, pendente e atrasado numa tela só. Sem planilha, sem conta de cabeça.',
   },
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-    title: 'Cobrar inquilino automaticamente',
-    desc: 'E-mails automáticos antes do vencimento, no atraso e na data de reajuste. Sem você precisar fazer nada.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+    title: 'Pix ou boleto gerado automático todo mês',
+    desc: 'O app gera a cobrança e envia pro inquilino no dia certo. O dinheiro cai direto na sua conta.',
   },
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-    title: 'Gestão de inquilinos',
-    desc: 'Histórico completo: dados de contato, período de locação e registro de todos os pagamentos do locatário.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    title: 'Dados de todos os inquilinos num lugar só',
+    desc: 'Contato, contrato, histórico de pagamento. Na hora que precisar, está lá.',
   },
   {
-    icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>,
-    title: 'Recibos PDF',
-    desc: 'Gere recibos profissionais em PDF com 1 clique — com seus dados e do inquilino, prontos para enviar.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+    title: 'Recibo profissional em 1 clique',
+    desc: 'PDF com todos os dados legais gerado na hora. Envie por WhatsApp direto do app.',
+  },
+]
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+
+const TESTIMONIALS = [
+  {
+    photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=56&h=56&fit=crop&crop=face',
+    name: 'Carla Mendes',
+    role: 'Proprietária · 2 apartamentos · São Paulo, SP',
+    text: 'Eu cobrava aluguel pelo WhatsApp há 6 anos. Tinha vergonha de cobrar de novo quando atrasava. Agora o app manda, não eu. Mudou minha relação com os inquilinos.',
+  },
+  {
+    photo: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=56&h=56&fit=crop&crop=face',
+    name: 'Roberto Farias',
+    role: 'Proprietário · 3 imóveis · Rio de Janeiro, RJ',
+    text: 'Herdei 3 imóveis do meu pai e não sabia como gerenciar. O ProprietárioZen me deu controle total em menos de uma semana. Inclusive o reajuste pelo IGPM que eu sempre esquecia.',
+  },
+  {
+    photo: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=56&h=56&fit=crop&crop=face',
+    name: 'Fernanda Santos',
+    role: 'Proprietária · 1 kitnet · Curitiba, PR',
+    text: 'Tenho só uma kitnet mas perdia muito tempo com isso. Agora recebo o recibo no email, o inquilino recebe o dele e eu não preciso fazer nada. Vale muito os R$ 49,90.',
   },
 ]
 
@@ -142,8 +158,11 @@ const FAQ = [
 
 export function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled]     = useState(false)
+  const [faqOpen, setFaqOpen]       = useState<number | null>(null)
 
   useEffect(() => {
+    // Fade-in on scroll
     const els = document.querySelectorAll('.lp-fade')
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
@@ -151,7 +170,12 @@ export function LandingPage() {
       })
     }, { threshold: 0.1 })
     els.forEach(el => obs.observe(el))
-    return () => obs.disconnect()
+
+    // Navbar shadow on scroll
+    const onScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', onScroll, { passive: true })
+
+    return () => { obs.disconnect(); window.removeEventListener('scroll', onScroll) }
   }, [])
 
   return (
@@ -165,24 +189,28 @@ export function LandingPage() {
         .lp-delay-3 { transition-delay: .3s; }
         .lp-delay-4 { transition-delay: .4s; }
         .lp-delay-5 { transition-delay: .5s; }
-        @keyframes lp-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
-        .lp-float { animation: lp-float 6s ease-in-out infinite; }
-        @keyframes lp-badge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        .lp-badge-1 { animation: lp-badge 6s ease-in-out infinite; }
-        .lp-badge-2 { animation: lp-badge 6s ease-in-out 2s infinite; }
-        .lp-badge-3 { animation: lp-badge 6s ease-in-out 4s infinite; }
+        @keyframes lp-float-card { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+        .lp-float-1 { animation: lp-float-card 3s ease-in-out infinite; }
+        .lp-float-2 { animation: lp-float-card 3s ease-in-out 1.5s infinite; }
         @keyframes lp-blink { 0%,100% { opacity:1; } 50% { opacity:.25; } }
         .lp-blink { animation: lp-blink 2s ease-in-out infinite; }
         @keyframes lp-blob { 0%,100% { transform:translate(0,0) scale(1); } 33% { transform:translate(24px,-24px) scale(1.06); } 66% { transform:translate(-16px,12px) scale(.97); } }
         .lp-blob-1 { animation: lp-blob 8s ease-in-out infinite; }
         .lp-blob-2 { animation: lp-blob 11s ease-in-out reverse infinite; }
+        .lp-feat-card { transition: transform .2s ease, box-shadow .2s ease; }
+        .lp-feat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(5,150,105,.10); }
         .lp-card { transition: transform .25s ease, box-shadow .25s ease; }
-        .lp-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(5,150,105,.12); }
+        .lp-card:hover { transform: translateY(-4px); box-shadow: 0 16px 44px rgba(5,150,105,.12); }
+        .faq-row { transition: background-color .15s ease; cursor: pointer; }
+        .faq-row:hover { background-color: #F0FDF4; }
       `}</style>
 
       {/* ── HEADER / NAVBAR ── */}
       <header role="banner">
-        <nav aria-label="Navegação principal" className="sticky top-0 z-50 bg-white/96 backdrop-blur-md border-b border-[#D1FAE5]">
+        <nav
+          aria-label="Navegação principal"
+          className={`sticky top-0 z-50 bg-white/96 backdrop-blur-md border-b border-[#D1FAE5] transition-shadow duration-200 ${scrolled ? 'shadow-[0_1px_12px_rgba(0,0,0,0.08)]' : ''}`}
+        >
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <LogoColor href="/" iconSize={36} />
             <ul className="hidden md:flex items-center gap-8 list-none m-0 p-0">
@@ -192,7 +220,7 @@ export function LandingPage() {
             </ul>
             <div className="hidden md:flex items-center gap-3">
               <Link href="/login" className="text-sm font-semibold text-[#374151] hover:text-[#059669] px-4 py-2 transition-colors">Entrar</Link>
-              <Link href="/cadastro" className="bg-[#059669] hover:bg-[#047857] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:-translate-y-px shadow-sm">Começar gestão gratuita</Link>
+              <Link href="/cadastro" className="bg-[#059669] hover:bg-[#047857] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all hover:-translate-y-px shadow-sm">Começar grátis</Link>
             </div>
             <button
               className="md:hidden p-2 rounded-lg hover:bg-[#F0FDF4]"
@@ -221,69 +249,110 @@ export function LandingPage() {
       <main id="main-content">
 
         {/* ── HERO ── */}
-        <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden" style={{background:'linear-gradient(135deg,#022C22 0%,#033D2C 55%,#044D38 100%)',padding:'88px 0 108px'}}>
-          <div className="absolute -top-40 -right-20 w-[520px] h-[520px] rounded-full opacity-[0.055]" style={{background:'#34D399'}} aria-hidden="true" />
-          <div className="absolute -bottom-24 -left-12 w-[300px] h-[300px] rounded-full opacity-[0.055]" style={{background:'#34D399'}} aria-hidden="true" />
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden bg-white" style={{ padding: '80px 0 100px' }}>
+          {/* Subtle bg gradient */}
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(209,250,229,0.35) 0%, transparent 70%)' }} aria-hidden="true" />
+
+          <div className="max-w-6xl mx-auto px-6 relative">
+            <div className="grid lg:grid-cols-[55fr_45fr] gap-12 lg:gap-16 items-center">
+
+              {/* ── Left: Text ── */}
               <div>
-                <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full text-[#34D399] text-xs font-semibold" style={{background:'rgba(52,211,153,0.12)',border:'1px solid rgba(52,211,153,0.25)'}}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] lp-blink" aria-hidden="true" />
-                  Recibos PDF automáticos — novidade
+                {/* Badge */}
+                <div className="inline-flex items-center gap-1.5 mb-6 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 font-medium" style={{ fontSize: 13, padding: '6px 14px' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  Mais de 2.400 proprietários confiam
                 </div>
-                <h1 id="hero-title" className="text-[50px] lg:text-[58px] font-bold text-white leading-[1.1] mb-6">
-                  Gestão de imóveis<br />para proprietários <span className="text-[#34D399]">sem planilha,<br />sem estresse.</span>
+
+                {/* Headline */}
+                <h1 id="hero-title" className="font-extrabold leading-[1.1] mb-6" style={{ letterSpacing: '-0.02em' }}>
+                  <span className="block text-slate-900" style={{ fontSize: 'clamp(36px, 4.5vw, 52px)' }}>Chega de cobrar aluguel</span>
+                  <span className="block text-emerald-600" style={{ fontSize: 'clamp(36px, 4.5vw, 52px)' }}>pelo WhatsApp.</span>
                 </h1>
-                <p className="text-[17px] text-white/60 mb-10 leading-[1.75] max-w-[420px]">
-                  O melhor app para proprietários fazerem controle de aluguel, inquilinos e cobranças num só lugar. Alertas automáticos de vencimento e recibos profissionais com 1 clique.
+
+                {/* Subheadline */}
+                <p className="text-slate-500 font-normal leading-relaxed mb-10 max-w-[480px]" style={{ fontSize: 20 }}>
+                  O ProprietárioZen organiza seus imóveis, avisa os inquilinos, controla os pagamentos e gera recibos. Tudo automático. Tudo no celular.
                 </p>
-                <div className="flex flex-wrap gap-4 mb-12">
-                  <Link href="/cadastro" className="inline-flex items-center gap-2.5 bg-[#10B981] hover:bg-[#059669] text-white font-semibold px-7 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.35)] text-[15px]">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                    Começar gestão gratuita agora
+
+                {/* CTA */}
+                <div className="mb-8">
+                  <Link
+                    href="/cadastro"
+                    className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-all hover:-translate-y-0.5"
+                    style={{ padding: '16px 32px', fontSize: 16, borderRadius: 10, boxShadow: '0 4px 16px rgba(5,150,105,0.25)' }}
+                  >
+                    Criar conta grátis agora
                   </Link>
-                  <a href="#como-funciona" className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-xl transition-all hover:-translate-y-0.5 text-white text-[15px]" style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)'}}>
-                    Ver como funciona →
-                  </a>
+                  <p className="mt-2.5 text-slate-400" style={{ fontSize: 12 }}>Sem cartão de crédito · Cancele quando quiser</p>
                 </div>
-                <div className="flex gap-10">
-                  {[['2.400+','Proprietários ativos'],['R$ 0','Para começar'],['98%','Satisfação']].map(([v,l]) => (
-                    <div key={l}><p className="text-2xl font-bold text-white">{v}</p><p className="text-xs text-white/40 mt-0.5">{l}</p></div>
-                  ))}
-                </div>
-              </div>
-              {/* Mockup */}
-              <div className="relative flex justify-center">
-                <div className="lp-float relative">
-                  <div className="lp-badge-1 absolute top-[10%] -left-[28%] bg-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 z-10 hidden lg:flex" aria-hidden="true">
-                    <div className="w-8 h-8 rounded-lg bg-[#D1FAE5] flex items-center justify-center shrink-0">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                    <div><p className="text-[10px] text-[#94A3B8] leading-none mb-1">Aluguel recebido</p><p className="text-[13px] font-bold text-[#059669]">+R$ 1.800</p></div>
+
+                {/* Social proof inline */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex" aria-hidden="true">
+                    {[
+                      { src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face', alt: '' },
+                      { src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=face', alt: '' },
+                      { src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face', alt: '' },
+                      { src: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face', alt: '' },
+                      { src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face', alt: '' },
+                    ].map(({ src, alt }, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={i}
+                        src={src}
+                        alt={alt}
+                        width={32}
+                        height={32}
+                        loading="lazy"
+                        className="w-8 h-8 rounded-full border-2 border-white object-cover"
+                        style={{ marginLeft: i > 0 ? -8 : 0 }}
+                      />
+                    ))}
                   </div>
-                  <div className="lp-badge-2 absolute bottom-[30%] -right-[22%] bg-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 z-10 hidden lg:flex" aria-hidden="true">
-                    <div className="w-8 h-8 rounded-lg bg-[#FEF3C7] flex items-center justify-center shrink-0">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    </div>
-                    <div><p className="text-[10px] text-[#94A3B8] leading-none mb-1">Vence em 3 dias</p><p className="text-[13px] font-bold text-[#D97706]">Apto 302</p></div>
-                  </div>
-                  <div className="lp-badge-3 absolute top-[55%] -left-[32%] bg-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 z-10 hidden lg:flex" aria-hidden="true">
-                    <div className="w-8 h-8 rounded-lg bg-[#D1FAE5] flex items-center justify-center shrink-0">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    </div>
-                    <div><p className="text-[10px] text-[#94A3B8] leading-none mb-1">Recibo gerado</p><p className="text-[13px] font-bold text-[#059669]">Abril 2025 ✓</p></div>
-                  </div>
-                  <AppMockup />
+                  <p style={{ fontSize: 13 }} className="text-slate-600">
+                    <span className="text-amber-400">★★★★★</span>
+                    <span className="ml-1">Avaliado por proprietários em todo o Brasil</span>
+                  </p>
                 </div>
               </div>
+
+              {/* ── Right: Visual ── */}
+              <div className="relative flex justify-center lg:justify-end mt-10 lg:mt-0">
+                <div className="relative w-full max-w-[480px]">
+
+                  {/* Floating card 1 — payment received */}
+                  <div className="lp-float-1 absolute -top-5 -right-4 hidden lg:flex bg-white rounded-[12px] z-10 items-center gap-3 px-4 py-3" style={{ boxShadow: '0 8px 28px rgba(0,0,0,0.12)', borderRadius: 12 }} aria-hidden="true">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-bold text-slate-900 leading-none mb-1">Pagamento recebido</p>
+                      <p className="text-[12px] text-slate-500 leading-none">Marcelo · Apto Alto Leblon · R$ 3.000</p>
+                    </div>
+                  </div>
+
+                  {/* Floating card 2 — monthly stat */}
+                  <div className="lp-float-2 absolute -bottom-5 -left-4 hidden lg:flex bg-white rounded-[12px] z-10 flex-col px-4 py-3" style={{ boxShadow: '0 8px 28px rgba(0,0,0,0.12)', borderRadius: 12 }} aria-hidden="true">
+                    <p className="text-[11px] text-slate-400 uppercase tracking-wide font-medium mb-1">Este mês</p>
+                    <p className="text-[20px] font-bold text-emerald-600 leading-none mb-1">R$ 9.400</p>
+                    <p className="text-[12px] text-slate-500">↑ 3 imóveis pagos</p>
+                  </div>
+
+                  {/* Browser mockup */}
+                  <DashboardMockup />
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
         {/* ── SOCIAL PROOF ── */}
-        <section aria-label="Mais de 2.400 proprietários de imóveis confiam no ProprietárioZen" className="py-10 bg-[#F0FDF4] border-y border-[#D1FAE5]">
-          <div className="max-w-6xl mx-auto px-6">
-            <p className="text-center text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-8">Confiado por proprietários em todo o Brasil</p>
+        <section aria-label="Mais de 2.400 proprietários de imóveis confiam no ProprietárioZen" className="bg-[#F0FDF4]">
+          <div className="max-w-6xl mx-auto px-6 pt-8 pb-10">
+            <div className="border-b border-slate-200 mb-6" />
+            <p className="text-center text-[13px] text-slate-400 mb-8">Proprietários de todo o Brasil já usam o ProprietárioZen</p>
             <div className="flex flex-wrap items-center justify-center gap-10 opacity-50" aria-hidden="true">
               {[
                 [<svg key="v" width="16" height="16" viewBox="0 0 24 24" fill="#374151"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="#374151" strokeWidth="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="#374151" strokeWidth="2"/></svg>,'VivaReal'],
@@ -292,9 +361,7 @@ export function LandingPage() {
                 [<svg key="m" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,'Mailgun'],
                 [<svg key="sp" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,'Supabase'],
               ].map(([icon, name]) => (
-                <div key={name as string} className="flex items-center gap-2 font-bold text-[17px] text-[#374151]">
-                  {icon}{name}
-                </div>
+                <div key={name as string} className="flex items-center gap-2 font-bold text-[17px] text-[#374151]">{icon}{name}</div>
               ))}
             </div>
           </div>
@@ -305,16 +372,18 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Funcionalidades</span>
-              <h2 id="funcionalidades-title" className="text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3 mb-4">
-                Tudo para a sua gestão de imóveis<br />sem complicação.
+              <h2 id="funcionalidades-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3 mb-4">
+                Tudo que você precisa.<br />Nada que você não precisa.
               </h2>
-              <p className="text-[17px] text-[#6B7280] max-w-lg leading-relaxed">Software para proprietário de imóvel que dispensa planilhas, papéis e surpresas.</p>
+              <p className="text-[17px] text-[#6B7280] max-w-lg leading-relaxed">
+                Feito para quem tem 1 a 5 imóveis e não quer virar gerente de imobiliária.
+              </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {FEATURES.map(({ icon, title, desc }, i) => (
-                <div key={title} className={`lp-fade lp-delay-${i % 3 === 0 ? 0 : i % 3} lp-card bg-white rounded-2xl border border-[#E5F7F0] p-8 cursor-default`}>
-                  <div className="w-12 h-12 bg-[#F0FDF4] rounded-[14px] flex items-center justify-center mb-5">{icon}</div>
-                  <h3 className="font-semibold text-[#1F2937] text-[16px] mb-2">{title}</h3>
+                <div key={title} className={`lp-fade lp-delay-${i % 3 === 0 ? 0 : i % 3} lp-feat-card bg-white rounded-2xl border border-[#E5F7F0] p-8 cursor-default`}>
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-5 shrink-0">{icon}</div>
+                  <h3 className="font-semibold text-[#1F2937] text-[16px] mb-2 leading-snug">{title}</h3>
                   <p className="text-sm text-[#6B7280] leading-[1.75]">{desc}</p>
                 </div>
               ))}
@@ -327,27 +396,51 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Como funciona</span>
-              <h2 id="como-funciona-title" className="text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Comece a usar em minutos</h2>
-              <p className="text-[17px] text-[#6B7280] mt-3 max-w-md mx-auto">Sem instalação, sem configuração complicada. O app de aluguel Brasil que qualquer proprietário consegue usar.</p>
+              <h2 id="como-funciona-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Comece a usar em minutos</h2>
+              <p className="text-[17px] text-[#6B7280] mt-3 max-w-md mx-auto">Sem instalação, sem configuração complicada.</p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6">
               {[
-                { n:'01', icon:<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>, title:'Crie sua conta grátis', desc:'Cadastro gratuito em menos de 1 minuto. Só precisa do seu e-mail — sem cartão de crédito.' },
-                { n:'02', icon:<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>, title:'Cadastre seus imóveis', desc:'Adicione imóveis e vincule os inquilinos. O app organiza sua gestão automaticamente.' },
-                { n:'03', icon:<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>, title:'Receba no prazo', desc:'Acompanhe pagamentos, receba alertas e gere recibos com 1 clique. Controle de aluguel total.' },
+                {
+                  n: '1',
+                  icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+                  title: 'Crie sua conta em 2 minutos',
+                  desc: 'Só precisa do seu e-mail — sem cartão de crédito. Começa grátis, começa agora.',
+                },
+                {
+                  n: '2',
+                  icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+                  title: 'Cadastre seus imóveis e inquilinos',
+                  desc: 'Adicione os imóveis, os inquilinos e os valores. O app organiza tudo automaticamente.',
+                },
+                {
+                  n: '3',
+                  icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>,
+                  title: 'Relaxe — o app faz o resto',
+                  desc: 'Cobranças automáticas, lembretes, recibos PDF. Você só confirma o recebimento.',
+                },
               ].map(({ n, icon, title, desc }, i) => (
-                <div key={n} className={`lp-fade lp-delay-${i} text-center relative`}>
+                <div key={n} className={`lp-fade lp-delay-${i} relative`}>
                   {i < 2 && (
-                    <div className="hidden md:block absolute top-10 left-[calc(50%+44px)] w-[calc(100%-44px)] overflow-hidden" style={{height:'2px',background:'repeating-linear-gradient(90deg,#10B981 0,#10B981 6px,transparent 6px,transparent 14px)'}} aria-hidden="true" />
+                    <div className="hidden md:block absolute top-10 left-[calc(50%+44px)] w-[calc(100%-44px)] overflow-hidden" style={{ height: '2px', background: 'repeating-linear-gradient(90deg,#10B981 0,#10B981 6px,transparent 6px,transparent 14px)' }} aria-hidden="true" />
                   )}
-                  <div className="relative flex justify-center mb-6">
-                    <div className="w-20 h-20 bg-white rounded-full border-[3px] border-[#10B981] flex items-center justify-center shadow-sm">{icon}</div>
-                    <span className="absolute -top-2 left-[calc(50%+28px)] w-6 h-6 rounded-full bg-[#059669] text-white text-[11px] font-bold flex items-center justify-center" aria-hidden="true">{n}</span>
+                  <div className="bg-emerald-50 rounded-2xl p-8 text-center h-full">
+                    <div className="relative flex justify-center mb-5">
+                      <div className="w-[72px] h-[72px] bg-white rounded-full border-[3px] border-[#10B981] flex items-center justify-center shadow-sm">
+                        {icon}
+                      </div>
+                      <span className="absolute -top-1 left-[calc(50%+26px)] w-7 h-7 rounded-full bg-[#059669] text-white text-xs font-bold flex items-center justify-center shadow" aria-hidden="true">{n}</span>
+                    </div>
+                    <h3 className="text-[17px] font-semibold text-[#1F2937] mb-2">{title}</h3>
+                    <p className="text-[14px] text-[#6B7280] leading-relaxed max-w-[200px] mx-auto">{desc}</p>
                   </div>
-                  <h3 className="text-[17px] font-semibold text-[#1F2937] mb-2">{title}</h3>
-                  <p className="text-[14px] text-[#6B7280] leading-relaxed max-w-[200px] mx-auto">{desc}</p>
                 </div>
               ))}
+            </div>
+            <div className="text-center mt-12 lp-fade lp-delay-3">
+              <Link href="/cadastro" className="text-[#059669] font-semibold text-[15px] hover:underline">
+                Pronto para começar? →
+              </Link>
             </div>
           </div>
         </section>
@@ -357,22 +450,33 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Depoimentos</span>
-              <h2 id="depoimentos-title" className="text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">O que dizem nossos proprietários</h2>
+              <h2 id="depoimentos-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">O que dizem nossos proprietários</h2>
+              <p className="text-[17px] text-[#6B7280] mt-3">Pessoas reais. Imóveis reais. Resultados reais.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { initials:'CR', bg:'#D1FAE5', fg:'#065F46', name:'Carlos Ribeiro', city:'São Paulo, SP — 3 imóveis', text:'"Eu controlava tudo por planilha do Excel e era um caos. Com o ProprietárioZen passei a receber em dia porque os alertas chegam antes do vencimento. Simples assim."', delay:'0' },
-                { initials:'MA', bg:'#FEF3C7', fg:'#92400E', name:'Márcia Alves', city:'Belo Horizonte, MG — 4 imóveis', text:'"Tenho 4 imóveis alugados e vivia esquecendo de cobrar alguém. Agora o sistema avisa e ainda gero o recibo na hora. Economizo pelo menos 2 horas por mês."', delay:'1' },
-                { initials:'FS', bg:'#D1FAE5', fg:'#065F46', name:'Fernando Santos', city:'Curitiba, PR — 2 imóveis', text:'"O que mais me surpreendeu foi o recibo PDF. Antes mandava um comprovante feito no Word. Agora é profissional, com todos os dados certinhos. Vale muito."', delay:'2' },
-              ].map(({ initials, bg, fg, name, city, text, delay }) => (
-                <article key={name} className={`lp-fade lp-delay-${delay} lp-card bg-white rounded-2xl border border-[#E5F7F0] p-8`}>
-                  <div className="flex gap-0.5 mb-5" aria-label="Avaliação 5 estrelas" role="img">
-                    {Array.from({length:5}).map((_,i) => <span key={i} className="text-[#F59E0B] text-base" aria-hidden="true">★</span>)}
+              {TESTIMONIALS.map(({ photo, name, role, text }, i) => (
+                <article key={name} className={`lp-fade lp-delay-${i} lp-card bg-white rounded-[16px] border border-slate-100 flex flex-col`} style={{ padding: 28 }}>
+                  <div className="flex gap-0.5 mb-4" aria-label="Avaliação 5 estrelas" role="img">
+                    {Array.from({ length: 5 }).map((_, j) => <span key={j} className="text-amber-400 text-base" aria-hidden="true">★</span>)}
                   </div>
-                  <p className="text-[14px] text-[#374151] leading-[1.85] mb-6 italic">{text}</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{background:bg,color:fg}} aria-hidden="true">{initials}</div>
-                    <div><p className="text-sm font-semibold text-[#1F2937]">{name}</p><p className="text-xs text-[#6B7280] mt-0.5">{city}</p></div>
+                  <div className="relative mb-5 flex-1">
+                    <span className="text-emerald-200 font-serif leading-none float-left mr-1" style={{ fontSize: 64, lineHeight: 0.8 }} aria-hidden="true">&ldquo;</span>
+                    <p className="text-[15px] text-slate-700 leading-[1.7] italic">{text}</p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photo}
+                      alt={`Foto de ${name}, ${role}`}
+                      width={48}
+                      height={48}
+                      loading="lazy"
+                      className="w-12 h-12 rounded-full object-cover shrink-0"
+                    />
+                    <div>
+                      <p className="text-sm font-bold text-[#1F2937]">{name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{role}</p>
+                    </div>
                   </div>
                 </article>
               ))}
@@ -381,68 +485,89 @@ export function LandingPage() {
         </section>
 
         {/* ── COMPARISON ── */}
-        <section aria-labelledby="comparacao-title" className="py-24" style={{background:'linear-gradient(135deg,#022C22 0%,#033D2C 100%)'}}>
+        <section aria-labelledby="comparacao-title" className="py-24 bg-[#F8FAFC]">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
-              <span className="text-xs font-semibold text-[#34D399] uppercase tracking-widest">Diferenciais</span>
-              <h2 id="comparacao-title" className="text-[40px] font-bold text-white leading-[1.2] mt-3">Chega de improvisar</h2>
-              <p className="text-[17px] mt-3 max-w-md mx-auto" style={{color:'rgba(255,255,255,0.55)'}}>Veja por que proprietários trocam planilhas e imobiliárias pelo ProprietárioZen.</p>
+              <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Diferenciais</span>
+              <h2 id="comparacao-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Chega de improvisar</h2>
+              <p className="text-[17px] text-[#6B7280] mt-3 max-w-md mx-auto">Veja por que proprietários trocam planilhas e imobiliárias pelo ProprietárioZen.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="lp-fade rounded-2xl p-10" style={{background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)'}}>
-                <h3 className="text-lg font-bold mb-6 flex items-center gap-2" style={{color:'rgba(255,255,255,0.65)'}}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  Gestão manual ou imobiliária
-                </h3>
-                {[
-                  'Planilhas manuais que viram bagunça',
-                  'Esquece de cobrar inquilino, perde dinheiro',
-                  'Recibos feitos no Word sem padrão',
-                  'Reajuste depende de você lembrar e calcular',
-                  'Dados espalhados em e-mail e caderno',
-                ].map(item => (
-                  <div key={item} className="flex items-start gap-3 mb-4">
-                    <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    <span className="text-[14px]" style={{color:'rgba(255,255,255,0.6)'}}>{item}</span>
-                  </div>
-                ))}
+              {/* Left — old way */}
+              <div className="lp-fade rounded-2xl overflow-hidden border border-slate-200">
+                <div className="bg-slate-100 px-8 py-5 flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <h3 className="text-base font-bold text-slate-500">Do jeito antigo</h3>
+                </div>
+                <div className="bg-[#F8FAFC] p-8 space-y-4">
+                  {[
+                    'Cobrar pelo WhatsApp e ficar sem resposta',
+                    'Planilha desatualizada toda hora',
+                    'Esquecer o reajuste anual',
+                    'Recibo feito no Word, sem padrão',
+                    'Não saber quanto recebeu no mês',
+                    'Constrangimento ao cobrar atrasado',
+                  ].map(item => (
+                    <div key={item} className="flex items-start gap-3">
+                      <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                      <span className="text-[14px] text-slate-600">{item}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="lp-fade lp-delay-1 rounded-2xl p-10 relative overflow-hidden" style={{background:'rgba(16,185,129,0.1)',border:'1px solid rgba(16,185,129,0.35)'}}>
-                <div className="absolute top-0 left-0 right-0 h-[3px]" style={{background:'linear-gradient(90deg,#10B981,#34D399)'}} aria-hidden="true" />
-                <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                  ProprietárioZen
-                </h3>
-                {[
-                  'Dashboard organizado com visão de tudo',
-                  'Alertas automáticos por e-mail no vencimento',
-                  'Recibos PDF profissionais em 1 clique',
-                  'Reajuste automático por IGPM ou IPCA',
-                  'Tudo centralizado, acessível de qualquer lugar',
-                ].map(item => (
-                  <div key={item} className="flex items-start gap-3 mb-4">
-                    <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span className="text-[14px] text-white/90">{item}</span>
-                  </div>
-                ))}
+
+              {/* Right — with ProprietárioZen */}
+              <div className="lp-fade lp-delay-1 rounded-2xl overflow-hidden border-2 border-emerald-500" style={{ boxShadow: '0 8px 30px rgba(5,150,105,0.15)' }}>
+                <div className="bg-emerald-600 px-8 py-5 flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <h3 className="text-base font-bold text-white">Com ProprietárioZen</h3>
+                  <span className="ml-auto text-[11px] font-bold bg-white text-emerald-700 px-2 py-0.5 rounded-full">Novo</span>
+                </div>
+                <div className="bg-white p-8 space-y-4">
+                  {[
+                    'Cobrança automática por Pix ou boleto',
+                    'Dashboard atualizado em tempo real',
+                    'Reajuste calculado e aplicado pelo app',
+                    'Recibo PDF gerado em 1 clique',
+                    'Resumo financeiro sempre disponível',
+                    'Inquilino recebe o lembrete — não você',
+                  ].map(item => (
+                    <div key={item} className="flex items-start gap-3">
+                      <svg className="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                      <span className="text-[14px] text-slate-800">{item}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* ── FAQ ── */}
-        <section id="faq" aria-labelledby="faq-title" className="py-24 bg-[#F8FAFC]">
+        <section id="faq" aria-labelledby="faq-title" className="py-24 bg-white">
           <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-14 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Dúvidas frequentes</span>
               <h2 id="faq-title" className="text-[36px] font-bold text-[#1F2937] leading-[1.2] mt-3">Perguntas frequentes</h2>
-              <p className="text-[16px] text-[#6B7280] mt-3">Tudo que você precisa saber sobre a gestão de imóveis grátis.</p>
+              <p className="text-[16px] text-[#6B7280] mt-3">Tudo que você precisa saber sobre o ProprietárioZen.</p>
             </div>
-            <dl className="space-y-4">
+            <dl className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
               {FAQ.map(({ q, a }, i) => (
-                <div key={q} className={`lp-fade lp-delay-${i % 3} bg-white rounded-2xl border border-[#E5F7F0] p-6`}>
-                  <dt className="font-semibold text-[#1F2937] text-[15px] mb-2">{q}</dt>
-                  <dd className="text-sm text-[#6B7280] leading-[1.75]">{a}</dd>
+                <div key={q} className={`lp-fade lp-delay-${i % 3}`}>
+                  <button
+                    type="button"
+                    className="faq-row w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+                    onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                    aria-expanded={faqOpen === i}
+                  >
+                    <dt className="text-[15px] font-medium text-slate-800">{q}</dt>
+                    <span className="shrink-0 text-emerald-600 font-bold text-xl leading-none" aria-hidden="true">{faqOpen === i ? '−' : '+'}</span>
+                  </button>
+                  {faqOpen === i && (
+                    <dd className="px-6 pb-5">
+                      <p className="text-[14px] text-slate-600 leading-[1.7]">{a}</p>
+                    </dd>
+                  )}
                 </div>
               ))}
             </dl>
@@ -450,20 +575,25 @@ export function LandingPage() {
         </section>
 
         {/* ── PRICING ── */}
-        <section id="precos" aria-labelledby="precos-title" className="py-24">
+        <section id="precos" aria-labelledby="precos-title" className="py-24 bg-[#F8FAFC]">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Preços</span>
-              <h2 id="precos-title" className="text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Simples e transparente</h2>
+              <h2 id="precos-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Simples e transparente</h2>
               <p className="text-[17px] text-[#6B7280] mt-3">Sem taxa de adesão. Sem fidelidade. Cancele quando quiser.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+
               {/* Free */}
-              <div className="lp-fade lp-card bg-white rounded-2xl border-2 border-[#E5F7F0] p-10">
-                <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-2">Grátis</p>
-                <div className="flex items-baseline gap-1 mb-1"><span className="text-[42px] font-bold text-[#1F2937]">R$ 0</span><span className="text-sm text-[#6B7280]">/mês</span></div>
-                <p className="text-sm text-[#6B7280] mb-8">Gestão de imóveis grátis para começar a organizar</p>
-                <ul className="space-y-3 mb-8">
+              <div className="lp-fade lp-card bg-white rounded-2xl border-2 border-[#E5F7F0] p-10 flex flex-col">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Para começar</p>
+                <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-1">Grátis</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-[42px] font-bold text-[#1F2937]">R$ 0</span>
+                  <span className="text-sm text-[#6B7280]">/mês</span>
+                </div>
+                <p className="text-sm text-emerald-600 font-medium mb-6">Para sempre grátis</p>
+                <ul className="space-y-3 mb-8 flex-1">
                   {[['1 imóvel cadastrado',true],['Controle de inquilinos',true],['Histórico de aluguéis',true],['Recibos PDF ilimitados',false],['Alertas automáticos por e-mail',false],['Reajuste automático',false]].map(([f,ok]) => (
                     <li key={f as string} className={`flex items-center gap-2.5 text-sm ${ok ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>
                       {ok
@@ -474,15 +604,23 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/cadastro" className="block text-center border-2 border-[#10B981] text-[#059669] font-semibold py-3 rounded-xl hover:bg-[#F0FDF4] transition-colors text-sm">Criar conta de gestão gratuita</Link>
+                <Link href="/cadastro" className="block text-center border-2 border-[#10B981] text-[#059669] font-semibold py-3 rounded-xl hover:bg-[#F0FDF4] transition-colors text-sm">
+                  Criar conta gratuita
+                </Link>
               </div>
-              {/* Pro */}
-              <div className="lp-fade lp-delay-1 lp-card bg-white rounded-2xl border-2 border-[#10B981] p-10 relative shadow-[0_8px_32px_rgba(16,185,129,0.18)]">
+
+              {/* Master */}
+              <div className="lp-fade lp-delay-1 lp-card bg-white rounded-2xl border-2 border-[#10B981] p-10 relative flex flex-col shadow-[0_8px_32px_rgba(16,185,129,0.18)]">
                 <div className="absolute -top-[14px] left-1/2 -translate-x-1/2 bg-[#059669] text-white text-xs font-bold px-4 py-1 rounded-full">Mais popular</div>
-                <p className="text-xs font-semibold text-[#059669] uppercase tracking-widest mb-2">Master</p>
-                <div className="flex items-baseline gap-1 mb-1"><span className="text-[42px] font-bold text-[#059669]">R$ 49</span><span className="text-[26px] font-bold text-[#059669]">,90</span><span className="text-sm text-[#6B7280]">/mês</span></div>
-                <p className="text-sm text-[#6B7280] mb-8">Gestão completa de imóveis para proprietários</p>
-                <ul className="space-y-3 mb-8">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Gestão completa</p>
+                <p className="text-xs font-semibold text-[#059669] uppercase tracking-widest mb-1">Master</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-[42px] font-bold text-[#059669]">R$ 49</span>
+                  <span className="text-[26px] font-bold text-[#059669]">,90</span>
+                  <span className="text-sm text-[#6B7280]">/mês</span>
+                </div>
+                <p className="text-sm text-emerald-600 font-medium mb-6">Menos de R$ 2 por dia</p>
+                <ul className="space-y-3 mb-6 flex-1">
                   {['Até 5 imóveis cadastrados','Controle de inquilinos','Histórico de aluguéis','Recibos PDF ilimitados','Alertas automáticos por e-mail','Reajuste automático IGPM/IPCA'].map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm text-[#374151]">
                       <div className="w-4 h-4 rounded-full bg-[#D1FAE5] flex items-center justify-center shrink-0" aria-hidden="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -490,7 +628,12 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/cadastro" className="block text-center bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-xl transition-colors text-sm">Assinar Master — R$ 49,90/mês</Link>
+                <div className="border-t border-slate-100 pt-4 mb-4">
+                  <p className="text-center text-[12px] text-slate-400">🔒 Pagamento seguro · Cancele quando quiser</p>
+                </div>
+                <Link href="/cadastro" className="block text-center bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+                  Começar agora — R$ 49,90/mês
+                </Link>
               </div>
             </div>
             <p className="text-center mt-8 text-sm text-[#9CA3AF] lp-fade">
@@ -500,22 +643,38 @@ export function LandingPage() {
         </section>
 
         {/* ── CTA FINAL ── */}
-        <section aria-labelledby="cta-title" className="relative overflow-hidden py-28 text-center" style={{background:'linear-gradient(135deg,#065F46 0%,#022C22 100%)'}}>
-          <div className="lp-blob-1 absolute w-80 h-80 rounded-full -top-20 -left-20 pointer-events-none" style={{background:'rgba(52,211,153,0.1)',filter:'blur(72px)'}} aria-hidden="true" />
-          <div className="lp-blob-2 absolute w-64 h-64 rounded-full -bottom-16 -right-16 pointer-events-none" style={{background:'rgba(16,185,129,0.09)',filter:'blur(64px)'}} aria-hidden="true" />
+        <section aria-labelledby="cta-title" className="relative overflow-hidden py-28 text-center" style={{ background: 'linear-gradient(135deg,#065F46 0%,#0F172A 100%)' }}>
+          <div className="lp-blob-1 absolute w-80 h-80 rounded-full -top-20 -left-20 pointer-events-none" style={{ background: 'rgba(52,211,153,0.1)', filter: 'blur(72px)' }} aria-hidden="true" />
+          <div className="lp-blob-2 absolute w-64 h-64 rounded-full -bottom-16 -right-16 pointer-events-none" style={{ background: 'rgba(16,185,129,0.09)', filter: 'blur(64px)' }} aria-hidden="true" />
           <div className="max-w-6xl mx-auto px-6 relative z-10 lp-fade">
-            <h2 id="cta-title" className="text-[48px] lg:text-[56px] font-bold text-white leading-[1.12] mb-4">
-              Pare de improvisar.<br /><span className="text-[#34D399]">Comece a controlar.</span>
+            <h2 id="cta-title" className="font-bold leading-[1.12] mb-4" style={{ fontSize: 'clamp(36px, 4vw, 48px)' }}>
+              <span className="block text-white">Pare de improvisar.</span>
+              <span className="block text-emerald-300">Comece a controlar.</span>
             </h2>
-            <p className="text-lg mb-10" style={{color:'rgba(255,255,255,0.55)'}}>Gestão de imóveis grátis por 14 dias. Sem cartão de crédito.</p>
-            <Link href="/cadastro" className="inline-flex items-center gap-2.5 bg-white hover:bg-[#F0FDF4] text-[#065F46] font-bold px-10 py-4 rounded-xl text-[16px] transition-all hover:-translate-y-1 hover:shadow-2xl">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              Criar conta gratuita agora
+            <p className="mb-10 text-emerald-100" style={{ fontSize: 18 }}>Grátis por 14 dias. Sem cartão de crédito.</p>
+            <Link
+              href="/cadastro"
+              className="inline-flex items-center gap-2 bg-white hover:bg-[#F0FDF4] text-emerald-800 font-bold transition-all hover:-translate-y-1 hover:shadow-2xl"
+              style={{ padding: '18px 40px', fontSize: 16, borderRadius: 10 }}
+            >
+              Criar conta grátis agora →
             </Link>
+            <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
+              {[
+                { icon: '🔒', label: 'Dados seguros' },
+                { icon: '✓',  label: 'Cancele quando quiser' },
+                { icon: '⚡', label: 'Ativa em 2 minutos' },
+              ].map(({ icon, label }) => (
+                <span key={label} className="text-emerald-200 flex items-center gap-1.5" style={{ fontSize: 13 }}>
+                  <span aria-hidden="true">{icon}</span>
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
-      </main>{/* /#main-content */}
+      </main>
 
       {/* ── FOOTER ── */}
       <footer role="contentinfo" className="bg-[#111827] pt-16 pb-8">
@@ -523,34 +682,34 @@ export function LandingPage() {
           <div className="grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 mb-12">
             <div>
               <LogoWhite iconSize={36} className="mb-3" />
-              <p className="text-sm leading-relaxed max-w-[260px]" style={{color:'rgba(255,255,255,0.4)'}}>
+              <p className="text-sm leading-relaxed max-w-[260px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 Software para proprietário de imóvel — gestão de imóveis simples e eficiente para proprietários brasileiros.
               </p>
             </div>
             {[
               ['Produto', [['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#precos','Preços'],['/cadastro','Criar conta']]],
               ['Suporte', [['#','Central de ajuda'],['#','Fale conosco'],['#','Status do sistema']]],
-              ['Legal', [['#','Termos de uso'],['#','Privacidade'],['#','LGPD']]],
+              ['Legal',   [['#','Termos de uso'],['#','Privacidade'],['#','LGPD']]],
             ].map(([col, links]) => (
               <div key={col as string}>
-                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{color:'rgba(255,255,255,0.4)'}}>{col}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'rgba(255,255,255,0.4)' }}>{col}</p>
                 <ul className="space-y-2.5">
                   {(links as [string,string][]).map(([href,label]) => (
-                    <li key={label}><a href={href} className="text-sm transition-colors hover:text-[#10B981]" style={{color:'rgba(255,255,255,0.55)'}}>{label}</a></li>
+                    <li key={label}><a href={href} className="text-sm transition-colors hover:text-[#10B981]" style={{ color: 'rgba(255,255,255,0.55)' }}>{label}</a></li>
                   ))}
                 </ul>
               </div>
             ))}
           </div>
-          <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{borderColor:'rgba(255,255,255,0.08)'}}>
-            <p className="text-xs" style={{color:'rgba(255,255,255,0.3)'}}>© 2025 ProprietárioZen. Todos os direitos reservados.</p>
+          <div className="border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>© 2025 ProprietárioZen. Todos os direitos reservados.</p>
             <div className="flex gap-3">
               {[
                 ['Instagram', <svg key="ig" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>],
-                ['LinkedIn', <svg key="li" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>],
-                ['YouTube', <svg key="yt" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.95C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>],
+                ['LinkedIn',  <svg key="li" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>],
+                ['YouTube',   <svg key="yt" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.95C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>],
               ].map(([label, icon]) => (
-                <a key={label as string} href="#" aria-label={`ProprietárioZen no ${label}`} className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-[#059669]" style={{background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.45)'}}>
+                <a key={label as string} href="#" aria-label={`ProprietárioZen no ${label}`} className="w-9 h-9 rounded-lg flex items-center justify-center transition-all hover:bg-[#059669]" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
                   {icon}
                 </a>
               ))}
