@@ -243,15 +243,17 @@ export default async function DashboardPage({
   ])
 
   // Totais do mês selecionado
-  const totalReceber  = alugueisMes?.filter(a => a.status !== 'cancelado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
+  // "A receber" = apenas pendente + atrasado (o que ainda não entrou no caixa)
+  const totalReceber  = alugueisMes?.filter(a => a.status === 'pendente' || a.status === 'atrasado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
   const totalRecebido = alugueisMes?.filter(a => a.status === 'pago').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
   const totalAtrasado = alugueisMes?.filter(a => a.status === 'atrasado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
   const qtdImoveisAtivos = imoveisAtivos?.length ?? 0
   const qtdPagos     = alugueisMes?.filter(a => a.status === 'pago').length ?? 0
   const qtdAtrasados = alugueisMes?.filter(a => a.status === 'atrasado').length ?? 0
+  const qtdPendentes = alugueisMes?.filter(a => a.status === 'pendente').length ?? 0
 
   // Totais do mês anterior para tendência
-  const prevReceber  = alugueisMesPrev?.filter(a => a.status !== 'cancelado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
+  const prevReceber  = alugueisMesPrev?.filter(a => a.status === 'pendente' || a.status === 'atrasado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
   const prevRecebido = alugueisMesPrev?.filter(a => a.status === 'pago').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
   const prevAtrasado = alugueisMesPrev?.filter(a => a.status === 'atrasado').reduce((s, a) => s + (a.valor ?? 0), 0) ?? 0
 
@@ -334,11 +336,13 @@ export default async function DashboardPage({
       {/* Cards de resumo */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          titulo="Total a receber"
+          titulo="A receber"
           valor={formatarMoeda(totalReceber)}
-          descricao="no mês selecionado"
+          descricao={totalReceber === 0 ? 'tudo recebido' : `${qtdPendentes + qtdAtrasados} pendente${qtdPendentes + qtdAtrasados !== 1 ? 's' : ''}`}
           icon={TrendingUp}
           cor="padrao"
+          todoEmDia={totalReceber === 0}
+          zeroText="Tudo recebido"
           tendencia={trendReceber}
         />
         <StatCard
