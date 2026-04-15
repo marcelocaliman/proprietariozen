@@ -379,7 +379,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
       )}
 
       {/* ── Modais ───────────────────────────────────────────────────────── */}
-      <ImovelModal open={open} onOpenChange={setOpen} imovel={editando} />
+      <ImovelModal open={open} onOpenChange={setOpen} imovel={editando} plano={plano} />
 
       <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
         <DialogContent className="sm:max-w-sm">

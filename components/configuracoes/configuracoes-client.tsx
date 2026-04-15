@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { User, CreditCard, Bell, ShieldCheck, Zap } from 'lucide-react'
+import { User, CreditCard, Bell, ShieldCheck, Zap, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AbaPerfil } from './aba-perfil'
 import { AbaAssinatura } from './aba-assinatura'
@@ -88,13 +88,35 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
           {abaAtiva === 'perfil' && <AbaPerfil profile={profile} avatarUrl={avatarUrl} qtdImoveis={qtdImoveis} />}
           {abaAtiva === 'assinatura' && <AbaAssinatura plano={profile.plano} />}
           {abaAtiva === 'cobrancas' && (
-            <AbaAsaas
-              asaasAccountId={profile.asaas_account_id}
-              asaasAccountStatus={profile.asaas_account_status}
-              profileNome={profile.nome}
-              profileEmail={profile.email}
-              profileTelefone={profile.telefone}
-            />
+            profile.plano === 'pago' ? (
+              <AbaAsaas
+                asaasAccountId={profile.asaas_account_id}
+                asaasAccountStatus={profile.asaas_account_status}
+                profileNome={profile.nome}
+                profileEmail={profile.email}
+                profileTelefone={profile.telefone}
+              />
+            ) : (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-8 flex flex-col items-center gap-4 text-center">
+                <div className="p-3 rounded-full bg-amber-100">
+                  <Lock className="h-7 w-7 text-amber-500" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-semibold text-slate-800">Cobrança automática via Asaas</p>
+                  <p className="text-sm text-slate-500 max-w-sm">
+                    Gere cobranças de aluguel com PIX e boleto automáticos direto pelo app.
+                    Disponível no <strong>plano Pro</strong>.
+                  </p>
+                </div>
+                <a
+                  href="/planos"
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 transition-colors"
+                >
+                  <Zap className="h-4 w-4" />
+                  Fazer upgrade para o Pro
+                </a>
+              </div>
+            )
           )}
           {abaAtiva === 'notificacoes' && <AbaNotificacoes config={notificacoesConfig} />}
           {abaAtiva === 'seguranca' && <AbaSeguranca email={profile.email} />}

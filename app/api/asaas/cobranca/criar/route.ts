@@ -55,12 +55,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Imóvel não configurado para cobrança automática' }, { status: 400 })
   }
 
-  // Load profile for API key
+  // Load profile for plan check + API key
   const { data: profile } = await admin
     .from('profiles')
-    .select('asaas_api_key_enc')
+    .select('asaas_api_key_enc, plano, role')
     .eq('id', user.id)
     .single()
+
+  const isPaid = profile?.role === 'admin' || profile?.plano === 'pago'
+  if (!isPaid) {
+    return NextResponse.json({ error: 'Cobrança automática disponível apenas no plano Pro.' }, { status: 403 })
+  }
 
   if (!profile?.asaas_api_key_enc) {
     return NextResponse.json({ error: 'Conta Asaas não vinculada. Configure em Configurações.' }, { status: 400 })

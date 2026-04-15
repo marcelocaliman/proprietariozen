@@ -56,9 +56,10 @@ interface ImovelModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   imovel: Imovel | null
+  plano: 'gratis' | 'pago'
 }
 
-export function ImovelModal({ open, onOpenChange, imovel }: ImovelModalProps) {
+export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalProps) {
   const [loading, setLoading] = useState(false)
   const editando = !!imovel
 
@@ -224,8 +225,18 @@ export function ImovelModal({ open, onOpenChange, imovel }: ImovelModalProps) {
               <Label htmlFor="billing_mode">Modo de cobrança</Label>
               <select id="billing_mode" className={sel} {...register('billing_mode')}>
                 <option value="MANUAL">Manual — registrar pagamentos manualmente</option>
-                <option value="AUTOMATIC">Automático — gerar PIX/boleto via Asaas</option>
+                <option value="AUTOMATIC" disabled={plano === 'gratis'}>
+                  {plano === 'gratis'
+                    ? 'Automático via Asaas — disponível no plano Pro'
+                    : 'Automático — gerar PIX/boleto via Asaas'}
+                </option>
               </select>
+              {plano === 'gratis' && (
+                <p className="text-xs text-amber-600">
+                  Cobrança automática disponível apenas no plano Pro.{' '}
+                  <a href="/planos" className="underline underline-offset-2 font-medium">Fazer upgrade</a>
+                </p>
+              )}
             </div>
 
             {billingMode === 'AUTOMATIC' && (

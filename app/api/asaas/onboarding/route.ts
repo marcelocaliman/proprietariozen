@@ -32,12 +32,20 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // 1. Verificar se já tem subconta
+  // 1. Verificar plano e se já tem subconta
   const { data: profile } = await admin
     .from('profiles')
-    .select('asaas_account_id, asaas_account_status')
+    .select('asaas_account_id, asaas_account_status, plano, role')
     .eq('id', user.id)
     .maybeSingle()
+
+  const isPaid = profile?.role === 'admin' || profile?.plano === 'pago'
+  if (!isPaid) {
+    return NextResponse.json(
+      { error: 'Cobrança automática disponível apenas no plano Pro.' },
+      { status: 403 },
+    )
+  }
 
   if (profile?.asaas_account_id) {
     return NextResponse.json(
