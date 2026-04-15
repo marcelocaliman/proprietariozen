@@ -4,7 +4,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
-const PRECO_PRO = 29.90
+const PRECO_PRO = 49.90
 
 type ProfileRow = { id: string; plano: string; criado_em: string; atualizado_em: string }
 type ActivityRow = { id: string; user_email: string | null; action: string; details: unknown; created_at: string }

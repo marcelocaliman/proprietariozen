@@ -20,7 +20,7 @@ export const LIMITES_PLANO = {
     relatorios: false,
   },
   pago: {
-    nome: 'Pro',
+    nome: 'Master',
     maxImoveis: 5,
     recibos: true,
     reajuste: true,

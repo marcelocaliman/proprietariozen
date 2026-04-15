@@ -479,8 +479,8 @@ export function LandingPage() {
               {/* Pro */}
               <div className="lp-fade lp-delay-1 lp-card bg-white rounded-2xl border-2 border-[#10B981] p-10 relative shadow-[0_8px_32px_rgba(16,185,129,0.18)]">
                 <div className="absolute -top-[14px] left-1/2 -translate-x-1/2 bg-[#059669] text-white text-xs font-bold px-4 py-1 rounded-full">Mais popular</div>
-                <p className="text-xs font-semibold text-[#059669] uppercase tracking-widest mb-2">Pro</p>
-                <div className="flex items-baseline gap-1 mb-1"><span className="text-[42px] font-bold text-[#059669]">R$ 29</span><span className="text-[26px] font-bold text-[#059669]">,90</span><span className="text-sm text-[#6B7280]">/mês</span></div>
+                <p className="text-xs font-semibold text-[#059669] uppercase tracking-widest mb-2">Master</p>
+                <div className="flex items-baseline gap-1 mb-1"><span className="text-[42px] font-bold text-[#059669]">R$ 49</span><span className="text-[26px] font-bold text-[#059669]">,90</span><span className="text-sm text-[#6B7280]">/mês</span></div>
                 <p className="text-sm text-[#6B7280] mb-8">Gestão completa de imóveis para proprietários</p>
                 <ul className="space-y-3 mb-8">
                   {['Até 5 imóveis cadastrados','Controle de inquilinos','Histórico de aluguéis','Recibos PDF ilimitados','Alertas automáticos por e-mail','Reajuste automático IGPM/IPCA'].map(f => (
@@ -490,7 +490,7 @@ export function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/cadastro" className="block text-center bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-xl transition-colors text-sm">Assinar Pro — R$ 29,90/mês</Link>
+                <Link href="/cadastro" className="block text-center bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-xl transition-colors text-sm">Assinar Master — R$ 49,90/mês</Link>
               </div>
             </div>
             <p className="text-center mt-8 text-sm text-[#9CA3AF] lp-fade">

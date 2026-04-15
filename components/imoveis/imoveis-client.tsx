@@ -396,9 +396,9 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
               <strong>5 imóveis</strong>, além de recibos PDF, reajuste automático e muito mais.
             </p>
             <div className="rounded-xl border border-emerald-200 bg-[#D1FAE5]/40 p-4 space-y-2">
-              <p className="text-sm font-semibold text-emerald-700">ProprietárioZen Pro</p>
+              <p className="text-sm font-semibold text-emerald-700">ProprietárioZen Master</p>
               <p className="text-2xl font-bold text-emerald-700">
-                R$ 29,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
+                R$ 49,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
               </p>
               <ul className="text-xs text-[#475569] space-y-1 pt-1">
                 {['Até 5 imóveis', 'Recibos PDF ilimitados', 'Reajuste automático', 'Alertas por e-mail'].map(f => (

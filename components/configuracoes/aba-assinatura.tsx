@@ -96,7 +96,7 @@ export function AbaAssinatura({ plano }: Props) {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Grátis</CardTitle>
-                <Badge variant="outline">Atual</Badge>
+                <Badge variant="outline">Plano atual</Badge>
               </div>
               <p className="text-2xl font-bold">R$ 0<span className="text-sm font-normal text-[#94A3B8]">/mês</span></p>
             </CardHeader>
@@ -110,13 +110,13 @@ export function AbaAssinatura({ plano }: Props) {
           <Card className="border-2 border-emerald-500 bg-emerald-50/50">
             <CardHeader className="pb-3 pt-5">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-emerald-700">Pro</CardTitle>
+                <CardTitle className="text-base text-emerald-700">Master</CardTitle>
                 <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white">
                   <Zap className="h-3 w-3 mr-1" />Recomendado
                 </Badge>
               </div>
               <p className="text-2xl font-bold text-emerald-700">
-                R$ 29,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
+                R$ 49,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -129,7 +129,7 @@ export function AbaAssinatura({ plano }: Props) {
                 disabled={loading}
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                Assinar Pro — R$ 29,90/mês
+                Assinar Master — R$ 49,90/mês
               </Button>
             </CardContent>
           </Card>
@@ -146,11 +146,11 @@ export function AbaAssinatura({ plano }: Props) {
             <div className="flex gap-3">
               <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Plano Pro ativo</p>
+                <p className="font-medium text-sm">Plano Master ativo</p>
                 <p className="text-sm text-[#475569] mt-0.5">Todos os recursos estão disponíveis.</p>
               </div>
             </div>
-            <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold">Pro</Badge>
+            <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold">Master</Badge>
           </div>
         </CardContent>
       </Card>
@@ -163,7 +163,7 @@ export function AbaAssinatura({ plano }: Props) {
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between py-1.5">
             <span className="text-sm text-[#475569]">Valor mensal</span>
-            <span className="text-sm font-medium">R$ 29,90/mês</span>
+            <span className="text-sm font-medium">R$ 49,90/mês</span>
           </div>
           <Separator />
           <div className="flex items-center justify-between py-1.5">

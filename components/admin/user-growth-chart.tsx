@@ -20,7 +20,7 @@ function CustomTooltip({ active, payload, label }: TipProps) {
     <div className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-xs shadow-lg">
       <p className="font-semibold text-[#475569] mb-1">{label}</p>
       <p className="text-blue-600">Total: <span className="font-bold text-[#0F172A]">{payload[0]?.value}</span></p>
-      <p className="text-amber-600">Pro: <span className="font-bold text-[#0F172A]">{payload[1]?.value}</span></p>
+      <p className="text-amber-600">Master: <span className="font-bold text-[#0F172A]">{payload[1]?.value}</span></p>
     </div>
   )
 }
@@ -73,7 +73,7 @@ export function UserGrowthChart({ data }: { data: GrowthPoint[] }) {
         <Area
           type="monotone"
           dataKey="pro"
-          name="Pro"
+          name="Master"
           stroke="#f59e0b"
           strokeWidth={2}
           fill="url(#gradPro)"

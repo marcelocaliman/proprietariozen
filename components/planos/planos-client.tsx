@@ -107,9 +107,9 @@ export function PlanosClient({ planoAtual }: Props) {
           </div>
           <CardHeader className="pt-3 pb-4">
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Pro</p>
+              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Master</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-emerald-700">R$ 29,90</span>
+                <span className="text-4xl font-bold text-emerald-700">R$ 49,90</span>
                 <span className="text-[#94A3B8] text-sm">/mês</span>
               </div>
               <p className="text-sm text-[#475569]">Gestão completa de imóveis e inquilinos</p>
@@ -134,7 +134,7 @@ export function PlanosClient({ planoAtual }: Props) {
                   </Button>
                 : <Button className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2" onClick={handleAssinar} disabled={loading}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                    Assinar Pro — R$ 29,90/mês
+                    Assinar Master — R$ 49,90/mês
                   </Button>
               }
             </div>

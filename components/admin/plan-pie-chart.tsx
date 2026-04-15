@@ -21,7 +21,7 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
 
   const data = [
     { name: 'Grátis', value: gratis, color: '#475569' },
-    { name: 'Pro',    value: pro,    color: '#10b981' },
+    { name: 'Master', value: pro,    color: '#10b981' },
   ]
 
   return (
@@ -50,7 +50,7 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
         {/* Label central */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold text-[#0F172A] leading-none">{pct}%</span>
-          <span className="text-[11px] text-[#64748B] mt-0.5">Pro</span>
+          <span className="text-[11px] text-[#64748B] mt-0.5">Master</span>
         </div>
       </div>
       {/* Legenda */}
@@ -61,7 +61,7 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          Pro: <strong className="text-white">{pro}</strong>
+          Master: <strong className="text-white">{pro}</strong>
         </span>
       </div>
     </div>

@@ -60,7 +60,7 @@ type Pagination = { page: number; page_size: number; total: number; total_pages:
 
 // ── Filtros ───────────────────────────────────────────────────────────────────
 
-const PLANO_OPS   = [{ v: '', l: 'Todos os planos' }, { v: 'gratis', l: 'Grátis' }, { v: 'pago', l: 'Pro' }]
+const PLANO_OPS   = [{ v: '', l: 'Todos os planos' }, { v: 'gratis', l: 'Grátis' }, { v: 'pago', l: 'Master' }]
 const STATUS_OPS  = [{ v: '', l: 'Todos os status' }, { v: 'ativos', l: 'Ativos' }, { v: 'banidos', l: 'Banidos' }]
 const ORDENAR_OPS = [
   { v: 'mais_recentes',  l: 'Mais recentes' },
@@ -150,7 +150,7 @@ export default function AdminUsuariosPage() {
       const rows = allData.map(u => [
         u.nome,
         u.email,
-        u.plano === 'pago' ? 'Pro' : 'Grátis',
+        u.plano === 'pago' ? 'Master' : 'Grátis',
         u.total_imoveis,
         u.total_inquilinos,
         u.total_alugueis_mes,
@@ -191,7 +191,7 @@ export default function AdminUsuariosPage() {
         toast.success('Link de recuperação copiado para a área de transferência')
       } else {
         const msgs: Record<string, string> = {
-          mudar_plano: `Plano alterado para ${json.plano === 'pago' ? 'Pro' : 'Grátis'}`,
+          mudar_plano: `Plano alterado para ${json.plano === 'pago' ? 'Master' : 'Grátis'}`,
           banir:       'Usuário banido',
           reativar:    'Usuário reativado',
         }
@@ -335,7 +335,7 @@ export default function AdminUsuariosPage() {
                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                             : 'bg-slate-100 text-[#64748B] hover:bg-slate-100',
                         )}>
-                          {u.plano === 'pago' ? 'Pro' : 'Grátis'}
+                          {u.plano === 'pago' ? 'Master' : 'Grátis'}
                         </Badge>
                       </td>
 
@@ -384,7 +384,7 @@ export default function AdminUsuariosPage() {
                             {u.role !== 'admin' && (
                               <DropdownMenuItem onClick={() => acaoRapida(u.id, 'mudar_plano')}>
                                 <TrendingUp className="h-4 w-4 mr-2" />
-                                {u.plano === 'pago' ? 'Mover p/ Grátis' : 'Mover p/ Pro'}
+                                {u.plano === 'pago' ? 'Mover p/ Grátis' : 'Mover p/ Master'}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => acaoRapida(u.id, 'resetar_senha')}>

@@ -176,7 +176,7 @@ export default function AdminVisaoGeralPage() {
             iconCls="bg-blue-50 text-blue-600"
           />
           <KpiCard
-            title="Plano Pro"
+            title="Plano Master"
             value={data.users.total_pro.toLocaleString('pt-BR')}
             sub={`${data.users.taxa_conversao}% de conversão`}
             icon={ShieldAlert}
@@ -219,7 +219,7 @@ export default function AdminVisaoGeralPage() {
             </CardTitle>
             <div className="flex items-center gap-4 text-[11px] text-[#64748B] mt-1">
               <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-400" /> Total</span>
-              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" /> Pro</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" /> Master</span>
             </div>
           </CardHeader>
           <CardContent className="pt-0">

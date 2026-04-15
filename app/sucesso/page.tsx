@@ -19,7 +19,7 @@ export default function SucessoPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Assinatura confirmada!</h1>
           <p className="text-muted-foreground">
-            Bem-vindo ao <span className="font-semibold text-purple-600">ProprietárioZen Pro</span>.
+            Bem-vindo ao <span className="font-semibold text-purple-600">ProprietárioZen Master</span>.
             Seu acesso completo já está ativo.
           </p>
         </div>

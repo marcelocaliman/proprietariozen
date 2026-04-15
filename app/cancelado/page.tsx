@@ -18,7 +18,7 @@ export default function CanceladoPage() {
         <div className="space-y-2">
           <h1 className="text-2xl font-bold tracking-tight">Pagamento cancelado</h1>
           <p className="text-muted-foreground">
-            Nenhuma cobrança foi realizada. Você pode assinar o Pro quando quiser.
+            Nenhuma cobrança foi realizada. Você pode assinar o Master quando quiser.
           </p>
         </div>
 

@@ -24,7 +24,7 @@ function CustomTooltip({ active, payload, label }: TipProps) {
       <p className="font-semibold text-[#475569] mb-1.5">{label}</p>
       <p className="text-indigo-600">Conversão: <span className="font-bold text-[#0F172A]">{Number(taxa).toFixed(1)}%</span></p>
       <p className="text-[#64748B]">Cadastros: <span className="text-[#0F172A]">{total}</span></p>
-      <p className="text-emerald-600">Pro: <span className="text-[#0F172A]">{pro}</span></p>
+      <p className="text-emerald-600">Master: <span className="text-[#0F172A]">{pro}</span></p>
     </div>
   )
 }

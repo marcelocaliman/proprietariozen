@@ -4,7 +4,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
-const PRECO_PRO = 29.90
+const PRECO_PRO = 49.90
 
 function mesLabel(year: number, month: number) {
   return new Date(year, month - 1, 1)

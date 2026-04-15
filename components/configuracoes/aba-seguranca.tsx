@@ -321,7 +321,7 @@ export function AbaSeguranca({ email }: Props) {
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                 <li>Todos os imóveis e inquilinos serão apagados</li>
                 <li>O histórico de aluguéis será removido</li>
-                <li>Sua assinatura Pro será cancelada (se ativa)</li>
+                <li>Sua assinatura Master será cancelada (se ativa)</li>
                 <li>Não será possível recuperar os dados</li>
               </ul>
             </div>

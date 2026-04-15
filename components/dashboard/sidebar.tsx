@@ -98,7 +98,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
               onClick={onClose}
               className="flex items-center justify-between w-full rounded-lg bg-sidebar-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#047857] transition-colors"
             >
-              Fazer upgrade Pro
+              Fazer upgrade Master
               <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -120,7 +120,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
               <p className="text-sm font-medium text-white truncate">{profile?.nome ?? 'Usuário'}</p>
               {isPro && (
                 <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] text-[10px] h-4 px-1.5 shrink-0 font-semibold">
-                  Pro
+                  Master
                 </Badge>
               )}
             </div>

@@ -251,7 +251,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
                   ? 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold border-0'
                   : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#F1F5F9] border-0'}
               >
-                {profile.plano === 'pago' ? 'Pro' : 'Grátis'}
+                {profile.plano === 'pago' ? 'Master' : 'Grátis'}
               </Badge>
             </div>
             <Separator />

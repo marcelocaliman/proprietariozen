@@ -178,7 +178,7 @@ export default function AdminFinanceiroPage() {
                 value={fmt(data.totals.ltv_medio)}
                 sub="Estimado (12 meses)"
               />
-              <MetricCard title="Ticket Médio" value={fmt(29.90, 2)} sub="Plano Pro / mês" />
+              <MetricCard title="Ticket Médio" value={fmt(49.90, 2)} sub="Plano Master / mês" />
             </>)}
           </div>
 
