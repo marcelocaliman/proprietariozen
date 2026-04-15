@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Users, TrendingUp, DollarSign, Building2, Receipt,
   RefreshCw, AlertTriangle, CheckCircle2, Info, ShieldAlert,
-  ArrowUpRight, ArrowDownRight, Minus,
+  ArrowUpRight, ArrowDownRight, Minus, Activity,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -306,8 +306,14 @@ export default function AdminVisaoGeralPage() {
               {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
             </div>
           ) : !data?.recent_activity.length ? (
-            <div className="py-10 text-center text-sm text-[#94A3B8]">
-              Nenhum evento registrado ainda.
+            <div className="py-10 flex flex-col items-center gap-2 text-center">
+              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                <Activity className="h-5 w-5 text-slate-400" />
+              </div>
+              <p className="text-sm font-medium text-[#475569]">Nada por aqui ainda</p>
+              <p className="text-xs text-[#94A3B8] max-w-52">
+                Os eventos vão aparecer aqui conforme os usuários usarem o app.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">

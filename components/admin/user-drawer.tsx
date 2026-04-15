@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  Building2, Ban, RefreshCw, KeyRound,
+  Building2, Ban, RefreshCw, KeyRound, Activity,
   TrendingUp, Copy, CheckCircle2, AlertTriangle, ShieldOff,
 } from 'lucide-react'
 import {
@@ -487,8 +487,14 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                   {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12" />)}
                 </div>
               ) : !detail?.recent_activity.length ? (
-                <div className="py-12 text-center">
-                  <p className="text-sm text-[#94A3B8]">Nenhum evento registrado ainda.</p>
+                <div className="py-12 flex flex-col items-center gap-2 text-center">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <p className="text-sm font-medium text-[#475569]">Sem atividade recente</p>
+                  <p className="text-xs text-[#94A3B8] max-w-48">
+                    As ações deste usuário vão aparecer aqui automaticamente.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
