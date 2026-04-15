@@ -199,12 +199,12 @@ export function AbaAssinatura({ plano }: Props) {
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
               <p className="text-sm text-destructive font-medium">Atenção</p>
               <p className="text-sm text-[#475569] mt-1">
-                Você perderá acesso ao plano Pro <strong>no final do período pago</strong>.
+                Você perderá acesso ao plano Master <strong>no final do período pago</strong>.
                 Seus dados ficam preservados mas recursos exclusivos serão desativados.
               </p>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter Pro</Button>
+              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter Master</Button>
               <Button
                 variant="destructive"
                 disabled={loading}

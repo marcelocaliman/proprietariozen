@@ -227,13 +227,13 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
                 <option value="MANUAL">Manual — registrar pagamentos manualmente</option>
                 <option value="AUTOMATIC" disabled={plano === 'gratis'}>
                   {plano === 'gratis'
-                    ? 'Automático via Asaas — disponível no plano Pro'
+                    ? 'Automático via Asaas — disponível no plano Master'
                     : 'Automático — gerar PIX/boleto via Asaas'}
                 </option>
               </select>
               {plano === 'gratis' && (
                 <p className="text-xs text-amber-600">
-                  Cobrança automática disponível apenas no plano Pro.{' '}
+                  Cobrança automática disponível apenas no plano Master.{' '}
                   <a href="/planos" className="underline underline-offset-2 font-medium">Fazer upgrade</a>
                 </p>
               )}

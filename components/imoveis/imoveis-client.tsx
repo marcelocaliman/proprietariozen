@@ -147,7 +147,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Imóveis</h1>
           <p className="text-sm text-[#475569] mt-0.5">
-            {imoveis.length} de {limite} imóve{imoveis.length !== 1 ? 'is' : 'l'} · plano {plano === 'pago' ? 'Pro' : 'Grátis'}
+            {imoveis.length} de {limite} imóve{imoveis.length !== 1 ? 'is' : 'l'} · plano {plano === 'pago' ? 'Master' : 'Grátis'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                 onClick={handleAssinar}
               >
                 {loadingCheckout ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                Assinar Pro
+                Assinar Master
               </Button>
             </div>
           </div>

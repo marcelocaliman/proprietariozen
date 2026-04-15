@@ -105,7 +105,7 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
                   <p className="font-semibold text-slate-800">Cobrança automática via Asaas</p>
                   <p className="text-sm text-slate-500 max-w-sm">
                     Gere cobranças de aluguel com PIX e boleto automáticos direto pelo app.
-                    Disponível no <strong>plano Pro</strong>.
+                    Disponível no <strong>plano Master</strong>.
                   </p>
                 </div>
                 <a
@@ -113,7 +113,7 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 transition-colors"
                 >
                   <Zap className="h-4 w-4" />
-                  Fazer upgrade para o Pro
+                  Fazer upgrade para o Master
                 </a>
               </div>
             )
