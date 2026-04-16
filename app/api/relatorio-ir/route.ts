@@ -60,17 +60,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(calcularResumoAnual(ano, []))
     }
 
-    // Passo 2 — aluguéis pagos no ano
-    const anoStr = String(ano)
+    // Passo 2 — aluguéis pagos (calcularResumoAnual filtra pelo ano internamente)
     const { data: alugueis, error: errAlugueis } = await admin
       .from('alugueis')
       .select('mes_referencia, valor, valor_pago')
       .in('imovel_id', imovelIds)
       .eq('status', 'pago')
-      .like('mes_referencia', `${anoStr}%`)
 
     if (errAlugueis) {
-      console.error('[relatorio-ir] alugueis error:', errAlugueis.message, errAlugueis.code)
+      console.error('[relatorio-ir] alugueis error:', errAlugueis.message, errAlugueis.code, JSON.stringify(errAlugueis))
       return NextResponse.json({ error: 'Erro ao buscar aluguéis', detail: errAlugueis.message }, { status: 500 })
     }
 

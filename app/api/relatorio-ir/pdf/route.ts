@@ -44,8 +44,7 @@ export async function POST(req: NextRequest) {
 
   const imovelIds = (imoveis ?? []).map(i => i.id)
 
-  // Passo 2 — aluguéis pagos no ano
-  const anoStr = String(ano)
+  // Passo 2 — aluguéis pagos (calcularResumoAnual filtra pelo ano internamente)
   const registros: { mes_referencia: string; valor: number; valor_pago: number | null }[] = []
 
   if (imovelIds.length > 0) {
@@ -54,7 +53,6 @@ export async function POST(req: NextRequest) {
       .select('mes_referencia, valor, valor_pago')
       .in('imovel_id', imovelIds)
       .eq('status', 'pago')
-      .like('mes_referencia', `${anoStr}%`)
 
     if (error) {
       return NextResponse.json({ error: 'Erro ao buscar dados' }, { status: 500 })

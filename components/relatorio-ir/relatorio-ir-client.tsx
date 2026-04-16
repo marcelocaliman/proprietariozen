@@ -50,7 +50,8 @@ export function RelatorioIRClient({ anoAtual }: Props) {
       const res = await fetch(`/api/relatorio-ir?ano=${a}`)
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        toast.error(json.error ?? 'Erro ao carregar relatório')
+        const msg = json.detail ? `${json.error}: ${json.detail}` : (json.error ?? 'Erro ao carregar relatório')
+        toast.error(msg)
         return
       }
       const json: ResumoAnualIR = await res.json()
