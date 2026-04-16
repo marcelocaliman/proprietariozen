@@ -1,6 +1,7 @@
 'use client'
 
-import { X, Copy, ExternalLink, Zap, Loader2, QrCode, KeyRound, Settings } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Copy, ExternalLink, Zap, Loader2, QrCode, KeyRound, Settings, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -46,9 +47,11 @@ interface Props {
   open: boolean
   onClose: () => void
   loadingCobranca: boolean
+  loadingEmail: boolean
   onGerarCobranca: () => void
   onCancelarCobranca: () => void
   onRegistrarPagamento: () => void
+  onEnviarEmail: () => void
 }
 
 // ─── Seções por cenário ────────────────────────────────────────────────────────
@@ -80,10 +83,13 @@ function SecaoAutoSemCharge({ loading, onGerar }: { loading: boolean; onGerar: (
   )
 }
 
-function SecaoAutoComCharge({ aluguel, loading, onCancelar }: {
+function SecaoAutoComCharge({ aluguel, loading, loadingEmail, inquilinoEmail, onCancelar, onEnviarEmail }: {
   aluguel: AluguelItem
   loading: boolean
+  loadingEmail: boolean
+  inquilinoEmail: string | null
   onCancelar: () => void
+  onEnviarEmail: () => void
 }) {
   return (
     <div className="space-y-4 py-2">
@@ -129,6 +135,21 @@ function SecaoAutoComCharge({ aluguel, loading, onCancelar }: {
         </a>
       )}
 
+      {/* Enviar por e-mail */}
+      {inquilinoEmail ? (
+        <Button
+          variant="outline"
+          className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          onClick={onEnviarEmail}
+          disabled={loadingEmail}
+        >
+          {loadingEmail
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <Mail className="h-4 w-4" />}
+          Enviar para {inquilinoEmail}
+        </Button>
+      ) : null}
+
       {/* Cancelar */}
       <button
         onClick={onCancelar}
@@ -145,16 +166,45 @@ function SecaoAutoComCharge({ aluguel, loading, onCancelar }: {
 function SecaoManualComPix({
   pixKey,
   pixKeyTipo,
+  inquilinoEmail,
+  loadingEmail,
   onRegistrar,
+  onEnviarEmail,
 }: {
   pixKey: string
   pixKeyTipo: string | null
+  inquilinoEmail: string | null
+  loadingEmail: boolean
   onRegistrar: () => void
+  onEnviarEmail: () => void
 }) {
   const tipoLabel = pixKeyTipo ? (PIX_TIPO_LABEL[pixKeyTipo] ?? pixKeyTipo) : 'PIX'
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!pixKey) return
+    import('qrcode').then(mod => {
+      mod.default.toDataURL(pixKey, { width: 200, margin: 2 })
+        .then(url => setQrDataUrl(url))
+        .catch(() => setQrDataUrl(null))
+    })
+  }, [pixKey])
 
   return (
     <div className="space-y-4 py-2">
+      {/* QR Code */}
+      {qrDataUrl && (
+        <div className="flex justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={qrDataUrl}
+            alt="QR Code PIX"
+            className="h-44 w-44 rounded-xl border border-slate-200 p-2 bg-white"
+          />
+        </div>
+      )}
+
+      {/* Chave PIX */}
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
         <div className="flex items-center gap-2">
           <KeyRound className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -174,6 +224,25 @@ function SecaoManualComPix({
           Copiar chave PIX
         </Button>
       </div>
+
+      {/* Enviar por e-mail */}
+      {inquilinoEmail ? (
+        <Button
+          variant="outline"
+          className="w-full gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          onClick={onEnviarEmail}
+          disabled={loadingEmail}
+        >
+          {loadingEmail
+            ? <Loader2 className="h-4 w-4 animate-spin" />
+            : <Mail className="h-4 w-4" />}
+          Enviar para {inquilinoEmail}
+        </Button>
+      ) : (
+        <p className="text-xs text-slate-400 text-center">
+          Inquilino sem e-mail cadastrado — não é possível enviar por e-mail.
+        </p>
+      )}
 
       <p className="text-xs text-slate-500 text-center">
         Após o inquilino realizar o pagamento, registre-o abaixo.
@@ -225,14 +294,17 @@ export function CobrancaModal({
   open,
   onClose,
   loadingCobranca,
+  loadingEmail,
   onGerarCobranca,
   onCancelarCobranca,
   onRegistrarPagamento,
+  onEnviarEmail,
 }: Props) {
   if (!open) return null
 
   const isAutomatic = aluguel.imovel?.billing_mode === 'AUTOMATIC'
   const temCharge = !!aluguel.asaas_charge_id
+  const inquilinoEmail = aluguel.inquilino?.email ?? null
 
   function renderContent() {
     if (isAutomatic) {
@@ -248,7 +320,10 @@ export function CobrancaModal({
         <SecaoAutoComCharge
           aluguel={aluguel}
           loading={loadingCobranca}
+          loadingEmail={loadingEmail}
+          inquilinoEmail={inquilinoEmail}
           onCancelar={onCancelarCobranca}
+          onEnviarEmail={onEnviarEmail}
         />
       )
     }
@@ -259,7 +334,10 @@ export function CobrancaModal({
         <SecaoManualComPix
           pixKey={pixKey}
           pixKeyTipo={pixKeyTipo}
+          inquilinoEmail={inquilinoEmail}
+          loadingEmail={loadingEmail}
           onRegistrar={onRegistrarPagamento}
+          onEnviarEmail={onEnviarEmail}
         />
       )
     }

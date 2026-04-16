@@ -322,6 +322,127 @@ export async function enviarEmailCobranca({
   })
 }
 
+// ─── Template 5: Cobrança para o inquilino ───────────────────────────────────
+
+interface CobrancaInquilinoParams {
+  para: string
+  nomeInquilino: string
+  nomeProprietario: string
+  nomeImovel: string
+  valor: number
+  mesReferencia: string
+  dataVencimento: string
+  // Modo manual
+  pixKey?: string | null
+  pixKeyTipo?: string | null
+  pixQrBase64?: string | null   // base64 PNG gerado pelo servidor
+  // Modo automático (Asaas)
+  asaasPixCopiaECola?: string | null
+  asaasPixQrcode?: string | null // base64 PNG vindo do Asaas
+  assasBoletoUrl?: string | null
+}
+
+const PIX_TIPO_LABEL_EMAIL: Record<string, string> = {
+  cpf:       'CPF',
+  cnpj:      'CNPJ',
+  email:     'E-mail',
+  telefone:  'Telefone',
+  aleatoria: 'Chave aleatória',
+}
+
+export async function enviarCobrancaParaInquilino(p: CobrancaInquilinoParams) {
+  const isAutomatic = !!(p.asaasPixCopiaECola || p.asaasPixQrcode || p.assasBoletoUrl)
+  const tipoLabel = p.pixKeyTipo ? (PIX_TIPO_LABEL_EMAIL[p.pixKeyTipo] ?? p.pixKeyTipo) : 'PIX'
+
+  // ── bloco PIX manual ──
+  let pixManualBlock = ''
+  if (!isAutomatic && p.pixKey) {
+    const qrImg = p.pixQrBase64
+      ? `<div style="text-align:center;margin:16px 0;">
+           <img src="data:image/png;base64,${p.pixQrBase64}" alt="QR Code PIX"
+                width="180" height="180"
+                style="border-radius:8px;border:1px solid #e5e7eb;padding:8px;background:#fff;" />
+           <p style="margin:6px 0 0;font-size:11px;color:#9ca3af;">Aponte a câmera do celular para pagar</p>
+         </div>`
+      : ''
+    pixManualBlock = `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;">
+          Chave PIX — ${tipoLabel}
+        </p>
+        <p style="margin:0;font-size:16px;font-family:monospace;font-weight:700;color:#14532d;word-break:break-all;">
+          ${p.pixKey}
+        </p>
+      </div>
+      ${qrImg}`
+  }
+
+  // ── bloco Asaas (automático) ──
+  let asaasBlock = ''
+  if (isAutomatic) {
+    const qrImg = p.asaasPixQrcode
+      ? `<div style="text-align:center;margin:16px 0;">
+           <img src="data:image/png;base64,${p.asaasPixQrcode}" alt="QR Code PIX"
+                width="180" height="180"
+                style="border-radius:8px;border:1px solid #e5e7eb;padding:8px;background:#fff;" />
+           <p style="margin:6px 0 0;font-size:11px;color:#9ca3af;">QR Code PIX — aponte a câmera para pagar</p>
+         </div>`
+      : ''
+    const copiaECola = p.asaasPixCopiaECola
+      ? `<div style="margin:12px 0;">
+           <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#374151;">PIX Copia e Cola</p>
+           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:11px;color:#6b7280;word-break:break-all;line-height:1.5;">
+             ${p.asaasPixCopiaECola}
+           </div>
+         </div>`
+      : ''
+    const boleto = p.assasBoletoUrl
+      ? `<div style="text-align:center;margin:16px 0 0;">
+           <a href="${p.assasBoletoUrl}" target="_blank" rel="noopener"
+              style="display:inline-block;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+             Ver boleto bancário →
+           </a>
+         </div>`
+      : ''
+    asaasBlock = `${qrImg}${copiaECola}${boleto}`
+  }
+
+  // ── fallback: sem método ──
+  const semMetodoBlock = !pixManualBlock && !asaasBlock
+    ? `<p style="margin:20px 0;font-size:14px;color:#374151;">
+         Entre em contato com <strong>${p.nomeProprietario}</strong> para combinar a forma de pagamento.
+       </p>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Olá, <strong>${p.nomeInquilino}</strong>!</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+      <strong>${p.nomeProprietario}</strong> está enviando a cobrança do aluguel do imóvel
+      <strong>${p.nomeImovel}</strong>.
+    </p>
+    ${infoTable([
+      ['Imóvel',      p.nomeImovel],
+      ['Referência',  formatarMesReferencia(p.mesReferencia)],
+      ['Vencimento',  formatarData(p.dataVencimento)],
+      ['Valor',       formatarMoeda(p.valor)],
+    ])}
+    ${pixManualBlock}
+    ${asaasBlock}
+    ${semMetodoBlock}
+    <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
+      Em caso de dúvidas, entre em contato diretamente com <strong>${p.nomeProprietario}</strong>.
+    </p>`
+
+  return enviarEmail({
+    from: FROM,
+    to: [p.para],
+    subject: `Cobrança de aluguel — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
+    html: wrapEmail('#059669', 'Cobrança de Aluguel', body),
+  })
+}
+
+// ─── Template 6: Boas-vindas ─────────────────────────────────────────────────
+
 interface EmailBemVindoParams {
   para: string
   nome: string

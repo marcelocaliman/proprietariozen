@@ -267,6 +267,7 @@ export function AlugueisClient({
   const [cobrancaAluguel, setCobrancaAluguel] = useState<AluguelItem | null>(null)
   const [loadingRecibo, setLoadingRecibo] = useState<string | null>(null)
   const [loadingCobranca, setLoadingCobranca] = useState<string | null>(null)
+  const [loadingEmail, setLoadingEmail] = useState(false)
 
   // Filter state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -435,6 +436,23 @@ export function AlugueisClient({
       toast.error('Erro ao cancelar cobrança')
     } finally {
       setLoadingCobranca(null)
+    }
+  }
+
+  async function handleEnviarEmail(aluguel: AluguelItem) {
+    setLoadingEmail(true)
+    try {
+      const res = await fetch(`/api/alugueis/${aluguel.id}/enviar-cobranca`, { method: 'POST' })
+      const data = await res.json() as { error?: string }
+      if (!res.ok) {
+        toast.error(data.error ?? 'Erro ao enviar e-mail')
+        return
+      }
+      toast.success('E-mail enviado com sucesso!')
+    } catch {
+      toast.error('Erro ao enviar e-mail')
+    } finally {
+      setLoadingEmail(false)
     }
   }
 
@@ -885,6 +903,7 @@ export function AlugueisClient({
           open={cobrancaOpen}
           onClose={() => setCobrancaOpen(false)}
           loadingCobranca={loadingCobranca === cobrancaAluguel.id}
+          loadingEmail={loadingEmail}
           onGerarCobranca={() => {
             setCobrancaOpen(false)
             handleGerarCobranca(cobrancaAluguel)
@@ -897,6 +916,7 @@ export function AlugueisClient({
             setCobrancaOpen(false)
             handlePagar(cobrancaAluguel)
           }}
+          onEnviarEmail={() => handleEnviarEmail(cobrancaAluguel)}
         />
       )}
 
