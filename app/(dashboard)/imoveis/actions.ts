@@ -8,13 +8,16 @@ export type ImovelInput = {
   apelido: string
   endereco: string
   tipo: 'apartamento' | 'casa' | 'kitnet' | 'comercial' | 'terreno' | 'outro'
+  observacoes: string | null
+}
+
+export type ContratoInput = {
   valor_aluguel: number
   dia_vencimento: number
   data_inicio_contrato: string | null
   data_proximo_reajuste: string | null
   indice_reajuste: 'igpm' | 'ipca' | 'fixo'
   percentual_fixo: number | null
-  observacoes: string | null
   vigencia_meses: number | null
   data_fim_contrato: string | null
   contrato_indeterminado: boolean
@@ -31,6 +34,16 @@ export async function criarImovel(input: ImovelInput): Promise<{ error?: string 
     .insert({
       user_id: user.id,
       ...input,
+      valor_aluguel: 0,
+      dia_vencimento: 10,
+      indice_reajuste: 'fixo',
+      percentual_fixo: null,
+      data_inicio_contrato: null,
+      data_proximo_reajuste: null,
+      vigencia_meses: null,
+      data_fim_contrato: null,
+      contrato_indeterminado: true,
+      alerta_vencimento_enviado: false,
       billing_mode: 'MANUAL',
       multa_percentual: 2,
       juros_percentual: 1,
@@ -49,7 +62,22 @@ export async function editarImovel(id: string, input: ImovelInput): Promise<{ er
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
-  // Ler estado atual antes de atualizar
+  const { error } = await supabase
+    .from('imoveis')
+    .update(input)
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (error) return { error: error.message }
+
+  revalidatePath('/imoveis')
+  return {}
+}
+
+export async function editarContrato(id: string, input: ContratoInput): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
   const { data: imovelAtual } = await supabase
     .from('imoveis')
     .select('dia_vencimento, data_inicio_contrato')
@@ -93,7 +121,7 @@ export async function editarImovel(id: string, input: ImovelInput): Promise<{ er
   // Se data_inicio_contrato avançou, cancelar aluguéis pendentes/atrasados antes do novo início
   if (imovelAtual && input.data_inicio_contrato &&
       input.data_inicio_contrato !== imovelAtual.data_inicio_contrato) {
-    const inicioMesStr = `${input.data_inicio_contrato.slice(0, 7)}-01` // YYYY-MM-01
+    const inicioMesStr = `${input.data_inicio_contrato.slice(0, 7)}-01`
     await supabase
       .from('alugueis')
       .update({ status: 'cancelado' })

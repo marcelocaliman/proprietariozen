@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils'
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type ImovelOpcao = { id: string; apelido: string }
+type ImovelVago  = { id: string; apelido: string }
 
 type InquilinoRich = Inquilino & {
   imovel?: { id: string; apelido: string; valor_aluguel?: number } | null
@@ -104,10 +105,11 @@ function StatusAluguelLine({ aluguel }: { aluguel: AluguelMes | undefined }) {
 interface Props {
   inquilinos: InquilinoRich[]
   imoveis: ImovelOpcao[]
+  imoveisVagos: ImovelVago[]
   alugueisMes: AluguelMes[]
 }
 
-export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
+export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMes }: Props) {
   const router = useRouter()
   const [open, setOpen]         = useState(false)
   const [editando, setEditando] = useState<Inquilino | null>(null)
@@ -402,7 +404,13 @@ export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
         </div>
       )}
 
-      <InquilinoModal open={open} onOpenChange={setOpen} inquilino={editando} imoveis={imoveis} />
+      <InquilinoModal
+        open={open}
+        onOpenChange={setOpen}
+        inquilino={editando}
+        imoveis={editando ? imoveis : imoveisVagos}
+        imovelIdPrefill={null}
+      />
 
       {/* Sheet de documentos do inquilino */}
       <Sheet open={!!docInquilino} onOpenChange={(o) => { if (!o) setDocInquilino(null) }}>

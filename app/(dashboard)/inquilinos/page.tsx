@@ -19,7 +19,7 @@ export default async function InquilinosPage() {
 
     supabase
       .from('imoveis')
-      .select('id, apelido')
+      .select('id, apelido, inquilinos(id, ativo)')
       .eq('user_id', user.id)
       .eq('ativo', true)
       .order('apelido', { ascending: true }),
@@ -32,11 +32,20 @@ export default async function InquilinosPage() {
       .not('inquilino_id', 'is', null),
   ])
 
+  // Imóveis sem inquilino ativo
+  const imoveisVagos = (imoveis ?? [])
+    .filter(im => {
+      const inqs = (im.inquilinos as { id: string; ativo: boolean }[] | null) ?? []
+      return !inqs.some(i => i.ativo)
+    })
+    .map(im => ({ id: im.id, apelido: im.apelido }))
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <InquilinosClient
         inquilinos={(inquilinos ?? []) as (Inquilino & { imovel?: { id: string; apelido: string; valor_aluguel?: number } | null })[]}
-        imoveis={imoveis ?? []}
+        imoveis={(imoveis ?? []).map(im => ({ id: im.id, apelido: im.apelido }))}
+        imoveisVagos={imoveisVagos}
         alugueisMes={(alugueisMes ?? []) as { inquilino_id: string; status: string; data_pagamento: string | null; data_vencimento: string }[]}
       />
     </div>

@@ -6,7 +6,8 @@ import { toast } from 'sonner'
 import {
   Plus, Building2, Home, Square, Briefcase, MapPin,
   Zap, Loader2, MoreHorizontal, LayoutGrid, List,
-  CheckCircle2, Clock, AlertTriangle, Pencil, Archive, LogOut, Settings2,
+  CheckCircle2, Clock, AlertTriangle, Pencil, Archive, LogOut,
+  Settings2, FileText, UserPlus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,8 +19,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
+import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
 import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-modal'
 import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
+import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
@@ -102,6 +105,8 @@ function StatusAluguelLine({
 // ─── VigenciaCardLine ─────────────────────────────────────────────────────────
 
 function VigenciaCardLine({ imovel, onEditar }: { imovel: Imovel; onEditar: () => void }) {
+  // Sem contrato configurado ainda (imóvel recém-criado)
+  if (imovel.valor_aluguel === 0) return null
   if (!imovel.data_fim_contrato && !imovel.contrato_indeterminado) return null
   if (imovel.contrato_indeterminado) {
     return <span className="text-xs text-slate-400 italic">Sem prazo definido</span>
@@ -137,13 +142,15 @@ interface Props {
 
 export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
   const router = useRouter()
-  const [open, setOpen]               = useState(false)
+  const [open, setOpen]                         = useState(false)
   const [editando, setEditando]                 = useState<Imovel | null>(null)
+  const [editContrato, setEditContrato]         = useState<Imovel | null>(null)
   const [encerrando, setEncerrando]             = useState<Imovel | null>(null)
   const [configCobranca, setConfigCobranca]     = useState<Imovel | null>(null)
+  const [vinculandoImovel, setVinculandoImovel] = useState<Imovel | null>(null)
   const [upgradeOpen, setUpgradeOpen]           = useState(false)
-  const [loadingCheckout, setLoadingCheckout] = useState(false)
-  const [view, setView]               = useState<'grid' | 'list'>('grid')
+  const [loadingCheckout, setLoadingCheckout]   = useState(false)
+  const [view, setView]                         = useState<'grid' | 'list'>('grid')
 
   // Persistir preferência de view
   useEffect(() => {
@@ -154,17 +161,17 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
     setView(v); localStorage.setItem('imoveis_view', v)
   }
 
-  const limite       = LIMITES_PLANO[plano].imoveis
+  const limite        = LIMITES_PLANO[plano].imoveis
   const atingiuLimite = imoveis.length >= limite
 
-  // Mapa rápido imovel_id → aluguel do mês
   const aluguelMap = Object.fromEntries(alugueisMes.map(a => [a.imovel_id, a]))
 
   function handleNovo() {
     if (atingiuLimite) { setUpgradeOpen(true); return }
     setEditando(null); setOpen(true)
   }
-  function handleEditar(imovel: Imovel) { setEditando(imovel); setOpen(true) }
+  function handleEditar(imovel: Imovel)        { setEditando(imovel); setOpen(true) }
+  function handleEditarContrato(imovel: Imovel) { setEditContrato(imovel) }
 
   async function handleArquivar(imovel: Imovel) {
     if (!confirm(`Arquivar "${imovel.apelido}"?`)) return
@@ -267,40 +274,69 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
             return (
               <div key={imovel.id} className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
 
-                {/* Header colorido */}
-                <div className="relative bg-[#D1FAE5] px-5 py-6 flex items-center justify-center">
-                  <TipoIcon className="h-10 w-10 text-[#059669]" />
+                {/* Header colorido — verde para ocupado, slate para vago */}
+                <div className={cn(
+                  'relative px-5 py-6 flex items-center justify-center',
+                  ocupado ? 'bg-[#D1FAE5]' : 'bg-slate-100',
+                )}>
+                  <TipoIcon className={cn('h-10 w-10', ocupado ? 'text-[#059669]' : 'text-slate-400')} />
 
                   {/* Dropdown 3 pontos — canto superior esquerdo */}
                   <div className="absolute top-2 left-2" onClick={e => e.stopPropagation()}>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-emerald-200/60 transition-colors text-[#059669]">
+                      <DropdownMenuTrigger className={cn(
+                        'h-7 w-7 flex items-center justify-center rounded-md transition-colors',
+                        ocupado
+                          ? 'hover:bg-emerald-200/60 text-[#059669]'
+                          : 'hover:bg-slate-200/60 text-slate-500',
+                      )}>
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-52">
-                        <DropdownMenuItem onClick={() => handleEditar(imovel)}>
-                          <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
-                          <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/alugueis')}>
-                          <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setEncerrando(imovel)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <LogOut className="h-3.5 w-3.5 mr-2" />Encerrar contrato
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleArquivar(imovel)}
-                          className="text-[#94A3B8] focus:text-[#475569]"
-                        >
-                          <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
+                      {ocupado ? (
+                        <DropdownMenuContent align="start" className="w-52">
+                          <DropdownMenuItem onClick={() => handleEditar(imovel)}>
+                            <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditarContrato(imovel)}>
+                            <FileText className="h-3.5 w-3.5 mr-2" />Editar contrato
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
+                            <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push('/alugueis')}>
+                            <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setEncerrando(imovel)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <LogOut className="h-3.5 w-3.5 mr-2" />Encerrar contrato
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleArquivar(imovel)}
+                            className="text-[#94A3B8] focus:text-[#475569]"
+                          >
+                            <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      ) : (
+                        <DropdownMenuContent align="start" className="w-52">
+                          <DropdownMenuItem onClick={() => handleEditar(imovel)}>
+                            <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setVinculandoImovel(imovel)}>
+                            <UserPlus className="h-3.5 w-3.5 mr-2" />Vincular inquilino
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleArquivar(imovel)}
+                            className="text-[#94A3B8] focus:text-[#475569]"
+                          >
+                            <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      )}
                     </DropdownMenu>
                   </div>
 
@@ -316,7 +352,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                     </Badge>
                   </div>
 
-                  {/* Badge vencimento contrato — canto superior esquerdo (abaixo do ⋯) */}
+                  {/* Badge vencimento contrato */}
                   {(() => {
                     if (!imovel.data_fim_contrato || imovel.contrato_indeterminado) return null
                     const dias = diasAte(imovel.data_fim_contrato)
@@ -350,8 +386,8 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                   {/* Grade 2×2 de info */}
                   <div className="grid grid-cols-2 border border-[#F1F5F9] rounded-lg overflow-hidden">
                     {[
-                      { label: 'ALUGUEL',    value: formatarMoeda(imovel.valor_aluguel) },
-                      { label: 'VENCIMENTO', value: `Dia ${imovel.dia_vencimento}` },
+                      { label: 'ALUGUEL',    value: imovel.valor_aluguel > 0 ? formatarMoeda(imovel.valor_aluguel) : '—' },
+                      { label: 'VENCIMENTO', value: imovel.valor_aluguel > 0 ? `Dia ${imovel.dia_vencimento}` : '—' },
                       { label: 'INQUILINO',  value: inquilinoAtivo?.nome ?? '—' },
                       { label: 'TIPO',       value: labelsTipo[imovel.tipo] ?? imovel.tipo },
                     ].map(({ label, value }, idx) => (
@@ -370,18 +406,32 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                   </div>
                 </div>
 
-                {/* Footer — linha de status do aluguel + botão Editar + vigência */}
+                {/* Footer */}
                 <div className="px-5 py-3 border-t border-[#F1F5F9] space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
-                    <button
-                      onClick={() => handleEditar(imovel)}
-                      className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
-                    >
-                      <Pencil className="h-3 w-3" />Editar
-                    </button>
-                  </div>
-                  <VigenciaCardLine imovel={imovel} onEditar={() => handleEditar(imovel)} />
+                  {ocupado ? (
+                    <>
+                      <div className="flex items-center justify-between gap-2">
+                        <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
+                        <button
+                          onClick={() => handleEditar(imovel)}
+                          className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
+                        >
+                          <Pencil className="h-3 w-3" />Editar
+                        </button>
+                      </div>
+                      <VigenciaCardLine imovel={imovel} onEditar={() => handleEditarContrato(imovel)} />
+                    </>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-slate-400 italic">Sem inquilino vinculado</span>
+                      <button
+                        onClick={() => setVinculandoImovel(imovel)}
+                        className="shrink-0 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
+                      >
+                        <UserPlus className="h-3 w-3" />Vincular inquilino
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -404,6 +454,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
             <tbody className="divide-y divide-[#F1F5F9]">
               {imoveis.map(imovel => {
                 const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+                const ocupado        = !!inquilinoAtivo
                 const TipoIcon       = tipoIcone[imovel.tipo] ?? Building2
                 const aluguel        = aluguelMap[imovel.id]
 
@@ -411,8 +462,11 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                   <tr key={imovel.id} className="hover:bg-slate-50 transition-colors" style={{ height: 52 }}>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-[#D1FAE5] flex items-center justify-center shrink-0">
-                          <TipoIcon className="h-4 w-4 text-[#059669]" />
+                        <div className={cn(
+                          'h-8 w-8 rounded-lg flex items-center justify-center shrink-0',
+                          ocupado ? 'bg-[#D1FAE5]' : 'bg-slate-100',
+                        )}>
+                          <TipoIcon className={cn('h-4 w-4', ocupado ? 'text-[#059669]' : 'text-slate-400')} />
                         </div>
                         <div className="min-w-0">
                           <p className="font-semibold text-[#0F172A] truncate text-[13px]">{imovel.apelido}</p>
@@ -427,14 +481,14 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                       {inquilinoAtivo?.nome ?? <span className="text-[#94A3B8] italic">Vago</span>}
                     </td>
                     <td className="px-4 py-2 text-[13px] font-medium text-[#0F172A] whitespace-nowrap">
-                      {formatarMoeda(imovel.valor_aluguel)}
+                      {imovel.valor_aluguel > 0 ? formatarMoeda(imovel.valor_aluguel) : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-2 text-xs text-[#64748B] whitespace-nowrap">
-                      Dia {imovel.dia_vencimento}
+                      {imovel.valor_aluguel > 0 ? `Dia ${imovel.dia_vencimento}` : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-2 text-xs whitespace-nowrap">
                       {imovel.contrato_indeterminado ? (
-                        <span className="text-slate-400 italic">Indeterminado</span>
+                        <span className="text-slate-400 italic">{imovel.valor_aluguel > 0 ? 'Indeterminado' : '—'}</span>
                       ) : imovel.data_fim_contrato ? (() => {
                         const dias = diasAte(imovel.data_fim_contrato!)
                         const fim = new Date(imovel.data_fim_contrato! + 'T00:00:00')
@@ -449,42 +503,71 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleEditar(imovel)}
-                          className="text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1 whitespace-nowrap"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          Editar
-                        </button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-[#64748B]">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                          <DropdownMenuItem onClick={() => handleEditar(imovel)}>
-                            <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
-                            <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push('/alugueis')}>
-                            <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setEncerrando(imovel)}
-                            className="text-red-600 focus:text-red-600"
+                        {ocupado ? (
+                          <button
+                            onClick={() => handleEditar(imovel)}
+                            className="text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1 whitespace-nowrap"
                           >
-                            <LogOut className="h-3.5 w-3.5 mr-2" />Encerrar contrato
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleArquivar(imovel)}
-                            className="text-[#94A3B8] focus:text-[#475569]"
+                            <Pencil className="h-3 w-3" />Editar
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setVinculandoImovel(imovel)}
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1 whitespace-nowrap"
                           >
-                            <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <UserPlus className="h-3 w-3" />Vincular
+                          </button>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-[#64748B]">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </DropdownMenuTrigger>
+                          {ocupado ? (
+                            <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuItem onClick={() => handleEditar(imovel)}>
+                                <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditarContrato(imovel)}>
+                                <FileText className="h-3.5 w-3.5 mr-2" />Editar contrato
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
+                                <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push('/alugueis')}>
+                                <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setEncerrando(imovel)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <LogOut className="h-3.5 w-3.5 mr-2" />Encerrar contrato
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleArquivar(imovel)}
+                                className="text-[#94A3B8] focus:text-[#475569]"
+                              >
+                                <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          ) : (
+                            <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuItem onClick={() => handleEditar(imovel)}>
+                                <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setVinculandoImovel(imovel)}>
+                                <UserPlus className="h-3.5 w-3.5 mr-2" />Vincular inquilino
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleArquivar(imovel)}
+                                className="text-[#94A3B8] focus:text-[#475569]"
+                              >
+                                <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          )}
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>
@@ -498,6 +581,12 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
       {/* ── Modais ───────────────────────────────────────────────────────── */}
       <ImovelModal open={open} onOpenChange={setOpen} imovel={editando} />
 
+      <EditarContratoModal
+        open={!!editContrato}
+        onOpenChange={v => { if (!v) setEditContrato(null) }}
+        imovel={editContrato}
+      />
+
       <CobrancaConfigModal
         open={!!configCobranca}
         onOpenChange={v => { if (!v) setConfigCobranca(null) }}
@@ -509,6 +598,15 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
         imovel={encerrando}
         open={!!encerrando}
         onClose={() => setEncerrando(null)}
+      />
+
+      {/* Modal de vincular inquilino — aberto direto da tela de imóveis */}
+      <InquilinoModal
+        open={!!vinculandoImovel}
+        onOpenChange={v => { if (!v) setVinculandoImovel(null) }}
+        inquilino={null}
+        imoveis={vinculandoImovel ? [{ id: vinculandoImovel.id, apelido: vinculandoImovel.apelido }] : []}
+        imovelIdPrefill={vinculandoImovel?.id ?? null}
       />
 
       <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>

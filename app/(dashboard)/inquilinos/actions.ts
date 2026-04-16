@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { registrarLog } from '@/lib/log'
+import type { ContratoInput } from '@/app/(dashboard)/imoveis/actions'
 
 /** Revoga todos os tokens ativos de um inquilino (usa admin para bypassar RLS). */
 async function revogarTokensInquilino(inquilinoId: string) {
@@ -36,6 +37,35 @@ export async function criarInquilino(input: InquilinoInput): Promise<{ error?: s
   await registrarLog(user.id, 'INQUILINO_CRIADO', 'inquilino', inserted?.id, { nome: input.nome })
   revalidatePath('/inquilinos')
   revalidatePath('/imoveis')
+  return {}
+}
+
+export async function criarInquilinoComContrato(
+  inquilinoInput: InquilinoInput,
+  contratoInput: ContratoInput,
+): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: inserted, error } = await supabase
+    .from('inquilinos')
+    .insert({ user_id: user.id, ...inquilinoInput })
+    .select('id')
+    .single()
+  if (error) return { error: error.message }
+
+  const { error: errContrato } = await supabase
+    .from('imoveis')
+    .update(contratoInput)
+    .eq('id', inquilinoInput.imovel_id)
+    .eq('user_id', user.id)
+  if (errContrato) return { error: errContrato.message }
+
+  await registrarLog(user.id, 'INQUILINO_CRIADO', 'inquilino', inserted?.id, { nome: inquilinoInput.nome })
+  revalidatePath('/inquilinos')
+  revalidatePath('/imoveis')
+  revalidatePath('/dashboard')
   return {}
 }
 
