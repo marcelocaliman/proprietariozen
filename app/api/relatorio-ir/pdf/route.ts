@@ -1,16 +1,19 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { calcularResumoAnual, formatBRL, formatPct, LIMITE_CARNE_LEAO_2025 } from '@/lib/ir'
 import type { PlanoTipo } from '@/lib/stripe'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  try {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
-  const { data: profile } = await supabase
+  const admin = createAdminClient()
+
+  const { data: profile } = await admin
     .from('profiles')
     .select('plano, role, nome, email')
     .eq('id', user.id)
@@ -25,18 +28,18 @@ export async function POST(req: NextRequest) {
   const anoAtual = new Date().getFullYear()
   const ano = body.ano ?? anoAtual
 
-  if (isNaN(ano) || ano < 2020 || ano > anoAtual) {
+  if (isNaN(ano) || ano < 2020 || ano > anoAtual + 1) {
     return NextResponse.json({ error: 'Ano inválido' }, { status: 400 })
   }
 
   // Passo 1 — IDs dos imóveis do usuário
-  const { data: imoveis, error: errImoveis } = await supabase
+  const { data: imoveis, error: errImoveis } = await admin
     .from('imoveis')
     .select('id')
     .eq('user_id', user.id)
 
   if (errImoveis) {
-    return NextResponse.json({ error: 'Erro ao buscar dados' }, { status: 500 })
+    return NextResponse.json({ error: 'Erro ao buscar dados', detail: errImoveis.message }, { status: 500 })
   }
 
   const imovelIds = (imoveis ?? []).map(i => i.id)
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
   const registros: { mes_referencia: string; valor: number; valor_pago: number | null }[] = []
 
   if (imovelIds.length > 0) {
-    const { data: alugueis, error } = await supabase
+    const { data: alugueis, error } = await admin
       .from('alugueis')
       .select('mes_referencia, valor, valor_pago')
       .in('imovel_id', imovelIds)
@@ -235,4 +238,9 @@ export async function POST(req: NextRequest) {
       'Content-Disposition': `attachment; filename="relatorio-ir-${ano}.pdf"`,
     },
   })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[relatorio-ir/pdf] exceção:', msg)
+    return NextResponse.json({ error: 'Erro interno do servidor', detail: msg }, { status: 500 })
+  }
 }
