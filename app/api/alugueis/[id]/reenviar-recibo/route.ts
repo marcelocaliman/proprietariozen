@@ -61,10 +61,9 @@ export async function POST(
       observacao: aluguel.observacao ?? null,
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await admin
       .from('alugueis')
-      .update({ recibo_reenviado_em: new Date().toISOString() } as any)
+      .update({ recibo_reenviado_em: new Date().toISOString() })
       .eq('id', params.id)
 
     return NextResponse.json({ ok: true })

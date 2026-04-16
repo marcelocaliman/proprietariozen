@@ -79,17 +79,16 @@ export async function POST(
       ? `${tipoMotivo}: ${motivo.trim()}`
       : tipoMotivo
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: dbErr } = await admin
       .from('alugueis')
       .update({
-        status: 'cancelado' as any,
+        status: 'cancelado',
         motivo_cancelamento: motivoCompleto,
         asaas_charge_id: null,
         asaas_pix_qrcode: null,
         asaas_pix_copiaecola: null,
         asaas_boleto_url: null,
-      } as any)
+      })
       .eq('id', params.id)
 
     if (dbErr) return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 })

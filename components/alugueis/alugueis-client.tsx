@@ -6,7 +6,7 @@ import {
   CheckCircle2, Clock, AlertTriangle, Receipt, FileText,
   Banknote, Building2, ChevronLeft, ChevronRight,
   Calendar, Filter, MoreHorizontal, X, CheckCheck,
-  AlertCircle, TrendingUp, Zap, XCircle, Loader2, Paperclip,
+  AlertCircle, TrendingUp, Zap, Loader2, Paperclip,
   Mail, Tag, SplitSquareHorizontal, Ban, Gift,
 } from 'lucide-react'
 import { DocumentosAluguel } from '@/components/documentos/DocumentosAluguel'

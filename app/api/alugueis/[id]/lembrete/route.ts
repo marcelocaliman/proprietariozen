@@ -58,10 +58,9 @@ export async function POST(
     })
 
     // Salva timestamp do lembrete
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await admin
       .from('alugueis')
-      .update({ lembrete_enviado_em: new Date().toISOString() } as any)
+      .update({ lembrete_enviado_em: new Date().toISOString() })
       .eq('id', params.id)
 
     return NextResponse.json({ ok: true, enviadoPara: inquilino.email })

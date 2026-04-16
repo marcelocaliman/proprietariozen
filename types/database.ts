@@ -202,6 +202,12 @@ export type Database = {
           asaas_customer_id: string | null
           valor_pago: number | null
           metodo_pagamento: string | null
+          desconto: number | null
+          motivo_cancelamento: string | null
+          isento: boolean | null
+          motivo_isencao: string | null
+          lembrete_enviado_em: string | null
+          recibo_reenviado_em: string | null
         }
         Insert: {
           id?: string
@@ -221,6 +227,12 @@ export type Database = {
           asaas_customer_id?: string | null
           valor_pago?: number | null
           metodo_pagamento?: string | null
+          desconto?: number | null
+          motivo_cancelamento?: string | null
+          isento?: boolean | null
+          motivo_isencao?: string | null
+          lembrete_enviado_em?: string | null
+          recibo_reenviado_em?: string | null
         }
         Update: {
           inquilino_id?: string | null
@@ -237,6 +249,12 @@ export type Database = {
           asaas_customer_id?: string | null
           valor_pago?: number | null
           metodo_pagamento?: string | null
+          desconto?: number | null
+          motivo_cancelamento?: string | null
+          isento?: boolean | null
+          motivo_isencao?: string | null
+          lembrete_enviado_em?: string | null
+          recibo_reenviado_em?: string | null
         }
         Relationships: [
           {

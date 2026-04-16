@@ -38,10 +38,9 @@ export async function POST(
 
     const novaObs = motivo || null
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: dbErr } = await admin
       .from('alugueis')
-      .update({ desconto: valorDesconto, observacao: novaObs } as any)
+      .update({ desconto: valorDesconto, observacao: novaObs })
       .eq('id', params.id)
 
     if (dbErr) return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 })

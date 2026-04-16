@@ -75,12 +75,11 @@ export async function POST(
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: dbErr } = await admin
       .from('alugueis')
       .update({
         isento: true,
-        status: 'pago' as any,
+        status: 'pago',
         valor_pago: 0,
         motivo_isencao: motivo.trim(),
         data_pagamento: new Date().toISOString().split('T')[0],
@@ -88,7 +87,7 @@ export async function POST(
         asaas_pix_qrcode: null,
         asaas_pix_copiaecola: null,
         asaas_boleto_url: null,
-      } as any)
+      })
       .eq('id', params.id)
 
     if (dbErr) return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 })
