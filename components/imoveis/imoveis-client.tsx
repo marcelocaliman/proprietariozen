@@ -21,6 +21,7 @@ import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
+import type { PlanoTipo } from '@/lib/stripe'
 import type { Imovel } from '@/types'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
@@ -87,7 +88,7 @@ function StatusAluguelLine({ aluguel }: { aluguel: AluguelMes | undefined }) {
 
 interface Props {
   imoveis: Imovel[]
-  plano: 'gratis' | 'pago'
+  plano: PlanoTipo
   alugueisMes: AluguelMes[]
 }
 
@@ -110,7 +111,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
     setView(v); localStorage.setItem('imoveis_view', v)
   }
 
-  const limite       = LIMITES_PLANO[plano].maxImoveis
+  const limite       = LIMITES_PLANO[plano].imoveis
   const atingiuLimite = imoveis.length >= limite
 
   // Mapa rápido imovel_id → aluguel do mês
@@ -147,7 +148,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Imóveis</h1>
           <p className="text-sm text-[#475569] mt-0.5">
-            {imoveis.length} de {limite} imóve{imoveis.length !== 1 ? 'is' : 'l'} · plano {plano === 'pago' ? 'Master' : 'Grátis'}
+            {imoveis.length} de {limite} imóve{imoveis.length !== 1 ? 'is' : 'l'} · plano {LIMITES_PLANO[plano].nome}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -185,7 +186,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
       {plano === 'gratis' && imoveis.length > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm text-amber-700">
-            Plano Grátis: {imoveis.length}/{limite} imóvel usado. Faça upgrade para cadastrar até 5.
+            Plano Grátis: {imoveis.length}/{limite} imóvel usado. Faça upgrade para cadastrar mais imóveis.
           </p>
           <Button size="sm" className="shrink-0 bg-amber-500 hover:bg-amber-600 gap-1.5 text-white" onClick={() => router.push('/planos')}>
             <Zap className="h-3.5 w-3.5" />Fazer upgrade

@@ -18,6 +18,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { UserDrawer, type UserRow } from '@/components/admin/user-drawer'
+import { LIMITES_PLANO } from '@/lib/stripe'
+import type { PlanoTipo } from '@/lib/stripe'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -150,7 +152,7 @@ export default function AdminUsuariosPage() {
       const rows = allData.map(u => [
         u.nome,
         u.email,
-        u.plano === 'pago' ? 'Master' : 'Grátis',
+        LIMITES_PLANO[u.plano as PlanoTipo]?.nome ?? u.plano,
         u.total_imoveis,
         u.total_inquilinos,
         u.total_alugueis_mes,
@@ -191,7 +193,7 @@ export default function AdminUsuariosPage() {
         toast.success('Link de recuperação copiado para a área de transferência')
       } else {
         const msgs: Record<string, string> = {
-          mudar_plano: `Plano alterado para ${json.plano === 'pago' ? 'Master' : 'Grátis'}`,
+          mudar_plano: `Plano alterado para ${LIMITES_PLANO[json.plano as PlanoTipo]?.nome ?? json.plano}`,
           banir:       'Usuário banido',
           reativar:    'Usuário reativado',
         }
@@ -331,11 +333,13 @@ export default function AdminUsuariosPage() {
                       <td className="py-3 px-4">
                         <Badge className={cn(
                           'text-[10px] font-semibold',
-                          u.plano === 'pago'
-                            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-slate-100 text-[#64748B] hover:bg-slate-100',
+                          u.plano === 'elite'
+                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
+                            : u.plano === 'pago'
+                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-slate-100 text-[#64748B] hover:bg-slate-100',
                         )}>
-                          {u.plano === 'pago' ? 'Master' : 'Grátis'}
+                          {LIMITES_PLANO[u.plano as PlanoTipo]?.nome ?? u.plano}
                         </Badge>
                       </td>
 
@@ -384,7 +388,7 @@ export default function AdminUsuariosPage() {
                             {u.role !== 'admin' && (
                               <DropdownMenuItem onClick={() => acaoRapida(u.id, 'mudar_plano')}>
                                 <TrendingUp className="h-4 w-4 mr-2" />
-                                {u.plano === 'pago' ? 'Mover p/ Grátis' : 'Mover p/ Master'}
+                                {u.plano === 'elite' ? 'Mover p/ Master' : u.plano === 'pago' ? 'Mover p/ Grátis' : 'Mover p/ Master'}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => acaoRapida(u.id, 'resetar_senha')}>

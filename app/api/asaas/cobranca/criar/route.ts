@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
+import { isPlanoPago } from '@/lib/stripe'
 import crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  const isPaid = profile?.role === 'admin' || profile?.plano === 'pago'
+  const isPaid = profile?.role === 'admin' || isPlanoPago(profile?.plano ?? 'gratis')
   if (!isPaid) {
     return NextResponse.json({ error: 'Cobrança automática disponível apenas no plano Pro.' }, { status: 403 })
   }

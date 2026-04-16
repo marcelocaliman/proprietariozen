@@ -9,6 +9,7 @@ import { AbaNotificacoes } from './aba-notificacoes'
 import { AbaSeguranca } from './aba-seguranca'
 import { AbaAsaas } from './aba-asaas'
 import type { NotificacoesConfig } from '@/app/(dashboard)/configuracoes/types'
+import { isPlanoPago } from '@/lib/stripe'
 
 const ABAS = [
   { id: 'perfil',       label: 'Perfil',        icon: User },
@@ -25,7 +26,7 @@ interface Props {
     nome: string
     email: string
     telefone: string | null
-    plano: 'gratis' | 'pago'
+    plano: 'gratis' | 'pago' | 'elite'
     criado_em: string
     asaas_account_id: string | null
     asaas_account_status: string | null
@@ -88,7 +89,7 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
           {abaAtiva === 'perfil' && <AbaPerfil profile={profile} avatarUrl={avatarUrl} qtdImoveis={qtdImoveis} />}
           {abaAtiva === 'assinatura' && <AbaAssinatura plano={profile.plano} />}
           {abaAtiva === 'cobrancas' && (
-            profile.plano === 'pago' ? (
+            isPlanoPago(profile.plano) ? (
               <AbaAsaas
                 asaasAccountId={profile.asaas_account_id}
                 asaasAccountStatus={profile.asaas_account_status}

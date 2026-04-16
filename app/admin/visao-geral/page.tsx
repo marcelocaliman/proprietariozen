@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils'
 
 type StatsData = {
   users: {
-    total: number; total_gratis: number; total_pro: number
+    total: number; total_gratis: number; total_master: number; total_elite: number; total_pro: number
     usuarios_ativos_30d: number; novos_hoje: number; novos_semana: number
     novos_mes: number; crescimento_vs_mes_anterior: number
     taxa_conversao: number; churn_mes: number
@@ -176,9 +176,9 @@ export default function AdminVisaoGeralPage() {
             iconCls="bg-blue-50 text-blue-600"
           />
           <KpiCard
-            title="Plano Master"
+            title="Pagantes"
             value={data.users.total_pro.toLocaleString('pt-BR')}
-            sub={`${data.users.taxa_conversao}% de conversão`}
+            sub={`${data.users.total_master ?? 0} Master · ${data.users.total_elite ?? 0} Elite`}
             icon={ShieldAlert}
             iconCls="bg-emerald-50 text-emerald-600"
           />
@@ -241,7 +241,7 @@ export default function AdminVisaoGeralPage() {
           <CardContent className="pt-2 flex items-center justify-center min-h-[220px]">
             {loading
               ? <Skeleton className="h-[180px] w-[180px] rounded-full" />
-              : <PlanPieChart gratis={data?.users.total_gratis ?? 0} pro={data?.users.total_pro ?? 0} />
+              : <PlanPieChart gratis={data?.users.total_gratis ?? 0} pro={data?.users.total_master ?? 0} elite={data?.users.total_elite ?? 0} />
             }
           </CardContent>
         </Card>

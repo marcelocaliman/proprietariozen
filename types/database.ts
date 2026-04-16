@@ -7,7 +7,7 @@ export type Database = {
           nome: string
           email: string
           telefone: string | null
-          plano: 'gratis' | 'pago'
+          plano: 'gratis' | 'pago' | 'elite'
           role: 'user' | 'admin'
           stripe_customer_id: string | null
           criado_em: string
@@ -27,7 +27,7 @@ export type Database = {
           nome: string
           email: string
           telefone?: string | null
-          plano?: 'gratis' | 'pago'
+          plano?: 'gratis' | 'pago' | 'elite'
           role?: 'user' | 'admin'
           stripe_customer_id?: string | null
           asaas_account_id?: string | null
@@ -44,7 +44,7 @@ export type Database = {
           nome?: string
           email?: string
           telefone?: string | null
-          plano?: 'gratis' | 'pago'
+          plano?: 'gratis' | 'pago' | 'elite'
           role?: 'user' | 'admin'
           stripe_customer_id?: string | null
           asaas_account_id?: string | null

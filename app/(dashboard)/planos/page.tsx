@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { PlanosClient } from '@/components/planos/planos-client'
+import type { PlanoTipo } from '@/lib/stripe'
 
 export default async function PlanosPage() {
   const supabase = await createServerSupabaseClient()
@@ -12,7 +13,7 @@ export default async function PlanosPage() {
     .eq('id', user.id)
     .single()
 
-  const plano = (profile?.role === 'admin' || profile?.plano === 'pago' ? 'pago' : 'gratis') as 'gratis' | 'pago'
+  const plano = (profile?.role === 'admin' ? 'elite' : profile?.plano ?? 'gratis') as PlanoTipo
 
   return <PlanosClient planoAtual={plano} />
 }

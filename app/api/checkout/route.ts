@@ -1,21 +1,32 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
-import { getStripe } from '@/lib/stripe'
+import { getStripe, isPlanoPago } from '@/lib/stripe'
 import { getAppUrl } from '@/lib/app-url'
 
 export const dynamic = 'force-dynamic'
 
 // POST /api/checkout
-// Cria uma sessão de Stripe Checkout para o plano Pro.
-export async function POST() {
-  // ── Verificação de variáveis de ambiente ──────────────────────────────────
+// Body: { plano: 'pago' | 'elite' }
+// Cria uma sessão de Stripe Checkout para o plano solicitado.
+export async function POST(req: NextRequest) {
+  let body: { plano?: 'pago' | 'elite' }
+  try { body = await req.json() } catch { body = {} }
+  const planoSolicitado = body.plano ?? 'pago'
+
+  // ── Verificação de variáveis de ambiente ────────────────────────────────
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error('[checkout] STRIPE_SECRET_KEY não configurada')
     return NextResponse.json({ error: 'Pagamento não configurado: STRIPE_SECRET_KEY ausente' }, { status: 500 })
   }
-  if (!process.env.STRIPE_PRICE_ID) {
-    console.error('[checkout] STRIPE_PRICE_ID não configurada')
-    return NextResponse.json({ error: 'Pagamento não configurado: STRIPE_PRICE_ID ausente' }, { status: 500 })
+
+  const priceId = planoSolicitado === 'elite'
+    ? process.env.STRIPE_ELITE_PRICE_ID
+    : process.env.STRIPE_PRICE_ID
+
+  if (!priceId) {
+    const varName = planoSolicitado === 'elite' ? 'STRIPE_ELITE_PRICE_ID' : 'STRIPE_PRICE_ID'
+    console.error(`[checkout] ${varName} não configurada`)
+    return NextResponse.json({ error: `Pagamento não configurado: ${varName} ausente` }, { status: 500 })
   }
 
   try {
@@ -35,8 +46,13 @@ export async function POST() {
       return NextResponse.json({ error: `Erro ao buscar perfil: ${profileError.message}` }, { status: 500 })
     }
     if (!profile) return NextResponse.json({ error: 'Perfil não encontrado' }, { status: 404 })
-    if (profile.plano === 'pago') {
-      return NextResponse.json({ error: 'Você já possui o plano Pro' }, { status: 400 })
+
+    // Bloqueia se já tem o plano solicitado (ou superior)
+    if (planoSolicitado === 'elite' && profile.plano === 'elite') {
+      return NextResponse.json({ error: 'Você já possui o plano Elite' }, { status: 400 })
+    }
+    if (planoSolicitado === 'pago' && isPlanoPago(profile.plano)) {
+      return NextResponse.json({ error: 'Você já possui um plano ativo. Para fazer upgrade para Elite, selecione o plano Elite.' }, { status: 400 })
     }
 
     const appUrl = getAppUrl()
@@ -63,12 +79,12 @@ export async function POST() {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${appUrl}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/cancelado`,
       locale: 'pt-BR',
       subscription_data: {
-        metadata: { supabase_user_id: user.id },
+        metadata: { supabase_user_id: user.id, plano: planoSolicitado },
       },
     })
 

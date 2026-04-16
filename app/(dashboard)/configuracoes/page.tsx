@@ -30,9 +30,9 @@ export default async function ConfiguracoesPage() {
     ...((user.user_metadata?.notificacoes_config as Partial<NotificacoesConfig>) ?? {}),
   }
 
-  // Admin sempre tem acesso Pro
+  // Admin sempre tem acesso Elite
   if (profile && profile.role === 'admin') {
-    (profile as typeof profile & { plano: 'pago' }).plano = 'pago'
+    (profile as typeof profile & { plano: 'elite' }).plano = 'elite'
   }
 
   const profileData = profile ?? {

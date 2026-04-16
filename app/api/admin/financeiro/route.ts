@@ -4,7 +4,14 @@ import { createAdminSupabaseClient } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
-const PRECO_PRO = 49.90
+const PRECO_MASTER = 49.90
+const PRECO_ELITE  = 99.90
+
+function mrrPorPlano(plano: string): number {
+  if (plano === 'elite') return PRECO_ELITE
+  if (plano === 'pago')  return PRECO_MASTER
+  return 0
+}
 
 function mesLabel(year: number, month: number) {
   return new Date(year, month - 1, 1)
@@ -38,20 +45,21 @@ export async function GET() {
     const fimMes = new Date(year, month, 0, 23, 59, 59) // último dia do mês
     const inicioMes = new Date(year, month - 1, 1)
 
-    // Pro acumulado até o fim deste mês (aproximação: sem tracking de downgrade)
-    const usuariosPro = all.filter(
-      p => p.plano === 'pago' && new Date(p.criado_em) <= fimMes
-    ).length
+    // Pagantes acumulados até o fim deste mês (aproximação: sem tracking de downgrade)
+    const pagantesAcumulados = all.filter(
+      p => (p.plano === 'pago' || p.plano === 'elite') && new Date(p.criado_em) <= fimMes
+    )
+    const usuariosPro = pagantesAcumulados.length
 
-    // Novos neste mês (total e pro)
+    // Novos neste mês (total e pagantes)
     const novosMes = all.filter(p => {
       const d = new Date(p.criado_em)
       return d >= inicioMes && d <= fimMes
     })
     const novosTotal = novosMes.length
-    const novosPro   = novosMes.filter(p => p.plano === 'pago').length
+    const novosPro   = novosMes.filter(p => p.plano === 'pago' || p.plano === 'elite').length
 
-    const mrrBruto   = usuariosPro * PRECO_PRO
+    const mrrBruto   = pagantesAcumulados.reduce((s, p) => s + mrrPorPlano(p.plano), 0)
     const churnValor = 0 // sem tracking de churn
 
     return {

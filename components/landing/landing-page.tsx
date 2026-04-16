@@ -582,19 +582,18 @@ export function LandingPage() {
               <h2 id="precos-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Simples e transparente</h2>
               <p className="text-[17px] text-[#6B7280] mt-3">Sem taxa de adesão. Sem fidelidade. Cancele quando quiser.</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
 
               {/* Free */}
-              <div className="lp-fade lp-card bg-white rounded-2xl border-2 border-[#E5F7F0] p-10 flex flex-col">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Para começar</p>
+              <div className="lp-fade lp-card bg-white rounded-2xl border-2 border-[#E5F7F0] p-8 flex flex-col">
                 <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-widest mb-1">Grátis</p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[42px] font-bold text-[#1F2937]">R$ 0</span>
+                  <span className="text-[38px] font-bold text-[#1F2937]">R$ 0</span>
                   <span className="text-sm text-[#6B7280]">/mês</span>
                 </div>
-                <p className="text-sm text-emerald-600 font-medium mb-6">Para sempre grátis</p>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {[['1 imóvel cadastrado',true],['Controle de inquilinos',true],['Histórico de aluguéis',true],['Recibos PDF ilimitados',false],['Alertas automáticos por e-mail',false],['Reajuste automático',false]].map(([f,ok]) => (
+                <p className="text-sm text-emerald-600 font-medium mb-5">Para sempre grátis</p>
+                <ul className="space-y-2.5 mb-8 flex-1">
+                  {[['1 imóvel · 1 inquilino',true],['Histórico de aluguéis',true],['Recibos PDF',false],['Alertas por e-mail',false],['Reajuste automático',false]].map(([f,ok]) => (
                     <li key={f as string} className={`flex items-center gap-2.5 text-sm ${ok ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>
                       {ok
                         ? <div className="w-4 h-4 rounded-full bg-[#D1FAE5] flex items-center justify-center shrink-0" aria-hidden="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -610,29 +609,54 @@ export function LandingPage() {
               </div>
 
               {/* Master */}
-              <div className="lp-fade lp-delay-1 lp-card bg-white rounded-2xl border-2 border-[#10B981] p-10 relative flex flex-col shadow-[0_8px_32px_rgba(16,185,129,0.18)]">
+              <div className="lp-fade lp-delay-1 lp-card bg-white rounded-2xl border-2 border-[#10B981] p-8 relative flex flex-col shadow-[0_8px_32px_rgba(16,185,129,0.18)]">
                 <div className="absolute -top-[14px] left-1/2 -translate-x-1/2 bg-[#059669] text-white text-xs font-bold px-4 py-1 rounded-full">Mais popular</div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Gestão completa</p>
                 <p className="text-xs font-semibold text-[#059669] uppercase tracking-widest mb-1">Master</p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[42px] font-bold text-[#059669]">R$ 49</span>
-                  <span className="text-[26px] font-bold text-[#059669]">,90</span>
+                  <span className="text-[38px] font-bold text-[#059669]">R$ 49</span>
+                  <span className="text-[22px] font-bold text-[#059669]">,90</span>
                   <span className="text-sm text-[#6B7280]">/mês</span>
                 </div>
-                <p className="text-sm text-emerald-600 font-medium mb-6">Menos de R$ 2 por dia</p>
-                <ul className="space-y-3 mb-6 flex-1">
-                  {['Até 5 imóveis cadastrados','Controle de inquilinos','Histórico de aluguéis','Recibos PDF ilimitados','Alertas automáticos por e-mail','Reajuste automático IGPM/IPCA'].map(f => (
+                <p className="text-sm text-emerald-600 font-medium mb-5">Menos de R$ 2 por dia</p>
+                <ul className="space-y-2.5 mb-6 flex-1">
+                  {['3 imóveis · 3 inquilinos','Recibos PDF','Alertas por e-mail','Reajuste IGPM/IPCA'].map(f => (
                     <li key={f} className="flex items-center gap-2.5 text-sm text-[#374151]">
                       <div className="w-4 h-4 rounded-full bg-[#D1FAE5] flex items-center justify-center shrink-0" aria-hidden="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
                       {f}
                     </li>
                   ))}
                 </ul>
-                <div className="border-t border-slate-100 pt-4 mb-4">
-                  <p className="text-center text-[12px] text-slate-400">🔒 Pagamento seguro · Cancele quando quiser</p>
+                <div className="border-t border-slate-100 pt-3 mb-3">
+                  <p className="text-center text-[11px] text-slate-400">🔒 Pagamento seguro · Cancele quando quiser</p>
                 </div>
                 <Link href="/cadastro" className="block text-center bg-[#059669] hover:bg-[#047857] text-white font-semibold py-3 rounded-xl transition-colors text-sm">
-                  Começar agora — R$ 49,90/mês
+                  Assinar Master — R$ 49,90/mês
+                </Link>
+              </div>
+
+              {/* Elite */}
+              <div className="lp-fade lp-delay-2 lp-card bg-white rounded-2xl border-2 border-[#8B5CF6] p-8 relative flex flex-col shadow-[0_8px_32px_rgba(139,92,246,0.15)]">
+                <div className="absolute -top-[14px] left-1/2 -translate-x-1/2 bg-[#7C3AED] text-white text-xs font-bold px-4 py-1 rounded-full">Premium</div>
+                <p className="text-xs font-semibold text-[#7C3AED] uppercase tracking-widest mb-1">Elite</p>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-[38px] font-bold text-[#7C3AED]">R$ 99</span>
+                  <span className="text-[22px] font-bold text-[#7C3AED]">,90</span>
+                  <span className="text-sm text-[#6B7280]">/mês</span>
+                </div>
+                <p className="text-sm text-purple-600 font-medium mb-5">Para gestão em escala</p>
+                <ul className="space-y-2.5 mb-6 flex-1">
+                  {['10 imóveis · inquilinos ilimitados','Recibos PDF','Alertas + cobrança automática','Reajuste IGPM/IPCA','5 GB armazenamento','Suporte prioritário'].map(f => (
+                    <li key={f} className="flex items-center gap-2.5 text-sm text-[#374151]">
+                      <div className="w-4 h-4 rounded-full bg-[#EDE9FE] flex items-center justify-center shrink-0" aria-hidden="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div className="border-t border-slate-100 pt-3 mb-3">
+                  <p className="text-center text-[11px] text-slate-400">🔒 Pagamento seguro · Cancele quando quiser</p>
+                </div>
+                <Link href="/cadastro" className="block text-center bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-semibold py-3 rounded-xl transition-colors text-sm">
+                  Assinar Elite — R$ 99,90/mês
                 </Link>
               </div>
             </div>

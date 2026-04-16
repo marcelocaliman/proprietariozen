@@ -56,7 +56,7 @@ interface ImovelModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   imovel: Imovel | null
-  plano: 'gratis' | 'pago'
+  plano: 'gratis' | 'pago' | 'elite'
 }
 
 export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalProps) {

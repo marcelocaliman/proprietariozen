@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase'
 import type { Profile } from '@/types'
+import { isPlanoPago, LIMITES_PLANO } from '@/lib/stripe'
+import type { PlanoTipo } from '@/lib/stripe'
 import { LogoWhite } from '@/components/ui/logo'
 
 const navItems = [
@@ -31,7 +33,8 @@ interface SidebarProps {
 export function Sidebar({ profile, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const isPro = profile?.plano === 'pago' || profile?.role === 'admin'
+  const plano = (profile?.plano ?? 'gratis') as PlanoTipo
+  const isPro = isPlanoPago(plano) || profile?.role === 'admin'
 
   async function handleLogout() {
     const supabase = createClient()
@@ -80,8 +83,8 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* Card upgrade — plano Grátis */}
-      {!isPro && (
+      {/* Card upgrade — plano Grátis → Master */}
+      {!isPro && profile?.role !== 'admin' && (
         <div className="px-3 pb-3">
           <div className="rounded-xl border border-sidebar-primary/20 bg-sidebar-accent/50 p-3 space-y-2.5">
             <div className="flex items-center gap-2">
@@ -91,7 +94,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
               <span className="text-xs font-semibold text-[#E2E8F0]">Plano Grátis</span>
             </div>
             <p className="text-[11px] text-sidebar-foreground leading-relaxed">
-              Desbloqueie até 5 imóveis, recibos PDF e alertas automáticos.
+              Desbloqueie até 3 imóveis, recibos PDF e alertas automáticos.
             </p>
             <Link
               href="/planos"
@@ -99,6 +102,31 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
               className="flex items-center justify-between w-full rounded-lg bg-sidebar-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#047857] transition-colors"
             >
               Fazer upgrade Master
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Card upgrade — plano Master → Elite */}
+      {plano === 'pago' && profile?.role !== 'admin' && (
+        <div className="px-3 pb-3">
+          <div className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-3 space-y-2.5">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <Star className="h-3.5 w-3.5 text-purple-300" />
+              </div>
+              <span className="text-xs font-semibold text-[#E2E8F0]">Plano Master</span>
+            </div>
+            <p className="text-[11px] text-sidebar-foreground leading-relaxed">
+              Elite: 10 imóveis, inquilinos ilimitados e cobrança automática.
+            </p>
+            <Link
+              href="/planos"
+              onClick={onClose}
+              className="flex items-center justify-between w-full rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition-colors"
+            >
+              Fazer upgrade Elite
               <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -119,8 +147,12 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
             <div className="flex items-center gap-1.5">
               <p className="text-sm font-medium text-white truncate">{profile?.nome ?? 'Usuário'}</p>
               {isPro && (
-                <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] text-[10px] h-4 px-1.5 shrink-0 font-semibold">
-                  Master
+                <Badge className={
+                  plano === 'elite' || profile?.role === 'admin'
+                    ? 'bg-[#EDE9FE] text-[#5B21B6] hover:bg-[#EDE9FE] text-[10px] h-4 px-1.5 shrink-0 font-semibold'
+                    : 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] text-[10px] h-4 px-1.5 shrink-0 font-semibold'
+                }>
+                  {profile?.role === 'admin' ? 'Admin' : LIMITES_PLANO[plano].nome}
                 </Badge>
               )}
             </div>

@@ -4,7 +4,8 @@ import { createAdminSupabaseClient } from '@/lib/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
-const PRECO_PRO = 49.90
+const PRECO_MASTER = 49.90
+const PRECO_ELITE  = 99.90
 
 type ProfileRow = { id: string; plano: string; criado_em: string; atualizado_em: string }
 type ActivityRow = { id: string; user_email: string | null; action: string; details: unknown; created_at: string }
@@ -84,10 +85,14 @@ export async function GET() {
   const profiles = (rawProfiles ?? []) as ProfileRow[]
 
   // ── Métricas de usuários ──────────────────────────────────────────────────
-  const total       = profiles.length
-  const proProfiles = profiles.filter((p: ProfileRow) => p.plano === 'pago')
-  const totalPro    = proProfiles.length
-  const totalGratis = total - totalPro
+  const total          = profiles.length
+  const masterProfiles = profiles.filter((p: ProfileRow) => p.plano === 'pago')
+  const eliteProfiles  = profiles.filter((p: ProfileRow) => p.plano === 'elite')
+  const proProfiles    = [...masterProfiles, ...eliteProfiles]
+  const totalPro       = proProfiles.length
+  const totalMaster    = masterProfiles.length
+  const totalElite     = eliteProfiles.length
+  const totalGratis    = total - totalPro
 
   const novosHoje    = profiles.filter((p: ProfileRow) => new Date(p.criado_em) >= hoje).length
   const novosSemana  = profiles.filter((p: ProfileRow) => new Date(p.criado_em) >= ha7Dias).length
@@ -103,12 +108,15 @@ export async function GET() {
     : novosMes > 0 ? 100 : 0
 
   // ── MRR ──────────────────────────────────────────────────────────────────
-  const mrrAtual = totalPro * PRECO_PRO
+  const mrrAtual = totalMaster * PRECO_MASTER + totalElite * PRECO_ELITE
 
-  const proMesAnt = proProfiles.filter(
+  const masterMesAnt = masterProfiles.filter(
     (p: ProfileRow) => new Date(p.criado_em) < inicioMesAtual
   ).length
-  const mrrMesAnt = proMesAnt * PRECO_PRO
+  const eliteMesAnt = eliteProfiles.filter(
+    (p: ProfileRow) => new Date(p.criado_em) < inicioMesAtual
+  ).length
+  const mrrMesAnt = masterMesAnt * PRECO_MASTER + eliteMesAnt * PRECO_ELITE
   const crescimentoMrr = mrrMesAnt > 0
     ? Math.round(((mrrAtual - mrrMesAnt) / mrrMesAnt) * 100)
     : mrrAtual > 0 ? 100 : 0
@@ -118,7 +126,7 @@ export async function GET() {
   const diasTotalPro = proProfiles.filter((p: ProfileRow) => new Date(p.criado_em) < ha30Dias).length
 
   const growth_series = Array.from({ length: 30 }, (_, i) => {
-    const dia = addDays(ha30Dias, i)
+    const dia    = addDays(ha30Dias, i)
     const diaStr = isoDate(dia)
     const novosNoDia    = profiles.filter((p: ProfileRow) => isoDate(new Date(p.criado_em)) === diaStr).length
     const novosProNoDia = proProfiles.filter((p: ProfileRow) => isoDate(new Date(p.criado_em)) === diaStr).length
@@ -148,6 +156,8 @@ export async function GET() {
     users: {
       total,
       total_gratis:                totalGratis,
+      total_master:                totalMaster,
+      total_elite:                 totalElite,
       total_pro:                   totalPro,
       usuarios_ativos_30d:         ativos30d,
       novos_hoje:                  novosHoje,

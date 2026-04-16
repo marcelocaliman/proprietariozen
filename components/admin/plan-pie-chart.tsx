@@ -15,14 +15,16 @@ function CustomTooltip({ active, payload }: TipProps) {
   )
 }
 
-export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
-  const total = gratis + pro
-  const pct = total > 0 ? Math.round((pro / total) * 100) : 0
+export function PlanPieChart({ gratis, pro, elite = 0 }: { gratis: number; pro: number; elite?: number }) {
+  const total    = gratis + pro + elite
+  const pagantes = pro + elite
+  const pct      = total > 0 ? Math.round((pagantes / total) * 100) : 0
 
   const data = [
     { name: 'Grátis', value: gratis, color: '#475569' },
     { name: 'Master', value: pro,    color: '#10b981' },
-  ]
+    { name: 'Elite',  value: elite,  color: '#8b5cf6' },
+  ].filter(d => d.value > 0)
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -50,11 +52,11 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
         {/* Label central */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold text-[#0F172A] leading-none">{pct}%</span>
-          <span className="text-[11px] text-[#64748B] mt-0.5">Master</span>
+          <span className="text-[11px] text-[#64748B] mt-0.5">pagantes</span>
         </div>
       </div>
       {/* Legenda */}
-      <div className="flex items-center gap-4 text-xs text-[#64748B]">
+      <div className="flex items-center gap-3 text-xs text-[#64748B] flex-wrap justify-center">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-[#475569]" />
           Grátis: <strong className="text-white">{gratis}</strong>
@@ -63,6 +65,12 @@ export function PlanPieChart({ gratis, pro }: { gratis: number; pro: number }) {
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           Master: <strong className="text-white">{pro}</strong>
         </span>
+        {elite > 0 && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-violet-500" />
+            Elite: <strong className="text-white">{elite}</strong>
+          </span>
+        )}
       </div>
     </div>
   )

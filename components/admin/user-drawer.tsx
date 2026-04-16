@@ -17,6 +17,8 @@ import {
 } from 'recharts'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { LIMITES_PLANO, isPlanoPago } from '@/lib/stripe'
+import type { PlanoTipo } from '@/lib/stripe'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -132,7 +134,7 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
 
   if (!user) return null
 
-  const isPro    = user.plano === 'pago'
+  const isPro    = isPlanoPago(user.plano as PlanoTipo)
   const isBanned = user.banned
 
   // ── Executar ação ──────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
         setResetLink(json.reset_link)
       } else {
         const msgs: Record<string, string> = {
-          mudar_plano:   `Plano alterado para ${json.plano === 'pago' ? 'Master' : 'Grátis'}`,
+          mudar_plano:   `Plano alterado para ${LIMITES_PLANO[json.plano as PlanoTipo]?.nome ?? json.plano}`,
           banir:         'Usuário banido',
           reativar:      'Usuário reativado',
         }
@@ -210,11 +212,13 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
           <div className="flex items-center gap-2 mt-2.5 flex-wrap">
             <Badge className={cn(
               'text-[10px] font-semibold px-2',
-              isPro
-                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                : 'bg-slate-100 text-[#64748B] hover:bg-slate-100',
+              user.plano === 'elite'
+                ? 'bg-purple-100 text-purple-700 hover:bg-purple-100'
+                : isPro
+                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                  : 'bg-slate-100 text-[#64748B] hover:bg-slate-100',
             )}>
-              {isPro ? 'Master' : 'Grátis'}
+              {LIMITES_PLANO[user.plano as PlanoTipo]?.nome ?? user.plano}
             </Badge>
             {isBanned && (
               <Badge className="text-[10px] bg-red-100 text-red-700 hover:bg-red-100 px-2">
@@ -323,7 +327,7 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                         {actionLoading === 'mudar_plano'
                           ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                           : <TrendingUp className="h-3.5 w-3.5" />}
-                        {isPro ? 'Mover p/ Grátis' : 'Mover p/ Master'}
+                        {user.plano === 'elite' ? 'Mover p/ Grátis' : user.plano === 'pago' ? 'Mover p/ Elite' : 'Mover p/ Master'}
                       </Button>
                       <Button
                         size="sm"
@@ -426,8 +430,8 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                     {[
                       {
                         label: 'MRR contribuído',
-                        value: isPro ? fmt(49.90) : '—',
-                        sub: isPro ? 'Plano Master ativo' : 'Plano Grátis',
+                        value: isPro ? fmt((LIMITES_PLANO[user.plano as PlanoTipo]?.preco ?? 0) / 100) : '—',
+                        sub: isPro ? `Plano ${LIMITES_PLANO[user.plano as PlanoTipo]?.nome} ativo` : 'Plano Grátis',
                       },
                       {
                         label: 'Receita 6 meses',

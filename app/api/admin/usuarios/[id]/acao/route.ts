@@ -53,7 +53,10 @@ export async function POST(
   // ── Executar ação ─────────────────────────────────────────────────────────
   switch (acao) {
     case 'mudar_plano': {
-      const novoPlano = target.plano === 'pago' ? 'gratis' : 'pago'
+      // Ciclo: gratis → pago → elite → gratis
+      const novoPlano = target.plano === 'gratis' ? 'pago'
+        : target.plano === 'pago' ? 'elite'
+        : 'gratis'
       const { error } = await admin
         .from('profiles')
         .update({ plano: novoPlano })

@@ -7,6 +7,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Loader2, Camera, Lock, Building2 } from 'lucide-react'
+import { LIMITES_PLANO, isPlanoPago } from '@/lib/stripe'
+import type { PlanoTipo } from '@/lib/stripe'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +47,7 @@ interface Props {
     nome: string
     email: string
     telefone: string | null
-    plano: 'gratis' | 'pago'
+    plano: 'gratis' | 'pago' | 'elite'
     criado_em: string
   }
   avatarUrl: string | null
@@ -69,7 +71,7 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
     },
   })
 
-  const limiteImoveis = profile.plano === 'pago' ? '∞' : '1'
+  const limiteImoveis = LIMITES_PLANO[profile.plano as PlanoTipo].imoveis.toString()
   const iniciaisNome = profile.nome
     .split(' ')
     .slice(0, 2)
@@ -247,11 +249,13 @@ export function AbaPerfil({ profile, avatarUrl, qtdImoveis }: Props) {
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-muted-foreground">Plano atual</span>
               <Badge
-                className={profile.plano === 'pago'
-                  ? 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold border-0'
+                className={isPlanoPago(profile.plano as PlanoTipo)
+                  ? profile.plano === 'elite'
+                    ? 'bg-[#EDE9FE] text-[#5B21B6] hover:bg-[#EDE9FE] font-semibold border-0'
+                    : 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold border-0'
                   : 'bg-[#F1F5F9] text-[#475569] hover:bg-[#F1F5F9] border-0'}
               >
-                {profile.plano === 'pago' ? 'Master' : 'Grátis'}
+                {LIMITES_PLANO[profile.plano as PlanoTipo].nome}
               </Badge>
             </div>
             <Separator />

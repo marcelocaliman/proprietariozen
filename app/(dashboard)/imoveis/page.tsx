@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { ImoveisClient } from '@/components/imoveis/imoveis-client'
 import type { Imovel } from '@/types'
+import type { PlanoTipo } from '@/lib/stripe'
 
 export default async function ImoveisPage() {
   const supabase = await createServerSupabaseClient()
@@ -31,7 +32,7 @@ export default async function ImoveisPage() {
       .lte('mes_referencia', mesAtual.slice(0, 7) + '-31'),
   ])
 
-  const plano = (profile?.role === 'admin' || profile?.plano === 'pago' ? 'pago' : 'gratis') as 'gratis' | 'pago'
+  const plano = (profile?.role === 'admin' ? 'elite' : profile?.plano ?? 'gratis') as PlanoTipo
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
