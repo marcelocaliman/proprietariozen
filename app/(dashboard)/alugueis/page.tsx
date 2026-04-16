@@ -32,6 +32,8 @@ export default async function AlugueisPage({
         mes_referencia, observacao, recibo_gerado,
         asaas_charge_id, asaas_pix_qrcode, asaas_pix_copiaecola,
         asaas_boleto_url, valor_pago, metodo_pagamento,
+        desconto, motivo_cancelamento, isento, motivo_isencao,
+        lembrete_enviado_em, recibo_reenviado_em,
         imovel:imoveis!inner(apelido, endereco, user_id, billing_mode),
         inquilino:inquilinos(nome, cpf, email, telefone)
       `)
@@ -52,7 +54,7 @@ export default async function AlugueisPage({
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <AlugueisClient
-        alugueis={(alugueis ?? []) as AluguelItem[]}
+        alugueis={(alugueis ?? []) as unknown as AluguelItem[]}
         mesSelecionado={mesParam}
         profile={profile
           ? { ...profile, pix_key, pix_key_tipo }

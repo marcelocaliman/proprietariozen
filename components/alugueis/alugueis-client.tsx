@@ -7,6 +7,7 @@ import {
   Banknote, Building2, ChevronLeft, ChevronRight,
   Calendar, Filter, MoreHorizontal, X, CheckCheck,
   AlertCircle, TrendingUp, Zap, XCircle, Loader2, Paperclip,
+  Mail, Tag, SplitSquareHorizontal, Ban, Gift,
 } from 'lucide-react'
 import { DocumentosAluguel } from '@/components/documentos/DocumentosAluguel'
 import { toast } from 'sonner'
@@ -16,13 +17,28 @@ import { Card, CardContent } from '@/components/ui/card'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { PagarModal } from './pagar-modal'
 import { CobrancaModal } from './cobranca-modal'
+import { PagamentoParcialModal } from './pagamento-parcial-modal'
+import { LembreteModal } from './lembrete-modal'
+import { CancelarCobrancaModal } from './cancelar-cobranca-modal'
+import { DescontoModal } from './desconto-modal'
+import { IsentarModal } from './isentar-modal'
+import { ReenviarReciboModal } from './reenviar-recibo-modal'
 import { marcarReciboGerado } from '@/app/(dashboard)/alugueis/actions'
-import { formatarMoeda } from '@/lib/helpers'
+import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+
+type ActionModal =
+  | { type: 'pagamento-parcial'; aluguel: AluguelItem }
+  | { type: 'lembrete';          aluguel: AluguelItem }
+  | { type: 'cancelar';          aluguel: AluguelItem }
+  | { type: 'desconto';          aluguel: AluguelItem }
+  | { type: 'isentar';           aluguel: AluguelItem }
+  | { type: 'reenviar-recibo';   aluguel: AluguelItem }
+  | null
 
 export type AluguelItem = {
   id: string
@@ -42,6 +58,13 @@ export type AluguelItem = {
   asaas_boleto_url: string | null
   valor_pago: number | null
   metodo_pagamento: string | null
+  // Campos de gestão avançada
+  desconto: number | null
+  motivo_cancelamento: string | null
+  isento: boolean | null
+  motivo_isencao: string | null
+  lembrete_enviado_em: string | null
+  recibo_reenviado_em: string | null
 }
 
 type Profile = {
@@ -258,6 +281,14 @@ export function AlugueisClient({
 }) {
   const router = useRouter()
 
+  // Local copy of alugueis — updated optimistically without router.refresh()
+  const [listaAlugueis, setListaAlugueis] = useState(alugueis)
+  useEffect(() => { setListaAlugueis(alugueis) }, [alugueis])
+
+  function atualizarAluguel(id: string, updates: Partial<AluguelItem>) {
+    setListaAlugueis(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a))
+  }
+
   // PagarModal state
   const [modalOpen, setModalOpen] = useState(false)
   const [pagando, setPagando] = useState<AluguelItem | null>(null)
@@ -268,6 +299,11 @@ export function AlugueisClient({
   const [loadingRecibo, setLoadingRecibo] = useState<string | null>(null)
   const [loadingCobranca, setLoadingCobranca] = useState<string | null>(null)
   const [loadingEmail, setLoadingEmail] = useState(false)
+
+  // Action modals
+  const [actionModal, setActionModal] = useState<ActionModal>(null)
+  function abrirModal(m: ActionModal) { setActionModal(m) }
+  function fecharModal() { setActionModal(null) }
 
   // Filter state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -301,20 +337,20 @@ export function AlugueisClient({
   // Unique imóveis from loaded data
   const imoveisUnicos = useMemo(() => {
     const map = new Map<string, string>()
-    alugueis.forEach(a => {
+    listaAlugueis.forEach(a => {
       if (a.imovel?.apelido) map.set(a.imovel.apelido, a.imovel.apelido)
     })
     return Array.from(map.values()).sort()
-  }, [alugueis])
+  }, [listaAlugueis])
 
   // Filtered list
   const filtrados = useMemo(() => {
-    return alugueis.filter(a => {
+    return listaAlugueis.filter(a => {
       if (filtroStatus !== 'todos' && a.status !== filtroStatus) return false
       if (filtroImovel !== 'todos' && a.imovel?.apelido !== filtroImovel) return false
       return true
     })
-  }, [alugueis, filtroStatus, filtroImovel])
+  }, [listaAlugueis, filtroStatus, filtroImovel])
 
   // Pagination
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE))
@@ -322,14 +358,14 @@ export function AlugueisClient({
   const paginados = filtrados.slice((paginaAtual - 1) * PAGE_SIZE, paginaAtual * PAGE_SIZE)
 
   // Summary counts (from full list, not filtered)
-  const totalPago     = alugueis.filter(a => a.status === 'pago').reduce((s, a) => s + a.valor, 0)
-  const totalPendente = alugueis.filter(a => a.status === 'pendente').reduce((s, a) => s + a.valor, 0)
-  const totalAtrasado = alugueis.filter(a => a.status === 'atrasado').reduce((s, a) => s + a.valor, 0)
-  const qtdPago       = alugueis.filter(a => a.status === 'pago').length
-  const qtdPendente   = alugueis.filter(a => a.status === 'pendente').length
-  const qtdAtrasado   = alugueis.filter(a => a.status === 'atrasado').length
-  const qtdCancelado  = alugueis.filter(a => a.status === 'cancelado').length
-  const qtdEstornado  = alugueis.filter(a => a.status === 'estornado').length
+  const totalPago     = listaAlugueis.filter(a => a.status === 'pago').reduce((s, a) => s + a.valor, 0)
+  const totalPendente = listaAlugueis.filter(a => a.status === 'pendente').reduce((s, a) => s + a.valor, 0)
+  const totalAtrasado = listaAlugueis.filter(a => a.status === 'atrasado').reduce((s, a) => s + a.valor, 0)
+  const qtdPago       = listaAlugueis.filter(a => a.status === 'pago').length
+  const qtdPendente   = listaAlugueis.filter(a => a.status === 'pendente').length
+  const qtdAtrasado   = listaAlugueis.filter(a => a.status === 'atrasado').length
+  const qtdCancelado  = listaAlugueis.filter(a => a.status === 'cancelado').length
+  const qtdEstornado  = listaAlugueis.filter(a => a.status === 'estornado').length
 
   const TABS = [
     { id: 'todos'     as const, label: 'Todos',     count: alugueis.length, cls: '' },
@@ -463,7 +499,7 @@ export function AlugueisClient({
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Aluguéis</h1>
           <p className="text-sm text-[#475569] mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0">
-            <span>{alugueis.length} registro{alugueis.length !== 1 ? 's' : ''}</span>
+            <span>{listaAlugueis.length} registro{listaAlugueis.length !== 1 ? 's' : ''}</span>
             <span className="text-slate-300">·</span>
             <span className="text-emerald-600 font-medium">{qtdPago} pago{qtdPago !== 1 ? 's' : ''}</span>
             <span className="text-slate-300">·</span>
@@ -602,14 +638,14 @@ export function AlugueisClient({
         <StatCard
           titulo="Total mês"
           valor={formatarMoeda(totalPago + totalPendente + totalAtrasado)}
-          descricao={`${alugueis.length} imóve${alugueis.length !== 1 ? 'is' : 'l'}`}
+          descricao={`${listaAlugueis.length} imóve${listaAlugueis.length !== 1 ? 'is' : 'l'}`}
           icon={TrendingUp}
           cor="padrao"
         />
       </div>
 
       {/* Table card */}
-      {alugueis.length === 0 ? (
+      {listaAlugueis.length === 0 ? (
         <Card>
           <CardContent className="p-0">
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
@@ -722,8 +758,28 @@ export function AlugueisClient({
                     </div>
 
                     {/* Status */}
-                    <div className="mb-2 md:mb-0">
-                      <Badge className={cn('text-xs font-semibold', st.badgeCls)}>{st.label}</Badge>
+                    <div className="mb-2 md:mb-0 flex items-center gap-1 flex-wrap">
+                      {aluguel.isento
+                        ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100 text-xs font-semibold">Isento</Badge>
+                        : <Badge className={cn('text-xs font-semibold', st.badgeCls)}>{st.label}</Badge>
+                      }
+                      {/* Indicadores visuais */}
+                      {aluguel.lembrete_enviado_em && (
+                        <span
+                          title={`Lembrete enviado em ${formatarData(aluguel.lembrete_enviado_em)}`}
+                          className="inline-flex text-slate-400 cursor-default"
+                        >
+                          <Mail className="h-3 w-3" />
+                        </span>
+                      )}
+                      {aluguel.valor_pago != null && aluguel.status !== 'pago' && (
+                        <span
+                          title={`Pagamento parcial: ${formatarMoeda(aluguel.valor_pago)} recebido`}
+                          className="inline-flex text-slate-400 cursor-default"
+                        >
+                          <SplitSquareHorizontal className="h-3 w-3" />
+                        </span>
+                      )}
                     </div>
 
                     {/* Cobrança */}
@@ -737,15 +793,27 @@ export function AlugueisClient({
 
                     {/* Valor */}
                     <div className="mb-2 md:mb-0">
-                      <span className={cn(
-                        'text-sm font-bold',
-                        isPago ? 'text-emerald-600'
-                          : aluguel.status === 'atrasado' ? 'text-red-600'
-                          : isFinalizado ? 'text-slate-400 line-through'
-                          : 'text-slate-700',
-                      )}>
-                        {formatarMoeda(aluguel.valor)}
-                      </span>
+                      {aluguel.desconto && aluguel.desconto > 0 ? (
+                        <span
+                          title={`Desconto de ${formatarMoeda(aluguel.desconto)} concedido`}
+                          className="flex flex-col leading-tight"
+                        >
+                          <span className="text-[11px] text-slate-400 line-through">{formatarMoeda(aluguel.valor)}</span>
+                          <span className="text-sm font-bold text-emerald-700">
+                            {formatarMoeda(aluguel.valor - aluguel.desconto)}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className={cn(
+                          'text-sm font-bold',
+                          isPago ? 'text-emerald-600'
+                            : aluguel.status === 'atrasado' ? 'text-red-600'
+                            : isFinalizado ? 'text-slate-400 line-through'
+                            : 'text-slate-700',
+                        )}>
+                          {formatarMoeda(aluguel.valor)}
+                        </span>
+                      )}
                     </div>
 
                     {/* Ações dropdown */}
@@ -756,73 +824,120 @@ export function AlugueisClient({
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                          {isPago ? (
-                            <>
-                              <DropdownMenuItem
-                                disabled={loadingRecibo === aluguel.id}
-                                onClick={() => handleGerarRecibo(aluguel)}
-                              >
-                                <Receipt className="h-3.5 w-3.5 mr-2" />
-                                {aluguel.recibo_gerado ? 'Ver recibo' : 'Gerar recibo'}
-                              </DropdownMenuItem>
-                            </>
-                          ) : isFinalizado ? (
+                        <DropdownMenuContent align="end" className="w-56">
+
+                          {/* ── ATRASADO ── */}
+                          {aluguel.status === 'atrasado' && <>
+                            <DropdownMenuItem onClick={() => handlePagar(aluguel)}>
+                              <Banknote className="h-3.5 w-3.5 mr-2" />
+                              Registrar pagamento
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => abrirModal({ type: 'pagamento-parcial', aluguel })}>
+                              <SplitSquareHorizontal className="h-3.5 w-3.5 mr-2" />
+                              Registrar pagamento parcial
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => abrirModal({ type: 'lembrete', aluguel })}>
+                              <Mail className="h-3.5 w-3.5 mr-2" />
+                              Enviar lembrete por e-mail
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => abrirModal({ type: 'cancelar', aluguel })}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Ban className="h-3.5 w-3.5 mr-2" />
+                              Cancelar cobrança
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>}
+
+                          {/* ── PENDENTE ── */}
+                          {aluguel.status === 'pendente' && <>
+                            {aluguel.imovel?.billing_mode === 'AUTOMATIC' ? (
+                              !aluguel.asaas_charge_id ? (
+                                <DropdownMenuItem
+                                  disabled={loadingCobranca === aluguel.id}
+                                  onClick={() => handleGerarCobranca(aluguel)}
+                                >
+                                  {loadingCobranca === aluguel.id
+                                    ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                                    : <Zap className="h-3.5 w-3.5 mr-2 text-amber-500" />}
+                                  Gerar cobrança PIX/Boleto
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => handleAbrirCobranca(aluguel)}>
+                                  <Zap className="h-3.5 w-3.5 mr-2 text-emerald-500" />
+                                  Ver cobrança PIX/Boleto
+                                </DropdownMenuItem>
+                              )
+                            ) : null}
+                            <DropdownMenuItem onClick={() => handlePagar(aluguel)}>
+                              <Banknote className="h-3.5 w-3.5 mr-2" />
+                              Registrar pagamento
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handlePagar(aluguel)}>
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
+                              Marcar como pago
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => abrirModal({ type: 'desconto', aluguel })}>
+                              <Tag className="h-3.5 w-3.5 mr-2" />
+                              Conceder desconto
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => abrirModal({ type: 'isentar', aluguel })}>
+                              <Gift className="h-3.5 w-3.5 mr-2" />
+                              Isentar este mês
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => abrirModal({ type: 'cancelar', aluguel })}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Ban className="h-3.5 w-3.5 mr-2" />
+                              Cancelar cobrança
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>}
+
+                          {/* ── PAGO ── */}
+                          {isPago && <>
+                            <DropdownMenuItem
+                              disabled={loadingRecibo === aluguel.id}
+                              onClick={() => handleGerarRecibo(aluguel)}
+                            >
+                              {loadingRecibo === aluguel.id
+                                ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+                                : <Receipt className="h-3.5 w-3.5 mr-2" />}
+                              {aluguel.recibo_gerado ? 'Ver recibo' : 'Gerar recibo'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => abrirModal({ type: 'reenviar-recibo', aluguel })}>
+                              <Mail className="h-3.5 w-3.5 mr-2" />
+                              Reenviar recibo por e-mail
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>}
+
+                          {/* ── CANCELADO / ESTORNADO ── */}
+                          {isFinalizado && <>
                             <DropdownMenuItem disabled>
                               <AlertCircle className="h-3.5 w-3.5 mr-2 text-slate-400" />
                               {aluguel.status === 'cancelado' ? 'Cobrança cancelada' : 'Cobrança estornada'}
                             </DropdownMenuItem>
-                          ) : (
-                            <>
-                              {aluguel.imovel?.billing_mode === 'AUTOMATIC' && (
-                                <>
-                                  {!aluguel.asaas_charge_id ? (
-                                    <DropdownMenuItem
-                                      disabled={loadingCobranca === aluguel.id}
-                                      onClick={() => handleGerarCobranca(aluguel)}
-                                    >
-                                      {loadingCobranca === aluguel.id
-                                        ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                                        : <Zap className="h-3.5 w-3.5 mr-2 text-amber-500" />
-                                      }
-                                      Gerar cobrança Asaas
-                                    </DropdownMenuItem>
-                                  ) : (
-                                    <DropdownMenuItem
-                                      disabled={loadingCobranca === aluguel.id}
-                                      onClick={() => handleCancelarCobranca(aluguel)}
-                                      className="text-red-600 focus:text-red-600"
-                                    >
-                                      {loadingCobranca === aluguel.id
-                                        ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                                        : <XCircle className="h-3.5 w-3.5 mr-2" />
-                                      }
-                                      Cancelar cobrança
-                                    </DropdownMenuItem>
-                                  )}
-                                  <DropdownMenuSeparator />
-                                </>
-                              )}
-                              {aluguel.imovel?.billing_mode !== 'AUTOMATIC' && (
-                                <>
-                                  <DropdownMenuItem onClick={() => handlePagar(aluguel)}>
-                                    <Banknote className="h-3.5 w-3.5 mr-2" />
-                                    Registrar pagamento
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
-                              )}
-                              <DropdownMenuItem onClick={() => handlePagar(aluguel)}>
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-2" />
-                                Marcar como pago
+                            {aluguel.motivo_cancelamento && (
+                              <DropdownMenuItem disabled className="text-xs text-slate-400 whitespace-normal">
+                                {aluguel.motivo_cancelamento}
                               </DropdownMenuItem>
-                            </>
-                          )}
-                          <DropdownMenuSeparator />
+                            )}
+                            <DropdownMenuSeparator />
+                          </>}
+
+                          {/* ── DOCUMENTOS (sempre) ── */}
                           <DropdownMenuItem onClick={toggleDocumentos}>
                             <Paperclip className="h-3.5 w-3.5 mr-2" />
                             {isDocOpen ? 'Fechar documentos' : 'Documentos do período'}
                           </DropdownMenuItem>
+
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -895,6 +1010,43 @@ export function AlugueisClient({
 
       <PagarModal open={modalOpen} onOpenChange={setModalOpen} aluguel={pagando} />
 
+      <PagamentoParcialModal
+        open={actionModal?.type === 'pagamento-parcial'}
+        aluguel={actionModal?.type === 'pagamento-parcial' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={u => atualizarAluguel(actionModal?.type === 'pagamento-parcial' ? actionModal.aluguel.id : '', u)}
+      />
+      <LembreteModal
+        open={actionModal?.type === 'lembrete'}
+        aluguel={actionModal?.type === 'lembrete' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={u => atualizarAluguel(actionModal?.type === 'lembrete' ? actionModal.aluguel.id : '', u)}
+      />
+      <CancelarCobrancaModal
+        open={actionModal?.type === 'cancelar'}
+        aluguel={actionModal?.type === 'cancelar' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={id => atualizarAluguel(id, { status: 'cancelado' })}
+      />
+      <DescontoModal
+        open={actionModal?.type === 'desconto'}
+        aluguel={actionModal?.type === 'desconto' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={u => atualizarAluguel(actionModal?.type === 'desconto' ? actionModal.aluguel.id : '', u)}
+      />
+      <IsentarModal
+        open={actionModal?.type === 'isentar'}
+        aluguel={actionModal?.type === 'isentar' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={u => atualizarAluguel(actionModal?.type === 'isentar' ? actionModal.aluguel.id : '', u)}
+      />
+      <ReenviarReciboModal
+        open={actionModal?.type === 'reenviar-recibo'}
+        aluguel={actionModal?.type === 'reenviar-recibo' ? actionModal.aluguel : null}
+        onClose={fecharModal}
+        onSuccess={u => atualizarAluguel(actionModal?.type === 'reenviar-recibo' ? actionModal.aluguel.id : '', u)}
+      />
+
       {cobrancaAluguel && (
         <CobrancaModal
           aluguel={cobrancaAluguel}
@@ -932,7 +1084,7 @@ export function AlugueisClient({
 
           {/* "Marcar como pagos" only if all selected are pending/overdue */}
           {Array.from(selecionados).every(id => {
-            const a = alugueis.find(x => x.id === id)
+            const a = listaAlugueis.find(x => x.id === id)
             return a && a.status !== 'pago'
           }) && (
             <Button

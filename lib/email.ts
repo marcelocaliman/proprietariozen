@@ -443,7 +443,142 @@ export async function enviarCobrancaParaInquilino(p: CobrancaInquilinoParams) {
   })
 }
 
-// ─── Template 6: Boas-vindas ─────────────────────────────────────────────────
+// ─── Template 6: Lembrete de cobrança para o inquilino ───────────────────────
+
+interface LembreteInquilinoParams {
+  para: string
+  nomeInquilino: string
+  nomeProprietario: string
+  nomeImovel: string
+  valor: number
+  mesReferencia: string
+  dataVencimento: string
+  pixKey?: string | null
+  asaasPixCopiaECola?: string | null
+  assasBoletoUrl?: string | null
+}
+
+export async function enviarLembreteInquilino(p: LembreteInquilinoParams) {
+  const hasPaymentInfo = !!(p.pixKey || p.asaasPixCopiaECola || p.assasBoletoUrl)
+
+  const pixBlock = p.pixKey
+    ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;margin:16px 0;">
+         <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.5px;">Chave PIX</p>
+         <p style="margin:0 0 12px;font-size:15px;font-family:monospace;font-weight:700;color:#14532d;word-break:break-all;">${p.pixKey}</p>
+         <div style="text-align:center;">
+           <img src="${qrCodeUrl(p.pixKey)}" alt="QR Code PIX" width="160" height="160"
+                style="border-radius:8px;border:1px solid #e5e7eb;padding:6px;background:#fff;" />
+         </div>
+       </div>`
+    : ''
+
+  const copiaEColaBlock = p.asaasPixCopiaECola
+    ? `<div style="margin:12px 0;">
+         <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#374151;">PIX Copia e Cola</p>
+         <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;font-family:monospace;font-size:11px;color:#6b7280;word-break:break-all;line-height:1.5;">${p.asaasPixCopiaECola}</div>
+       </div>`
+    : ''
+
+  const boletoBlock = p.assasBoletoUrl
+    ? `<div style="text-align:center;margin:12px 0 0;">
+         <a href="${p.assasBoletoUrl}" target="_blank" rel="noopener"
+            style="display:inline-block;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;">
+           Ver boleto bancário →
+         </a>
+       </div>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Olá, <strong>${p.nomeInquilino}</strong>!</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+      Este é um lembrete de <strong>${p.nomeProprietario}</strong> sobre o aluguel do imóvel
+      <strong>${p.nomeImovel}</strong> que está em aberto.
+    </p>
+    ${infoTable([
+      ['Imóvel',      p.nomeImovel],
+      ['Referência',  formatarMesReferencia(p.mesReferencia)],
+      ['Vencimento',  formatarData(p.dataVencimento)],
+      ['Valor',       formatarMoeda(p.valor)],
+    ])}
+    ${hasPaymentInfo
+      ? `<p style="margin:20px 0 8px;font-size:14px;font-weight:600;color:#374151;">Como pagar:</p>
+         ${pixBlock}${copiaEColaBlock}${boletoBlock}`
+      : `<p style="margin:20px 0;font-size:13px;color:#6b7280;">
+           Por favor entre em contato com <strong>${p.nomeProprietario}</strong>
+           para regularizar o pagamento o quanto antes.
+         </p>`
+    }
+    <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
+      Em caso de dúvidas, entre em contato com <strong>${p.nomeProprietario}</strong>.
+    </p>`
+
+  return enviarEmail({
+    from: FROM,
+    to: [p.para],
+    subject: `Lembrete de aluguel em aberto — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
+    html: wrapEmail('#dc2626', 'Lembrete de Aluguel', body),
+  })
+}
+
+// ─── Template 7: Recibo para o inquilino ─────────────────────────────────────
+
+interface ReciboInquilinoParams {
+  para: string
+  nomeInquilino: string
+  nomeProprietario: string
+  nomeImovel: string
+  enderecoImovel: string
+  valor: number
+  valorPago: number
+  mesReferencia: string
+  dataVencimento: string
+  dataPagamento: string
+  metodoPagamento: string | null
+  observacao: string | null
+}
+
+export async function enviarReciboInquilino(p: ReciboInquilinoParams) {
+  const rows: [string, string][] = [
+    ['Imóvel',      p.nomeImovel],
+    ['Endereço',    p.enderecoImovel],
+    ['Referência',  formatarMesReferencia(p.mesReferencia)],
+    ['Vencimento',  formatarData(p.dataVencimento)],
+    ['Valor',       formatarMoeda(p.valor)],
+    ['Valor pago',  formatarMoeda(p.valorPago)],
+    ['Data de pagamento', p.dataPagamento ? formatarData(p.dataPagamento) : '—'],
+  ]
+  if (p.metodoPagamento) rows.push(['Método', p.metodoPagamento])
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Olá, <strong>${p.nomeInquilino}</strong>!</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+      Segue o comprovante de pagamento do aluguel referente ao imóvel
+      <strong>${p.nomeImovel}</strong>.
+    </p>
+    ${infoTable(rows)}
+    ${p.observacao
+      ? `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px 16px;margin:16px 0;">
+           <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Observação</p>
+           <p style="margin:0;font-size:13px;color:#374151;">${p.observacao}</p>
+         </div>`
+      : ''
+    }
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:16px 0;text-align:center;">
+      <p style="margin:0;font-size:14px;font-weight:700;color:#166534;">✓ Pagamento confirmado</p>
+    </div>
+    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
+      Recibo gerado por <strong>${p.nomeProprietario}</strong> via ProprietárioZen.
+    </p>`
+
+  return enviarEmail({
+    from: FROM,
+    to: [p.para],
+    subject: `Recibo de aluguel — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
+    html: wrapEmail('#059669', 'Recibo de Pagamento', body),
+  })
+}
+
+// ─── Template 8: Boas-vindas ─────────────────────────────────────────────────
 
 interface EmailBemVindoParams {
   para: string
