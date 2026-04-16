@@ -157,7 +157,7 @@ export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
       const data = await res.json()
       if (!res.ok) { toast.error(data.error ?? 'Erro ao enviar convite.'); return }
       toast.success('Convite enviado!', {
-        description: data.link,
+        description: `Para: ${data.enviado_para}`,
         action: {
           label: 'Copiar link',
           onClick: () => navigator.clipboard.writeText(data.link),

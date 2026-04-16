@@ -5,9 +5,23 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 const FROM =
   process.env.RESEND_FROM_EMAIL ??
-  `ProprietárioZen <noreply@proprietariozen.com.br>`
+  'ProprietarioZen <noreply@proprietariozen.com.br>'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://proprietariozen.com.br'
+
+// ─── Helper interno de envio com log ─────────────────────────────────────────
+
+async function enviarEmail(
+  payload: Parameters<typeof resend.emails.send>[0],
+): Promise<string | null | undefined> {
+  const { data, error } = await resend.emails.send(payload)
+  if (error) {
+    console.error(`[Resend] ERRO ao enviar para ${payload.to} — ${error.message}`)
+    throw new Error(error.message)
+  }
+  console.log(`[Resend] OK enviado para ${payload.to} — ID: ${data?.id}`)
+  return data?.id
+}
 
 // ─── Base layout ─────────────────────────────────────────────────────────────
 
@@ -102,14 +116,12 @@ export async function enviarLembreteVencimento(p: VencimentoParams) {
       Após receber, registre o pagamento no sistema para manter seu controle atualizado.
     </p>`
 
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [p.para],
     subject: `Aluguel vence em 3 dias — ${p.nomeImovel}`,
     html: wrapEmail('#d97706', 'Vencimento em 3 dias', body),
   })
-  if (error) throw error
-  return data
 }
 
 // ─── Template 2: Alerta de atraso ────────────────────────────────────────────
@@ -153,14 +165,12 @@ export async function enviarAlertaAtraso(p: AtrasoParams) {
       Após receber, registre o pagamento no sistema para baixar o alerta.
     </p>`
 
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [p.para],
     subject: `Aluguel em atraso — ${p.nomeImovel}`,
     html: wrapEmail('#dc2626', 'Aluguel em Atraso', body),
   })
-  if (error) throw error
-  return data
 }
 
 // ─── Template 3: Alerta de reajuste ──────────────────────────────────────────
@@ -208,14 +218,12 @@ export async function enviarAlertaReajuste(p: ReajusteParams) {
     </div>
     ${ctaButton('Aplicar reajuste no painel', `${APP_URL}/dashboard`, '#1e40af')}`
 
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [p.para],
     subject: `Reajuste de aluguel em 30 dias — ${p.nomeImovel}`,
     html: wrapEmail('#1e40af', 'Reajuste em 30 dias', body),
   })
-  if (error) throw error
-  return data
 }
 
 // ─── Template 4: Convite ao inquilino ────────────────────────────────────────
@@ -256,14 +264,12 @@ export async function enviarConviteInquilino(p: ConviteInquilinoParams) {
       Caso precise de ajuda, entre em contato com ${p.nomeProprietario}.
     </p>`
 
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [p.para],
-    subject: `Seu acesso ao ProprietárioZen — ${p.nomeImovel}`,
+    subject: `Seu acesso ao ProprietarioZen — ${p.nomeImovel}`,
     html: wrapEmail('#059669', 'Área do Inquilino', body),
   })
-  if (error) throw error
-  return data
 }
 
 // ─── Funções legadas (mantidas para compatibilidade) ─────────────────────────
@@ -287,7 +293,7 @@ export async function enviarEmailCobranca({
   dataVencimento,
   enderecoImovel,
 }: EmailCobrancaParams) {
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [para],
     subject: `Cobrança de Aluguel — ${formatarMesReferencia(mesReferencia)}`,
@@ -309,8 +315,6 @@ export async function enviarEmailCobranca({
       </p>`,
     ),
   })
-  if (error) throw error
-  return data
 }
 
 interface EmailBemVindoParams {
@@ -319,10 +323,10 @@ interface EmailBemVindoParams {
 }
 
 export async function enviarEmailBemVindo({ para, nome }: EmailBemVindoParams) {
-  const { data, error } = await resend.emails.send({
+  return enviarEmail({
     from: FROM,
     to: [para],
-    subject: 'Bem-vindo ao ProprietárioZen!',
+    subject: 'Bem-vindo ao ProprietarioZen!',
     html: wrapEmail(
       '#1e40af',
       `Bem-vindo, ${nome}!`,
@@ -339,6 +343,4 @@ export async function enviarEmailBemVindo({ para, nome }: EmailBemVindoParams) {
       ${ctaButton('Acessar minha conta', `${APP_URL}/dashboard`)}`,
     ),
   })
-  if (error) throw error
-  return data
 }

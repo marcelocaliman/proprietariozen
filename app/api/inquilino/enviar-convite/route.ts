@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Busca inquilino com imovel
+  // Busca inquilino com imóvel
   const { data: inquilino, error: errInq } = await admin
     .from('inquilinos')
     .select('id, user_id, nome, email, imovel:imoveis(apelido, endereco)')
@@ -47,27 +47,37 @@ export async function POST(req: NextRequest) {
   const token = await criarOuBuscarTokenInquilino(inquilinoId, user.id)
 
   const imovel = inquilino.imovel as { apelido: string; endereco: string } | null
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://proprietariozen.com.br'
+  const link = `${appUrl}/inquilino/${token}`
 
-  // Envia e-mail
-  await enviarConviteInquilino({
-    para:             inquilino.email,
-    nomeInquilino:    inquilino.nome,
-    nomeProprietario,
-    nomeImovel:       imovel?.apelido ?? 'Imóvel',
-    enderecoImovel:   imovel?.endereco ?? '',
-    token,
-  })
+  // Envia e-mail — erros surfacam com mensagem clara para o cliente
+  try {
+    await enviarConviteInquilino({
+      para:             inquilino.email,
+      nomeInquilino:    inquilino.nome,
+      nomeProprietario,
+      nomeImovel:       imovel?.apelido ?? 'Imóvel',
+      enderecoImovel:   imovel?.endereco ?? '',
+      token,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Erro desconhecido'
+    console.error('[enviar-convite] falha Resend:', msg)
+    return NextResponse.json(
+      { error: `Não foi possível enviar o e-mail: ${msg}` },
+      { status: 502 },
+    )
+  }
 
-  // Atualiza convite_enviado_em
+  // Atualiza convite_enviado_em apenas se o envio teve sucesso
   await admin
     .from('inquilinos')
     .update({ convite_enviado_em: new Date().toISOString() })
     .eq('id', inquilinoId)
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://proprietariozen.com.br'
-
   return NextResponse.json({
-    ok: true,
-    link: `${appUrl}/inquilino/${token}`,
+    ok:          true,
+    link,
+    enviado_para: inquilino.email,
   })
 }
