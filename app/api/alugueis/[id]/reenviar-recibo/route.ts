@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { enviarReciboInquilino } from '@/lib/email'
+import { isPlanoPago } from '@/lib/stripe'
 
 export async function POST(
   _req: NextRequest,
@@ -42,9 +43,17 @@ export async function POST(
 
     const { data: profile } = await admin
       .from('profiles')
-      .select('nome')
+      .select('nome, plano, role')
       .eq('id', user.id)
       .single()
+
+    const isPaid = profile?.role === 'admin' || isPlanoPago(profile?.plano ?? 'gratis')
+    if (!isPaid) {
+      return NextResponse.json(
+        { error: 'Reenvio de recibo disponível apenas no plano Master ou Elite.' },
+        { status: 403 },
+      )
+    }
 
     await enviarReciboInquilino({
       para: inquilino.email,

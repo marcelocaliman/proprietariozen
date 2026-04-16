@@ -224,12 +224,21 @@ function CobrancaButton({
 
   // AUTOMATIC sem charge: destaque âmbar
   if (isAutomatic && !temCharge) {
+    const semCpf = !aluguel.inquilino?.cpf
     return (
       <button
         onClick={e => { e.stopPropagation(); onClick() }}
-        className="inline-flex items-center gap-1 rounded-md bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+        title={semCpf ? 'Cadastre o CPF do inquilino para gerar cobrança Asaas' : undefined}
+        className={cn(
+          'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-colors',
+          semCpf
+            ? 'bg-red-50 border border-red-200 text-red-600 hover:bg-red-100'
+            : 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100',
+        )}
       >
-        <Zap className="h-2.5 w-2.5" />
+        {semCpf
+          ? <AlertCircle className="h-2.5 w-2.5" />
+          : <Zap className="h-2.5 w-2.5" />}
         Gerar
       </button>
     )
