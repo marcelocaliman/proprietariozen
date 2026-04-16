@@ -470,8 +470,6 @@ export function AlugueisClient({
     })
   }
 
-  function limparSelecao() { setSelecionados(new Set()) }
-
   // Handlers
   function handlePagar(aluguel: AluguelItem) { setPagando(aluguel); setModalOpen(true) }
 
