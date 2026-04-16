@@ -140,14 +140,14 @@ function SecaoAutoComCharge({ aluguel, loading, loadingEmail, inquilinoEmail, on
       {/* Enviar por e-mail */}
       {inquilinoEmail ? (
         <Button
-          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
+          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 overflow-hidden"
           onClick={onEnviarEmail}
           disabled={loadingEmail}
         >
           {loadingEmail
-            ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <Mail className="h-4 w-4" />}
-          Enviar para {inquilinoEmail}
+            ? <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            : <Mail className="h-4 w-4 shrink-0" />}
+          <span className="truncate min-w-0">Enviar para {inquilinoEmail}</span>
         </Button>
       ) : null}
 
@@ -238,14 +238,14 @@ function SecaoManualComPix({
       {/* Enviar por e-mail */}
       {inquilinoEmail ? (
         <Button
-          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700"
+          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 overflow-hidden"
           onClick={onEnviarEmail}
           disabled={loadingEmail}
         >
           {loadingEmail
-            ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <Mail className="h-4 w-4" />}
-          Enviar por e-mail para {inquilinoEmail}
+            ? <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+            : <Mail className="h-4 w-4 shrink-0" />}
+          <span className="truncate min-w-0">Enviar por e-mail para {inquilinoEmail}</span>
         </Button>
       ) : (
         <Button
