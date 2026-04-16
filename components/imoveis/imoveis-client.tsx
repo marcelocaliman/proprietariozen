@@ -314,9 +314,16 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                   </div>
                 </div>
 
-                {/* Footer — linha de status do aluguel */}
-                <div className="px-5 py-3 border-t border-[#F1F5F9]">
+                {/* Footer — linha de status do aluguel + botão Editar */}
+                <div className="px-5 py-3 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
                   <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
+                  <button
+                    onClick={() => handleEditar(imovel)}
+                    className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
+                  >
+                    <Pencil className="h-3 w-3" />
+                    Editar
+                  </button>
                 </div>
               </div>
             )
@@ -371,6 +378,14 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                       <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
                     </td>
                     <td className="px-4 py-2">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEditar(imovel)}
+                          className="text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1 whitespace-nowrap"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Editar
+                        </button>
                       <DropdownMenu>
                         <DropdownMenuTrigger className="h-7 w-7 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-[#64748B]">
                           <MoreHorizontal className="h-4 w-4" />
@@ -397,6 +412,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 )
