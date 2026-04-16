@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Plus, Users, Pencil, UserX, Phone, Building2,
-  Search, MoreHorizontal, CheckCircle2, Clock, AlertTriangle,
+  Search, MoreHorizontal, CheckCircle2, Clock, AlertTriangle, Paperclip,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -14,7 +14,11 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from '@/components/ui/sheet'
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
+import { DocumentosInquilino } from '@/components/documentos/DocumentosInquilino'
 import { desativarInquilino } from '@/app/(dashboard)/inquilinos/actions'
 import { formatarTelefone, formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
@@ -107,6 +111,7 @@ export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
   const [open, setOpen]         = useState(false)
   const [editando, setEditando] = useState<Inquilino | null>(null)
   const [busca, setBusca]       = useState('')
+  const [docInquilino, setDocInquilino] = useState<{ id: string; nome: string } | null>(null)
 
   const aluguelMap = Object.fromEntries(
     alugueisMes.map(a => [a.inquilino_id, a])
@@ -294,6 +299,9 @@ export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
                         <DropdownMenuItem onClick={() => router.push('/alugueis')}>
                           <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDocInquilino({ id: inquilino.id, nome: inquilino.nome })}>
+                          <Paperclip className="h-3.5 w-3.5 mr-2" />Documentos
+                        </DropdownMenuItem>
                         {inquilino.ativo && (
                           <>
                             <DropdownMenuSeparator />
@@ -316,6 +324,29 @@ export function InquilinosClient({ inquilinos, imoveis, alugueisMes }: Props) {
       )}
 
       <InquilinoModal open={open} onOpenChange={setOpen} inquilino={editando} imoveis={imoveis} />
+
+      {/* Sheet de documentos do inquilino */}
+      <Sheet open={!!docInquilino} onOpenChange={(o) => { if (!o) setDocInquilino(null) }}>
+        <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+          <SheetHeader className="px-5 pt-5 pb-4 border-b border-[#F1F5F9]">
+            <div className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4 text-emerald-600 shrink-0" />
+              <SheetTitle className="text-[15px] font-semibold text-[#0F172A]">
+                Documentos de {docInquilino?.nome.split(' ')[0]}
+              </SheetTitle>
+            </div>
+            <p className="text-xs text-[#94A3B8]">RG, CPF, CNH e comprovantes</p>
+          </SheetHeader>
+          {docInquilino && (
+            <div className="flex-1 overflow-y-auto">
+              <DocumentosInquilino
+                inquilinoId={docInquilino.id}
+                nomeInquilino={docInquilino.nome}
+              />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   )
 }

@@ -6,8 +6,9 @@ import {
   CheckCircle2, Clock, AlertTriangle, Receipt, FileText,
   Banknote, Building2, ChevronLeft, ChevronRight,
   Calendar, Filter, MoreHorizontal, X, CheckCheck,
-  AlertCircle, TrendingUp, Zap, XCircle, Loader2,
+  AlertCircle, TrendingUp, Zap, XCircle, Loader2, Paperclip,
 } from 'lucide-react'
+import { DocumentosAluguel } from '@/components/documentos/DocumentosAluguel'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -286,6 +287,9 @@ export function AlugueisClient({
 
   // Bulk selection state
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+
+  // Documentos accordion
+  const [abrirDocumentos, setAbrirDocumentos] = useState<string | null>(null)
 
   // Close filter panel on outside click
   useEffect(() => {
@@ -648,14 +652,20 @@ export function AlugueisClient({
                 const isPago = aluguel.status === 'pago'
                 const isFinalizado = aluguel.status === 'cancelado' || aluguel.status === 'estornado'
                 const isSelected = selecionados.has(aluguel.id)
+                const isDocOpen = abrirDocumentos === aluguel.id
+
+                function toggleDocumentos() {
+                  setAbrirDocumentos(prev => prev === aluguel.id ? null : aluguel.id)
+                }
 
                 return (
+                  <div key={aluguel.id}>
                   <div
-                    key={aluguel.id}
                     className={cn(
                       'group flex flex-col md:grid md:grid-cols-[36px_2fr_1.5fr_100px_80px_110px_90px_72px] md:gap-3 px-5 py-4 md:py-0 md:h-16 md:items-center hover:bg-slate-50 transition-colors',
                       isPago && 'opacity-[0.92]',
                       isSelected && 'bg-emerald-50/60 hover:bg-emerald-50/80',
+                      isDocOpen && 'bg-slate-50',
                     )}
                   >
                     {/* Checkbox */}
@@ -789,9 +799,22 @@ export function AlugueisClient({
                               </DropdownMenuItem>
                             </>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={toggleDocumentos}>
+                            <Paperclip className="h-3.5 w-3.5 mr-2" />
+                            {isDocOpen ? 'Fechar documentos' : 'Documentos do período'}
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+                  </div>
+
+                  {/* Accordion de documentos */}
+                  {isDocOpen && (
+                    <div className="px-5 pb-5 pt-1 bg-slate-50/70 border-t border-slate-100">
+                      <DocumentosAluguel aluguelId={aluguel.id} />
+                    </div>
+                  )}
                   </div>
                 )
               })

@@ -252,6 +252,104 @@ export type Database = {
           }
         ]
       }
+      documentos_aluguel: {
+        Row: {
+          id: string
+          user_id: string
+          aluguel_id: string
+          tipo: 'contrato' | 'laudo_entrada' | 'laudo_saida' | 'comprovante' | 'foto' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao: string | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          aluguel_id: string
+          tipo: 'contrato' | 'laudo_entrada' | 'laudo_saida' | 'comprovante' | 'foto' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao?: string | null
+        }
+        Update: {
+          tipo?: 'contrato' | 'laudo_entrada' | 'laudo_saida' | 'comprovante' | 'foto' | 'outro'
+          nome_arquivo?: string
+          tamanho_bytes?: number
+          mime_type?: string
+          storage_path?: string
+          descricao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_aluguel_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_aluguel_aluguel_id_fkey"
+            columns: ["aluguel_id"]
+            isOneToOne: false
+            referencedRelation: "alugueis"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      documentos_inquilino: {
+        Row: {
+          id: string
+          user_id: string
+          inquilino_id: string
+          tipo: 'rg' | 'cpf' | 'cnh' | 'comprovante_renda' | 'comprovante_residencia' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao: string | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          inquilino_id: string
+          tipo: 'rg' | 'cpf' | 'cnh' | 'comprovante_renda' | 'comprovante_residencia' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao?: string | null
+        }
+        Update: {
+          tipo?: 'rg' | 'cpf' | 'cnh' | 'comprovante_renda' | 'comprovante_residencia' | 'outro'
+          nome_arquivo?: string
+          tamanho_bytes?: number
+          mime_type?: string
+          storage_path?: string
+          descricao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_inquilino_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_inquilino_inquilino_id_fkey"
+            columns: ["inquilino_id"]
+            isOneToOne: false
+            referencedRelation: "inquilinos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }
