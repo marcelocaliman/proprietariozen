@@ -889,7 +889,7 @@ export function AlugueisClient({
       ) : (
         <Card className="overflow-hidden">
           {/* Table header */}
-          <div className="hidden md:grid grid-cols-[36px_2fr_1.5fr_100px_80px_130px_90px_72px] gap-3 px-5 items-center bg-slate-50 border-b border-slate-100 h-10">
+          <div className="hidden md:grid grid-cols-[36px_2fr_1.5fr_100px_80px_130px_90px_120px] gap-3 px-5 items-center bg-slate-50 border-b border-slate-100 h-10">
             <div className="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -934,7 +934,7 @@ export function AlugueisClient({
                   <div key={aluguel.id}>
                   <div
                     className={cn(
-                      'group flex flex-col md:grid md:grid-cols-[36px_2fr_1.5fr_100px_80px_130px_90px_72px] md:gap-3 px-5 py-4 md:py-0 md:h-16 md:items-center hover:bg-slate-50 transition-colors',
+                      'group flex flex-col md:grid md:grid-cols-[36px_2fr_1.5fr_100px_80px_130px_90px_120px] md:gap-3 px-5 py-4 md:py-0 md:h-16 md:items-center hover:bg-slate-50 transition-colors',
                       isPago && 'opacity-[0.92]',
                       isSelected && 'bg-emerald-50/60 hover:bg-emerald-50/80',
                       isDocOpen && 'bg-slate-50',
@@ -979,28 +979,11 @@ export function AlugueisClient({
                     </div>
 
                     {/* Status */}
-                    <div className="mb-2 md:mb-0 flex items-center gap-1 flex-wrap">
+                    <div className="mb-2 md:mb-0">
                       {aluguel.isento
-                        ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100 text-xs font-semibold">Isento</Badge>
-                        : <Badge className={cn('text-xs font-semibold', st.badgeCls)}>{st.label}</Badge>
+                        ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100 text-xs font-semibold whitespace-nowrap">Isento</Badge>
+                        : <Badge className={cn('text-xs font-semibold whitespace-nowrap', st.badgeCls)}>{st.label}</Badge>
                       }
-                      {/* Indicadores visuais */}
-                      {aluguel.lembrete_enviado_em && (
-                        <span
-                          title={`Lembrete enviado em ${formatarData(aluguel.lembrete_enviado_em)}`}
-                          className="inline-flex text-slate-400 cursor-default"
-                        >
-                          <Mail className="h-3 w-3" />
-                        </span>
-                      )}
-                      {aluguel.valor_pago != null && aluguel.status !== 'pago' && (
-                        <span
-                          title={`Pagamento parcial: ${formatarMoeda(aluguel.valor_pago)} recebido`}
-                          className="inline-flex text-slate-400 cursor-default"
-                        >
-                          <SplitSquareHorizontal className="h-3 w-3" />
-                        </span>
-                      )}
                     </div>
 
                     {/* Cobrança */}
@@ -1039,7 +1022,28 @@ export function AlugueisClient({
                     </div>
 
                     {/* Ações dropdown */}
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-1">
+                      {/* Botão rápido visível */}
+                      {(aluguel.status === 'pendente' || aluguel.status === 'atrasado') && (
+                        <button
+                          onClick={() => handlePagar(aluguel)}
+                          className="text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2 py-1 transition-colors whitespace-nowrap"
+                        >
+                          Registrar
+                        </button>
+                      )}
+                      {isPago && (
+                        <button
+                          onClick={() => handleGerarRecibo(aluguel)}
+                          disabled={loadingRecibo === aluguel.id}
+                          title={aluguel.recibo_gerado ? 'Ver recibo' : 'Gerar recibo'}
+                          className="flex items-center justify-center h-7 w-7 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-40"
+                        >
+                          {loadingRecibo === aluguel.id
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <Receipt className="h-3.5 w-3.5" />}
+                        </button>
+                      )}
                       <DropdownMenu
                         onOpenChange={open => {
                           if (open && isPrimeiro) {

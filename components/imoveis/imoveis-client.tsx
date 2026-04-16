@@ -54,8 +54,21 @@ function diasAte(dataStr: string): number {
   return Math.round((alvo.getTime() - hoje.getTime()) / 86_400_000)
 }
 
-function StatusAluguelLine({ aluguel }: { aluguel: AluguelMes | undefined }) {
+function StatusAluguelLine({
+  aluguel,
+  inquilinoNome,
+}: {
+  aluguel: AluguelMes | undefined
+  inquilinoNome?: string
+}) {
   if (!aluguel) {
+    if (inquilinoNome) {
+      return (
+        <span className="text-xs text-slate-400">
+          Contrato ativo · sem cobrança este mês
+        </span>
+      )
+    }
     return <span className="text-xs text-[#94A3B8] italic">Imóvel vago</span>
   }
   if (aluguel.status === 'pago') {
@@ -303,7 +316,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
 
                 {/* Footer — linha de status do aluguel */}
                 <div className="px-5 py-3 border-t border-[#F1F5F9]">
-                  <StatusAluguelLine aluguel={inquilinoAtivo ? aluguel : undefined} />
+                  <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
                 </div>
               </div>
             )
@@ -355,7 +368,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                       Dia {imovel.dia_vencimento}
                     </td>
                     <td className="px-4 py-2">
-                      <StatusAluguelLine aluguel={inquilinoAtivo ? aluguel : undefined} />
+                      <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
                     </td>
                     <td className="px-4 py-2">
                       <DropdownMenu>
