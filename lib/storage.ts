@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase-server'
 
-const BUCKET = 'documentos'
+export const BUCKET = 'documentos'
 export const STORAGE_MAX_BYTES = 10 * 1024 * 1024 // 10 MB
 export const STORAGE_MIME_ACEITOS = [
   'application/pdf',

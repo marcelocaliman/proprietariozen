@@ -117,46 +117,72 @@ export function DocumentosAluguel({ aluguelId }: Props) {
     if (file) handleFileSelected(file)
   }
 
-  // ── Upload com progresso ───────────────────────────────────────────────────
+  // ── Upload em 3 etapas (direto ao Supabase, sem passar pelo Next.js) ─────────
+  // 1. GET /upload-token → signedUrl + path
+  // 2. PUT signedUrl (arquivo vai direto para o Supabase, sem limite de 4.5 MB do Vercel)
+  // 3. POST /api/documentos/aluguel/:id (só metadados, JSON pequeno)
 
   async function handleUploadConfirmar() {
     if (!fileParaConfirmar || !tipo) return
     setUploading(true)
     setProgresso(0)
 
-    const formData = new FormData()
-    formData.append('file', fileParaConfirmar)
-    formData.append('tipo', tipo)
-    if (descricao.trim()) formData.append('descricao', descricao.trim())
-
     try {
-      const novoDoc = await new Promise<Documento>((resolve, reject) => {
+      // ── Etapa 1: obter URL assinada ──────────────────────────────────────────
+      const tokenRes = await fetch(
+        `/api/documentos/aluguel/${aluguelId}/upload-token?` +
+        new URLSearchParams({
+          filename: fileParaConfirmar.name,
+          mimeType: fileParaConfirmar.type,
+          size:     String(fileParaConfirmar.size),
+          tipo,
+        }),
+      )
+      if (!tokenRes.ok) {
+        const err = await tokenRes.json()
+        throw new Error(err.error ?? 'Erro ao preparar upload')
+      }
+      const { signedUrl, path } = await tokenRes.json() as { signedUrl: string; path: string }
+      setProgresso(5)
+
+      // ── Etapa 2: upload direto para o Supabase Storage ──────────────────────
+      await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgresso(Math.round((e.loaded / e.total) * 100))
+          if (e.lengthComputable)
+            setProgresso(5 + Math.round((e.loaded / e.total) * 90))
         }
         xhr.onload = () => {
-          if (xhr.status === 201) {
-            try {
-              const json = JSON.parse(xhr.responseText)
-              resolve(json.documento)
-            } catch {
-              reject(new Error('Resposta inválida do servidor'))
-            }
-          } else {
-            try {
-              const err = JSON.parse(xhr.responseText)
-              reject(new Error(err.error ?? 'Erro ao enviar'))
-            } catch {
-              reject(new Error('Erro ao enviar'))
-            }
-          }
+          if (xhr.status >= 200 && xhr.status < 300) resolve()
+          else reject(new Error(`Falha ao enviar arquivo (${xhr.status})`))
         }
         xhr.onerror = () => reject(new Error('Erro de rede'))
-        xhr.open('POST', `/api/documentos/aluguel/${aluguelId}`)
-        xhr.send(formData)
+        xhr.open('PUT', signedUrl)
+        xhr.setRequestHeader('Content-Type', fileParaConfirmar.type)
+        xhr.send(fileParaConfirmar)
       })
+      setProgresso(95)
 
+      // ── Etapa 3: salvar metadados ────────────────────────────────────────────
+      const metaRes = await fetch(`/api/documentos/aluguel/${aluguelId}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          path,
+          tipo,
+          descricao:     descricao.trim() || null,
+          nome_arquivo:  fileParaConfirmar.name,
+          tamanho_bytes: fileParaConfirmar.size,
+          mime_type:     fileParaConfirmar.type,
+        }),
+      })
+      if (!metaRes.ok) {
+        const err = await metaRes.json()
+        throw new Error(err.error ?? 'Erro ao salvar metadados')
+      }
+      const { documento: novoDoc } = await metaRes.json() as { documento: Documento }
+
+      setProgresso(100)
       setDocs(prev => [novoDoc, ...prev])
       toast.success('Documento enviado com sucesso!')
       setFileParaConfirmar(null)
@@ -255,7 +281,10 @@ export function DocumentosAluguel({ aluguelId }: Props) {
                 <li key={doc.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
                   <IconeArquivo mimeType={doc.mime_type} className="h-5 w-5 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#0F172A] truncate leading-snug">
+                    <p
+                      className="text-sm font-medium text-[#0F172A] truncate leading-snug"
+                      title={doc.nome_arquivo}
+                    >
                       {doc.nome_arquivo}
                     </p>
                     <p className="text-xs text-[#94A3B8]">
@@ -312,7 +341,10 @@ export function DocumentosAluguel({ aluguelId }: Props) {
             <div className="flex items-center gap-3 rounded-lg bg-slate-50 border border-[#E2E8F0] px-3 py-2.5">
               <IconeArquivo mimeType={fileParaConfirmar?.type ?? ''} className="h-5 w-5 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#0F172A] truncate leading-snug">
+                <p
+                  className="text-sm font-medium text-[#0F172A] truncate leading-snug"
+                  title={fileParaConfirmar?.name}
+                >
                   {fileParaConfirmar?.name}
                 </p>
                 <p className="text-xs text-[#94A3B8]">
