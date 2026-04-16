@@ -14,6 +14,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://proprietariozen.com.br'),
   title: {
     default: 'ProprietárioZen — Gestão de Imóveis',
     template: '%s | ProprietárioZen',

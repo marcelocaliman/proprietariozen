@@ -17,16 +17,16 @@ export const metadata: Metadata = {
     'max-image-preview': 'large',
   },
   alternates: {
-    canonical: 'https://www.proprietariezen.com.br/',
+    canonical: 'https://proprietariozen.com.br',
   },
   openGraph: {
     type: 'website',
-    url: 'https://www.proprietariezen.com.br/',
+    url: 'https://proprietariozen.com.br',
     title: 'ProprietárioZen — Gestão de Imóveis sem Complicação',
     description: 'Controle aluguéis, contratos e cobranças em um único app. Mais de 2.400 proprietários já simplificaram sua gestão. Comece grátis hoje.',
     images: [
       {
-        url: 'https://www.proprietariezen.com.br/og-image.png',
+        url: 'https://proprietariozen.com.br/og-image.png',
         width: 1200,
         height: 630,
         alt: 'ProprietárioZen — Dashboard de gestão de imóveis',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     site: '@proprietariozenbr',
     title: 'ProprietárioZen — Gestão de Imóveis Simplificada',
     description: 'Gerencie seus imóveis, contratos e cobranças sem planilhas e sem stress. Experimente grátis.',
-    images: ['https://www.proprietariezen.com.br/og-image.png'],
+    images: ['https://proprietariozen.com.br/og-image.png'],
   },
   other: {
     language: 'pt-BR',
@@ -69,7 +69,7 @@ const jsonLdSoftware = {
   },
   description:
     'App brasileiro de gestão de imóveis para proprietários. Controle de aluguéis, contratos digitais, cobranças automáticas e relatórios financeiros.',
-  url: 'https://www.proprietariezen.com.br',
+  url: 'https://proprietariozen.com.br',
   inLanguage: 'pt-BR',
   featureList: [
     'Gestão de contratos de locação',
@@ -125,8 +125,8 @@ const jsonLdOrg = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'ProprietárioZen',
-  url: 'https://www.proprietariezen.com.br',
-  logo: 'https://www.proprietariezen.com.br/logo.png',
+  url: 'https://proprietariozen.com.br',
+  logo: 'https://proprietariozen.com.br/logo.png',
   sameAs: [
     'https://www.instagram.com/proprietariozenbr',
     'https://www.linkedin.com/company/proprietariozenbr',

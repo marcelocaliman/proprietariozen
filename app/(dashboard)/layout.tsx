@@ -1,6 +1,11 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { UnauthorizedToast } from '@/components/dashboard/unauthorized-toast'

@@ -1,6 +1,21 @@
 User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /app/
+Allow: /planos
+Allow: /login
+Allow: /cadastro
 
-Sitemap: https://www.proprietariezen.com.br/sitemap.xml
+Disallow: /dashboard
+Disallow: /imoveis
+Disallow: /inquilinos
+Disallow: /alugueis
+Disallow: /configuracoes
+Disallow: /admin
+Disallow: /relatorio-ir
+Disallow: /recibos
+Disallow: /inquilino/
+Disallow: /api/
+Disallow: /sucesso
+Disallow: /cancelado
+Disallow: /bloqueado
+
+Sitemap: https://proprietariozen.com.br/sitemap.xml
