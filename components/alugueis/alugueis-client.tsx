@@ -26,6 +26,7 @@ import { IsentarModal } from './isentar-modal'
 import { ReenviarReciboModal } from './reenviar-recibo-modal'
 import { marcarReciboGerado, limparRegistrosFuturosIndevidos } from '@/app/(dashboard)/alugueis/actions'
 import { CalendarioAnual, type AnoResumoItem, type ImovelVigencia } from './calendario-anual'
+import { GerarAntecipadoModal, type GerarAntecipadoItem } from './gerar-antecipado-modal'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
 import {
@@ -359,6 +360,24 @@ export function AlugueisClient({
 
   function atualizarAluguel(id: string, updates: Partial<AluguelItem>) {
     setListaAlugueis(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a))
+  }
+
+  // Local copy of anoData — updated optimistically after early charge generation
+  const [localAnoData, setLocalAnoData] = useState(anoData)
+  useEffect(() => { setLocalAnoData(anoData) }, [anoData])
+
+  // Gerar antecipado modal
+  const [gerarAntecipadoMes, setGerarAntecipadoMes] = useState<string | null>(null)
+
+  function handleConfirmado(_mes: string, registros: { valor: number; mesReferencia: string }[]) {
+    setLocalAnoData(prev => [
+      ...prev,
+      ...registros.map(r => ({
+        valor: r.valor,
+        status: 'pendente',
+        mes_referencia: r.mesReferencia,
+      } satisfies AnoResumoItem)),
+    ])
   }
 
   // PagarModal state
@@ -777,9 +796,10 @@ export function AlugueisClient({
       {/* Tabs de status — list view only */}
       {view === 'calendario' && (
         <CalendarioAnual
-          data={anoData}
+          data={localAnoData}
           ano={parseInt(anoSelecionado ?? mesSelecionado.slice(0, 4))}
           imoveis={imoveisVigencia}
+          onGerarAntecipado={mes => setGerarAntecipadoMes(mes)}
         />
       )}
 
@@ -884,23 +904,46 @@ export function AlugueisClient({
       {listaAlugueis.length === 0 ? (
         <Card>
           <CardContent className="p-0">
-            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-              <div className="p-3 rounded-full bg-slate-100">
-                <Calendar className="h-10 w-10 text-slate-300" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-[#0F172A]">
-                  Nenhum aluguel em {labelMes(mesSelecionado)}
-                </p>
-                <p className="text-xs text-slate-400 max-w-[280px]">
-                  Os aluguéis são gerados automaticamente quando você cadastra um imóvel com inquilino ativo.
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => router.push('/imoveis')} className="mt-1">
-                <Building2 className="h-4 w-4 mr-1.5" />
-                Ir para Imóveis
-              </Button>
-            </div>
+            {(() => {
+              const hoje = new Date()
+              const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`
+              const ehMesFuturo = mesSelecionado > mesAtual
+              return (
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                  <div className="p-3 rounded-full bg-slate-100">
+                    <Calendar className="h-10 w-10 text-slate-300" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#0F172A]">
+                      {ehMesFuturo
+                        ? `Nenhuma cobrança gerada para ${labelMes(mesSelecionado)}`
+                        : `Nenhum aluguel em ${labelMes(mesSelecionado)}`}
+                    </p>
+                    <p className="text-xs text-slate-400 max-w-[280px]">
+                      {ehMesFuturo
+                        ? 'Acesse o calendário para gerar esta cobrança com antecedência.'
+                        : 'Os aluguéis são gerados automaticamente quando você cadastra um imóvel com inquilino ativo.'}
+                    </p>
+                  </div>
+                  {ehMesFuturo ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/alugueis?view=calendario&ano=${mesSelecionado.slice(0, 4)}`)}
+                      className="mt-1"
+                    >
+                      <CalendarDays className="h-4 w-4 mr-1.5" />
+                      Ver no calendário
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => router.push('/imoveis')} className="mt-1">
+                      <Building2 className="h-4 w-4 mr-1.5" />
+                      Ir para Imóveis
+                    </Button>
+                  )}
+                </div>
+              )
+            })()}
           </CardContent>
         </Card>
       ) : (
@@ -1268,6 +1311,14 @@ export function AlugueisClient({
       )}
 
       </>}
+
+      {/* ── Gerar antecipado ── */}
+      <GerarAntecipadoModal
+        mes={gerarAntecipadoMes}
+        imoveis={imoveisVigencia as GerarAntecipadoItem[]}
+        onClose={() => setGerarAntecipadoMes(null)}
+        onConfirmado={handleConfirmado}
+      />
 
       {/* ── Modais de ação ── */}
       <PagarModal open={modalOpen} onOpenChange={setModalOpen} aluguel={pagando} />

@@ -66,7 +66,7 @@ export default async function AlugueisPage({
     // Não cria nenhum registro. Não filtrado por ano para funcionar ao navegar entre anos.
     supabase
       .from('imoveis')
-      .select('id, valor_aluguel, data_inicio_contrato, data_fim_contrato, contrato_indeterminado')
+      .select('id, apelido, endereco, valor_aluguel, dia_vencimento, data_inicio_contrato, data_fim_contrato, contrato_indeterminado, inquilinos(id, nome, ativo)')
       .eq('user_id', user.id)
       .eq('ativo', true),
   ])

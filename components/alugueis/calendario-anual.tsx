@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ChevronLeft, ChevronRight,
-  CheckCircle2, Clock, AlertTriangle, Minus, TrendingUp,
+  CheckCircle2, Clock, AlertTriangle, Minus, TrendingUp, Plus,
 } from 'lucide-react'
 import { formatarMoeda } from '@/lib/helpers'
 import { cn } from '@/lib/utils'
@@ -20,10 +21,14 @@ export type AnoResumoItem = {
 // Não representam registros na tabela alugueis.
 export type ImovelVigencia = {
   id: string
+  apelido: string
+  endereco: string
   valor_aluguel: number
+  dia_vencimento: number
   data_inicio_contrato: string | null
   data_fim_contrato: string | null
   contrato_indeterminado: boolean
+  inquilinos?: { id: string; nome: string; ativo: boolean }[] | null
 }
 
 type MesStats = {
@@ -176,11 +181,14 @@ export function CalendarioAnual({
   data,
   ano,
   imoveis = [],
+  onGerarAntecipado,
 }: {
   data: AnoResumoItem[]
   ano: number
   imoveis?: ImovelVigencia[]
+  onGerarAntecipado?: (mes: string) => void
 }) {
+  const router = useRouter()
   const stats = computeStats(data, ano)
 
   const hoje = new Date()
@@ -230,9 +238,9 @@ export function CalendarioAnual({
       {/* ── Grade de 12 meses ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
         {stats.map((s, i) => {
-          const variant  = getVariant(s, mesHoje, imoveis)
-          const cfg      = VARIANT_CFG[variant]
-          const isAtual  = s.mes === mesHoje
+          const variant    = getVariant(s, mesHoje, imoveis)
+          const cfg        = VARIANT_CFG[variant]
+          const isAtual    = s.mes === mesHoje
           const isPrevisto = variant === 'previsto'
 
           // Valor a exibir:
@@ -242,19 +250,9 @@ export function CalendarioAnual({
           const valorPrevisto = isPrevisto ? computeValorPrevisto(s.mes, imoveis) : 0
           const valorExibido  = isPrevisto ? valorPrevisto : (s.pago > 0 ? s.pago : s.total)
 
-          return (
-            <Link
-              key={s.mes}
-              href={`/alugueis?mes=${s.mes}`}
-              title={isPrevisto
-                ? 'Aluguel previsto com base na vigência do contrato. O registro será criado quando o mês chegar.'
-                : undefined}
-              className={cn(
-                'relative rounded-xl border p-4 flex flex-col gap-2.5 transition-all',
-                cfg.card,
-                isAtual && 'ring-2 ring-emerald-400 ring-offset-1',
-              )}
-            >
+          // Conteúdo interno compartilhado
+          const cardContent = (
+            <>
               {/* Mês + badge "Atual" */}
               <div className="flex items-start justify-between gap-1">
                 <span className={cn(
@@ -279,7 +277,6 @@ export function CalendarioAnual({
                     <p className={cn('text-base font-bold leading-tight', cfg.valueColor)}>
                       {formatarMoeda(valorExibido)}
                     </p>
-                    {/* Se parcial, mostra total riscado */}
                     {!isPrevisto && s.pago > 0 && s.pago < s.total && (
                       <p className="text-[11px] text-slate-400 line-through leading-tight">
                         {formatarMoeda(s.total)}
@@ -309,6 +306,54 @@ export function CalendarioAnual({
                   </span>
                 )}
               </div>
+            </>
+          )
+
+          // Cards "previsto" — div com hover overlay + botão "+ Gerar cobrança"
+          if (isPrevisto) {
+            return (
+              <div
+                key={s.mes}
+                role="button"
+                tabIndex={0}
+                title="Aluguel previsto com base na vigência do contrato."
+                onClick={() => router.push(`/alugueis?mes=${s.mes}`)}
+                onKeyDown={e => e.key === 'Enter' && router.push(`/alugueis?mes=${s.mes}`)}
+                className={cn(
+                  'relative group cursor-pointer rounded-xl border p-4 flex flex-col gap-2.5 transition-all',
+                  cfg.card,
+                  isAtual && 'ring-2 ring-emerald-400 ring-offset-1',
+                )}
+              >
+                {/* Overlay sutil esmeralda */}
+                <div className="absolute inset-0 rounded-xl bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                {cardContent}
+                {/* Botão "+ Gerar cobrança" — visível apenas no hover */}
+                {onGerarAntecipado && (
+                  <button
+                    onClick={e => { e.stopPropagation(); onGerarAntecipado(s.mes) }}
+                    className="absolute inset-x-2 bottom-2 flex items-center justify-center gap-1 text-[11px] font-semibold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 rounded-lg py-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-10"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Gerar cobrança
+                  </button>
+                )}
+              </div>
+            )
+          }
+
+          // Cards normais — Link com navegação direta
+          return (
+            <Link
+              key={s.mes}
+              href={`/alugueis?mes=${s.mes}`}
+              className={cn(
+                'relative rounded-xl border p-4 flex flex-col gap-2.5 transition-all',
+                cfg.card,
+                isAtual && 'ring-2 ring-emerald-400 ring-offset-1',
+              )}
+            >
+              {cardContent}
             </Link>
           )
         })}
