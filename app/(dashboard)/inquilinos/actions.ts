@@ -1,8 +1,18 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { registrarLog } from '@/lib/log'
+
+/** Revoga todos os tokens ativos de um inquilino (usa admin para bypassar RLS). */
+async function revogarTokensInquilino(inquilinoId: string) {
+  const admin = createAdminClient()
+  await admin
+    .from('inquilino_tokens')
+    .update({ ativo: false })
+    .eq('inquilino_id', inquilinoId)
+    .eq('ativo', true)
+}
 
 export type InquilinoInput = {
   imovel_id: string
@@ -34,12 +44,26 @@ export async function editarInquilino(id: string, input: InquilinoInput): Promis
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
+  // Verifica se o imóvel está sendo alterado (inquilino sai do imóvel atual)
+  const { data: atual } = await supabase
+    .from('inquilinos')
+    .select('imovel_id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
   const { error } = await supabase
     .from('inquilinos')
     .update(input)
     .eq('id', id)
     .eq('user_id', user.id)
   if (error) return { error: error.message }
+
+  // Se o imóvel mudou, revoga tokens — o link antigo não faz mais sentido
+  if (atual && atual.imovel_id !== input.imovel_id) {
+    await revogarTokensInquilino(id)
+  }
+
   revalidatePath('/inquilinos')
   revalidatePath('/imoveis')
   return {}
@@ -56,6 +80,10 @@ export async function desativarInquilino(id: string): Promise<{ error?: string }
     .eq('id', id)
     .eq('user_id', user.id)
   if (error) return { error: error.message }
+
+  // Revoga tokens de acesso público ao desativar o inquilino
+  await revogarTokensInquilino(id)
+
   revalidatePath('/inquilinos')
   revalidatePath('/imoveis')
   return {}
