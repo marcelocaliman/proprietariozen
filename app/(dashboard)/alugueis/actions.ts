@@ -77,6 +77,88 @@ export async function gerarAlugueisMes(
   return { criados: novos.length }
 }
 
+// Gera registros para todos os meses passados do ano (calendário anual)
+export async function gerarAlugueisMesesAno(
+  ano: number,
+): Promise<{ criados: number; error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { criados: 0, error: 'Não autorizado' }
+
+  const hoje = new Date()
+  const anoAtual = hoje.getFullYear()
+  const mesAtual = hoje.getMonth() + 1
+
+  // Gera apenas meses que já ocorreram (não gera o futuro)
+  const ultimoMes = ano < anoAtual ? 12 : (ano === anoAtual ? mesAtual : 0)
+  if (ultimoMes === 0) return { criados: 0 }
+
+  const mesesRef = Array.from({ length: ultimoMes }, (_, i) =>
+    `${ano}-${String(i + 1).padStart(2, '0')}-01`,
+  )
+
+  const { data: imoveis } = (await supabase
+    .from('imoveis')
+    .select('id, valor_aluguel, dia_vencimento, data_inicio_contrato, inquilinos(id, ativo)')
+    .eq('user_id', user.id)
+    .eq('ativo', true)) as unknown as {
+    data: {
+      id: string
+      valor_aluguel: number
+      dia_vencimento: number
+      data_inicio_contrato: string | null
+      inquilinos: { id: string; ativo: boolean }[]
+    }[] | null
+  }
+
+  if (!imoveis?.length) return { criados: 0 }
+
+  // Busca todos os aluguéis existentes do ano de uma vez
+  const { data: existentes } = await supabase
+    .from('alugueis')
+    .select('imovel_id, mes_referencia')
+    .in('imovel_id', imoveis.map(i => i.id))
+    .in('mes_referencia', mesesRef)
+
+  const existentesSet = new Set(existentes?.map(a => `${a.imovel_id}|${a.mes_referencia}`) ?? [])
+
+  const novos: {
+    imovel_id: string
+    inquilino_id: string | null
+    mes_referencia: string
+    valor: number
+    data_vencimento: string
+    status: 'pendente'
+  }[] = []
+
+  for (const mesRef of mesesRef) {
+    for (const imovel of imoveis) {
+      if (existentesSet.has(`${imovel.id}|${mesRef}`)) continue
+      if (imovel.data_inicio_contrato) {
+        const inicioMes = imovel.data_inicio_contrato.slice(0, 7)
+        if (mesRef.slice(0, 7) < inicioMes) continue
+      }
+      const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      novos.push({
+        imovel_id: imovel.id,
+        inquilino_id: inquilinoAtivo?.id ?? null,
+        mes_referencia: mesRef,
+        valor: imovel.valor_aluguel,
+        data_vencimento: calcularVencimento(mesRef, imovel.dia_vencimento),
+        status: 'pendente',
+      })
+    }
+  }
+
+  if (!novos.length) return { criados: 0 }
+
+  const { error } = await supabase.from('alugueis').insert(novos)
+  if (error) return { criados: 0, error: error.message }
+
+  revalidatePath('/alugueis')
+  return { criados: novos.length }
+}
+
 // Marca como atrasado os pendentes com vencimento passado
 export async function atualizarStatusAtrasados(): Promise<void> {
   const supabase = await createServerSupabaseClient()

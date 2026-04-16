@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { AlugueisClient, type AluguelItem } from '@/components/alugueis/alugueis-client'
 import type { AnoResumoItem } from '@/components/alugueis/calendario-anual'
-import { gerarAlugueisMes, atualizarStatusAtrasados } from './actions'
+import { gerarAlugueisMes, gerarAlugueisMesesAno, atualizarStatusAtrasados } from './actions'
 
 export default async function AlugueisPage({
   searchParams,
@@ -21,8 +21,11 @@ export default async function AlugueisPage({
   const anoNum = parseInt(anoParam)
 
   // Gera registros faltantes + atualiza atrasados em paralelo
+  // Na view de calendário, gera todos os meses passados do ano selecionado
   await Promise.all([
-    gerarAlugueisMes(mesReferencia),
+    viewParam === 'calendario'
+      ? gerarAlugueisMesesAno(anoNum)
+      : gerarAlugueisMes(mesReferencia),
     atualizarStatusAtrasados(),
   ])
 
