@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
-  Check, X, Zap, FileText, TrendingUp,
-  BarChart3, Mail, Shield, Loader2, Star, Building2,
+  Check, X, Zap, Shield, Loader2, Star,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
