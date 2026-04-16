@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   TrendingUp, CheckCircle, AlertCircle, Building2,
-  Calendar, Banknote, Activity, ArrowRight,
+  Calendar, Banknote, Activity, ArrowRight, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -125,6 +125,13 @@ type ImovelParaPreview = {
   inquilinos: { nome: string; ativo: boolean }[]
 }
 
+type ImovelContratoPrev = {
+  id: string
+  apelido: string
+  data_fim_contrato: string
+  inquilinos: { nome: string; ativo: boolean }[]
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -160,6 +167,7 @@ export default async function DashboardPage({
 
   const em7Dias = new Date(hoje); em7Dias.setDate(hoje.getDate() + 7)
   const em30Dias = new Date(hoje); em30Dias.setDate(hoje.getDate() + 30)
+  const em60Dias = new Date(hoje); em60Dias.setDate(hoje.getDate() + 60)
 
   const [
     { data: profile },
@@ -172,6 +180,7 @@ export default async function DashboardPage({
     { data: atividadeRecente },
     { data: receitaMeses },
     { data: imoveisParaPreview },
+    { data: contratosVencendo },
   ] = await Promise.all([
     supabase.from('profiles').select('nome').eq('id', user.id).single(),
 
@@ -241,6 +250,18 @@ export default async function DashboardPage({
       .select('id, apelido, valor_aluguel, dia_vencimento, data_inicio_contrato, inquilinos(nome, ativo)')
       .eq('user_id', user.id)
       .eq('ativo', true) as unknown as Promise<{ data: ImovelParaPreview[] | null; error: unknown }>,
+
+    // Contratos próximos do vencimento (≤ 60 dias)
+    supabase.from('imoveis')
+      .select('id, apelido, data_fim_contrato, inquilinos(nome, ativo)')
+      .eq('user_id', user.id)
+      .eq('ativo', true)
+      .eq('contrato_indeterminado', false)
+      .not('data_fim_contrato', 'is', null)
+      .lte('data_fim_contrato', em60Dias.toISOString().split('T')[0])
+      .gte('data_fim_contrato', hoje.toISOString().split('T')[0])
+      .order('data_fim_contrato', { ascending: true })
+      .limit(5) as unknown as Promise<{ data: ImovelContratoPrev[] | null; error: unknown }>,
   ])
 
   // Totais do mês selecionado
@@ -564,6 +585,42 @@ export default async function DashboardPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Contratos próximos do vencimento */}
+          {(contratosVencendo?.length ?? 0) > 0 && (
+            <Card>
+              <CardHeader className="pb-0 pt-4 px-5">
+                <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-amber-500" />Contratos vencendo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 mt-2">
+                <div className="divide-y divide-[#F1F5F9]">
+                  {contratosVencendo!.map(imovel => {
+                    const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
+                    const hoje2 = new Date(); hoje2.setHours(0, 0, 0, 0)
+                    const dias = Math.round((fim.getTime() - hoje2.getTime()) / 86_400_000)
+                    const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+                    return (
+                      <div key={imovel.id} className="flex items-center gap-3 px-5 py-3">
+                        <div className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 bg-amber-100">
+                          <FileText className="h-3.5 w-3.5 text-amber-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-[#0F172A] truncate leading-tight">{imovel.apelido}</p>
+                          <p className="text-xs text-slate-400 truncate leading-tight">{inquilinoAtivo?.nome ?? 'Sem inquilino'}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-bold text-amber-600">Vence em {dias}d</span>
+                          <Link href="/imoveis" className="text-xs text-emerald-600 hover:underline font-medium">Ver →</Link>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Reajustes próximos */}
           {(proximosReajustes?.length ?? 0) > 0 && (

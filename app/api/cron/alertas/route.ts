@@ -4,6 +4,7 @@ import {
   enviarLembreteVencimento,
   enviarAlertaAtraso,
   enviarAlertaReajuste,
+  enviarAlertaVencimentoContrato,
 } from '@/lib/email'
 
 // GET /api/cron/alertas
@@ -35,6 +36,14 @@ type ImovelAlerta = {
   data_proximo_reajuste: string
 }
 
+type ImovelContrato = {
+  id: string
+  apelido: string
+  user_id: string
+  data_fim_contrato: string
+  inquilinos: { nome: string; ativo: boolean }[] | null
+}
+
 type Profile = { id: string; nome: string; email: string }
 
 function dateOffset(days: number): string {
@@ -62,7 +71,7 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const resultados = { atualizados: 0, vencimento: 0, atraso: 0, reajuste: 0, erros: 0 }
+  const resultados = { atualizados: 0, vencimento: 0, atraso: 0, reajuste: 0, contrato: 0, erros: 0 }
 
   // ── 0. Marcar como atrasado todos os pendentes com vencimento passado ────────
   const hoje = dateOffset(0)
@@ -191,12 +200,52 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── 4. Alertas de vencimento de contrato (≤ 60 dias) ─────────────────────────
+  const em60Dias = dateOffset(60)
+  const { data: contratosVencendo } = await admin
+    .from('imoveis')
+    .select('id, apelido, user_id, data_fim_contrato, inquilinos(nome, ativo)')
+    .eq('ativo', true)
+    .eq('contrato_indeterminado', false)
+    .eq('alerta_vencimento_enviado', false)
+    .not('data_fim_contrato', 'is', null)
+    .lte('data_fim_contrato', em60Dias)
+    .gte('data_fim_contrato', hoje) as unknown as { data: ImovelContrato[] | null }
+
+  if (contratosVencendo?.length) {
+    const userIds = Array.from(new Set(contratosVencendo.map(i => i.user_id)))
+    const profiles = await getProfiles(userIds)
+
+    for (const imovel of contratosVencendo) {
+      const profile = profiles.get(imovel.user_id)
+      if (!profile?.email) continue
+      const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
+      const hoje2 = new Date(); hoje2.setHours(0, 0, 0, 0)
+      const dias = Math.round((fim.getTime() - hoje2.getTime()) / 86_400_000)
+      const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      try {
+        await enviarAlertaVencimentoContrato({
+          para: profile.email,
+          nomeProprietario: profile.nome,
+          nomeImovel: imovel.apelido,
+          nomeInquilino: inquilinoAtivo?.nome ?? null,
+          dataFim: imovel.data_fim_contrato,
+          diasRestantes: dias,
+        })
+        await admin.from('imoveis').update({ alerta_vencimento_enviado: true }).eq('id', imovel.id)
+        resultados.contrato++
+      } catch {
+        resultados.erros++
+      }
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     executado_em: new Date().toISOString(),
     atualizados: resultados.atualizados,
-    enviados: { vencimento: resultados.vencimento, atraso: resultados.atraso, reajuste: resultados.reajuste },
-    total: resultados.vencimento + resultados.atraso + resultados.reajuste,
+    enviados: { vencimento: resultados.vencimento, atraso: resultados.atraso, reajuste: resultados.reajuste, contrato: resultados.contrato },
+    total: resultados.vencimento + resultados.atraso + resultados.reajuste + resultados.contrato,
     erros: resultados.erros,
   })
 }

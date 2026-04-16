@@ -19,6 +19,10 @@ export type ImovelInput = {
   multa_percentual: number
   juros_percentual: number
   desconto_percentual: number
+  vigencia_meses: number | null
+  data_fim_contrato: string | null
+  contrato_indeterminado: boolean
+  alerta_vencimento_enviado?: boolean
 }
 
 export async function criarImovel(input: ImovelInput): Promise<{ error?: string }> {

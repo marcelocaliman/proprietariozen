@@ -98,6 +98,32 @@ function StatusAluguelLine({
   )
 }
 
+// ─── VigenciaCardLine ─────────────────────────────────────────────────────────
+
+function VigenciaCardLine({ imovel, onEditar }: { imovel: Imovel; onEditar: () => void }) {
+  if (!imovel.data_fim_contrato && !imovel.contrato_indeterminado) return null
+  if (imovel.contrato_indeterminado) {
+    return <span className="text-xs text-slate-400 italic">Sem prazo definido</span>
+  }
+  const dias = diasAte(imovel.data_fim_contrato!)
+  const fim = new Date(imovel.data_fim_contrato! + 'T00:00:00')
+  const dataFormatada = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .format(fim).replace('.', '')
+  if (dias < 0) {
+    return (
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-xs text-red-600">Venceu em {dataFormatada} · Atualize o contrato</span>
+        <button onClick={onEditar} className="shrink-0 text-xs font-semibold text-red-600 hover:underline">Renovar</button>
+      </div>
+    )
+  }
+  if (dias <= 60) {
+    return <span className="text-xs text-amber-600">Contrato até {dataFormatada} · Renove o contrato</span>
+  }
+  const meses = Math.round(dias / 30)
+  return <span className="text-xs text-slate-500">Contrato até {dataFormatada} · {meses} meses restantes</span>
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -284,6 +310,31 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                       {ocupado ? 'Ocupado' : 'Vago'}
                     </Badge>
                   </div>
+
+                  {/* Badge vencimento contrato — canto superior esquerdo (abaixo do ⋯) */}
+                  {(() => {
+                    if (!imovel.data_fim_contrato || imovel.contrato_indeterminado) return null
+                    const dias = diasAte(imovel.data_fim_contrato)
+                    if (dias < 0) {
+                      return (
+                        <div className="absolute top-10 left-2">
+                          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+                            Contrato vencido
+                          </span>
+                        </div>
+                      )
+                    }
+                    if (dias <= 60) {
+                      return (
+                        <div className="absolute top-10 left-2">
+                          <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-900">
+                            Vence em {dias}d
+                          </span>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                 </div>
 
                 {/* Body */}
@@ -314,16 +365,18 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                   </div>
                 </div>
 
-                {/* Footer — linha de status do aluguel + botão Editar */}
-                <div className="px-5 py-3 border-t border-[#F1F5F9] flex items-center justify-between gap-2">
-                  <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
-                  <button
-                    onClick={() => handleEditar(imovel)}
-                    className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    Editar
-                  </button>
+                {/* Footer — linha de status do aluguel + botão Editar + vigência */}
+                <div className="px-5 py-3 border-t border-[#F1F5F9] space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
+                    <button
+                      onClick={() => handleEditar(imovel)}
+                      className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
+                    >
+                      <Pencil className="h-3 w-3" />Editar
+                    </button>
+                  </div>
+                  <VigenciaCardLine imovel={imovel} onEditar={() => handleEditar(imovel)} />
                 </div>
               </div>
             )
@@ -336,7 +389,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-[#E2E8F0]">
               <tr>
-                {['Imóvel', 'Tipo', 'Inquilino', 'Aluguel', 'Vencimento', 'Status', ''].map(h => (
+                {['Imóvel', 'Tipo', 'Inquilino', 'Aluguel', 'Vencimento', 'Vigência', 'Status', ''].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
@@ -373,6 +426,18 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                     </td>
                     <td className="px-4 py-2 text-xs text-[#64748B] whitespace-nowrap">
                       Dia {imovel.dia_vencimento}
+                    </td>
+                    <td className="px-4 py-2 text-xs whitespace-nowrap">
+                      {imovel.contrato_indeterminado ? (
+                        <span className="text-slate-400 italic">Indeterminado</span>
+                      ) : imovel.data_fim_contrato ? (() => {
+                        const dias = diasAte(imovel.data_fim_contrato!)
+                        const fim = new Date(imovel.data_fim_contrato! + 'T00:00:00')
+                        const dataFmt = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(fim).replace('.', '')
+                        if (dias < 0) return <span className="inline-flex items-center text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">Vencido</span>
+                        if (dias <= 60) return <span className="inline-flex items-center text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">Vence em {dias}d</span>
+                        return <span className="text-slate-500">{dataFmt}</span>
+                      })() : <span className="text-slate-300">—</span>}
                     </td>
                     <td className="px-4 py-2">
                       <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />

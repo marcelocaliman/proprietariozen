@@ -608,3 +608,38 @@ export async function enviarEmailBemVindo({ para, nome }: EmailBemVindoParams) {
     ),
   })
 }
+
+// ─── Template N: Alerta de vencimento de contrato ────────────────────────────
+
+interface VencimentoContratoParams {
+  para: string
+  nomeProprietario: string
+  nomeImovel: string
+  nomeInquilino: string | null
+  dataFim: string
+  diasRestantes: number
+}
+
+export async function enviarAlertaVencimentoContrato(p: VencimentoContratoParams) {
+  const body = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Olá, <strong>${p.nomeProprietario}</strong>!</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+      O contrato do imóvel <strong>${p.nomeImovel}</strong>${p.nomeInquilino ? ` com <strong>${p.nomeInquilino}</strong>` : ''} vence em
+      <strong>${p.diasRestantes} dia${p.diasRestantes !== 1 ? 's' : ''}</strong> (${formatarData(p.dataFim)}).
+      Acesse o app para renovar ou encerrar o contrato.
+    </p>
+    ${infoTable([
+      ['Imóvel', p.nomeImovel],
+      ...(p.nomeInquilino ? [['Inquilino', p.nomeInquilino] as [string, string]] : []),
+      ['Data de vencimento', formatarData(p.dataFim)],
+      ['Dias restantes', String(p.diasRestantes)],
+    ])}
+    ${ctaButton('Gerenciar contrato →', `${APP_URL}/imoveis`, '#d97706')}`
+
+  return enviarEmail({
+    from: FROM,
+    to: [p.para],
+    subject: `Contrato vencendo em ${p.diasRestantes} dias — ${p.nomeImovel}`,
+    html: wrapEmail('#d97706', `Contrato vence em ${p.diasRestantes} dias`, body),
+  })
+}

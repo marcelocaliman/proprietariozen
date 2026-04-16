@@ -18,6 +18,26 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { criarImovel, editarImovel } from '@/app/(dashboard)/imoveis/actions'
 import type { Imovel } from '@/types'
+import { cn } from '@/lib/utils'
+
+// ─── Helpers de vigência ──────────────────────────────────────────────────────
+
+function calcularDataFim(inicio: string, meses: number): string {
+  const d = new Date(inicio + 'T00:00:00')
+  d.setMonth(d.getMonth() + meses)
+  return d.toISOString().split('T')[0]
+}
+
+function formatarDataLonga(dataStr: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+    .format(new Date(dataStr + 'T00:00:00'))
+}
+
+function diasEntre(dataStr: string): number {
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+  const alvo = new Date(dataStr + 'T00:00:00')
+  return Math.round((alvo.getTime() - hoje.getTime()) / 86_400_000)
+}
 
 const sel = "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none transition-colors focus:border-ring disabled:cursor-not-allowed disabled:opacity-50"
 
@@ -61,6 +81,7 @@ interface ImovelModalProps {
 
 export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalProps) {
   const [loading, setLoading] = useState(false)
+  const [vigenciaMeses, setVigenciaMeses] = useState<number | null>(null)
   const editando = !!imovel
 
   const hoje = new Date().toISOString().split('T')[0]
@@ -92,6 +113,18 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
         juros_percentual: String(imovel.juros_percentual ?? 1),
         desconto_percentual: String(imovel.desconto_percentual ?? 0),
       })
+      // Pre-fill vigência
+      if (imovel.data_fim_contrato && imovel.data_inicio_contrato) {
+        const inicio = new Date(imovel.data_inicio_contrato + 'T00:00:00')
+        const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
+        const meses = Math.round((fim.getTime() - inicio.getTime()) / (30 * 86_400_000))
+        const opcao = [12, 24, 30, 36].includes(meses) ? meses : null
+        setVigenciaMeses(opcao)
+      } else if (imovel.contrato_indeterminado) {
+        setVigenciaMeses(null)
+      } else {
+        setVigenciaMeses(null)
+      }
     } else {
       reset({
         apelido: '', endereco: '', tipo: 'apartamento',
@@ -103,6 +136,7 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
         juros_percentual: '1',
         desconto_percentual: '0',
       })
+      setVigenciaMeses(null)
     }
   }, [open, imovel, reset])
 
@@ -113,6 +147,10 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
     }
     setLoading(true)
     try {
+      // Vigência
+      const dataFimContrato = vigenciaMeses != null && data.data_inicio_contrato
+        ? calcularDataFim(data.data_inicio_contrato, vigenciaMeses)
+        : null
       const input = {
         apelido: data.apelido,
         endereco: data.endereco,
@@ -130,6 +168,10 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
         multa_percentual: Number(data.multa_percentual),
         juros_percentual: Number(data.juros_percentual),
         desconto_percentual: Number(data.desconto_percentual),
+        vigencia_meses: vigenciaMeses,
+        data_fim_contrato: dataFimContrato,
+        contrato_indeterminado: vigenciaMeses === null,
+        alerta_vencimento_enviado: false,
       }
       const result = editando
         ? await editarImovel(imovel!.id, input)
@@ -226,6 +268,74 @@ export function ImovelModal({ open, onOpenChange, imovel, plano }: ImovelModalPr
               <Label htmlFor="data_proximo_reajuste">Próximo reajuste</Label>
               <Input id="data_proximo_reajuste" type="date" {...register('data_proximo_reajuste')} />
             </div>
+          </div>
+
+          {/* ── Duração do contrato ──────────────────────────────────────────── */}
+          <div className="space-y-3">
+            <Label>Duração do contrato</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { value: 12,   label: '12 meses',  sub: '1 ano' },
+                { value: 24,   label: '24 meses',  sub: '2 anos' },
+                { value: 30,   label: '30 meses',  sub: '2,5 anos — padrão BR' },
+                { value: 36,   label: '36 meses',  sub: '3 anos' },
+                { value: null, label: 'Indeterminado', sub: 'Sem data fim' },
+              ].map(op => (
+                <button
+                  key={String(op.value)}
+                  type="button"
+                  onClick={() => setVigenciaMeses(op.value)}
+                  className={cn(
+                    'rounded-lg border px-3 py-2.5 text-left transition-colors',
+                    vigenciaMeses === op.value
+                      ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-400'
+                      : 'border-slate-200 hover:border-slate-300 bg-white',
+                  )}
+                >
+                  <p className={cn('text-sm font-semibold leading-tight', vigenciaMeses === op.value ? 'text-emerald-700' : 'text-slate-700')}>
+                    {op.label}
+                  </p>
+                  {op.sub && <p className={cn('text-xs leading-tight mt-0.5', vigenciaMeses === op.value ? 'text-emerald-500' : 'text-slate-400')}>{op.sub}</p>}
+                </button>
+              ))}
+            </div>
+
+            {/* Preview card */}
+            {(() => {
+              const inicioVal = watch('data_inicio_contrato')
+              if (!inicioVal) return null
+              if (vigenciaMeses === null) {
+                return (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500 italic">
+                    Contrato sem data de encerramento
+                  </div>
+                )
+              }
+              const dataFim = calcularDataFim(inicioVal, vigenciaMeses)
+              const dias = diasEntre(dataFim)
+              const vencido = dias < 0
+              return (
+                <div className={cn(
+                  'rounded-lg border px-3.5 py-2.5 space-y-1',
+                  vencido ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50',
+                )}>
+                  <p className={cn('text-xs font-medium', vencido ? 'text-red-700' : 'text-emerald-700')}>
+                    {vencido
+                      ? `Contrato vencido em ${formatarDataLonga(dataFim)}. Renove ou atualize.`
+                      : `Contrato válido de ${formatarDataLonga(inicioVal)} até ${formatarDataLonga(dataFim)}`
+                    }
+                  </p>
+                  <p className={cn('text-xs', vencido ? 'text-red-500' : 'text-emerald-600')}>
+                    {vencido
+                      ? `Vencido há ${Math.abs(dias)} dia${Math.abs(dias) !== 1 ? 's' : ''}`
+                      : dias <= 60
+                        ? `Vence em ${dias} dia${dias !== 1 ? 's' : ''}`
+                        : `${Math.round(dias / 30)} meses restantes`
+                    }
+                  </p>
+                </div>
+              )
+            })()}
           </div>
 
           {/* ── Cobrança automática ────────────────────────────────────────── */}

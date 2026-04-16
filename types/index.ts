@@ -26,6 +26,10 @@ export type Imovel = {
   juros_percentual: number
   desconto_percentual: number
   asaas_subscription_id: string | null
+  vigencia_meses: number | null
+  data_fim_contrato: string | null
+  contrato_indeterminado: boolean
+  alerta_vencimento_enviado: boolean
   inquilinos?: { id: string; nome: string; ativo: boolean }[]
 }
 
