@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Building2, Users, Receipt,
-  Settings, LogOut, Star, ChevronRight, Shield, Zap,
+  Settings, LogOut, Star, ChevronRight, Shield, Zap, Calculator,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -18,11 +18,12 @@ import type { PlanoTipo } from '@/lib/stripe'
 import { LogoWhite } from '@/components/ui/logo'
 
 const navItems = [
-  { href: '/dashboard',     label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/imoveis',       label: 'Imóveis',      icon: Building2 },
-  { href: '/inquilinos',    label: 'Inquilinos',   icon: Users },
-  { href: '/alugueis',      label: 'Aluguéis',     icon: Receipt },
-  { href: '/configuracoes', label: 'Configurações', icon: Settings },
+  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, elite: false },
+  { href: '/imoveis',       label: 'Imóveis',       icon: Building2,       elite: false },
+  { href: '/inquilinos',    label: 'Inquilinos',    icon: Users,           elite: false },
+  { href: '/alugueis',      label: 'Aluguéis',      icon: Receipt,         elite: false },
+  { href: '/relatorio-ir',  label: 'Relatório IR',  icon: Calculator,      elite: true  },
+  { href: '/configuracoes', label: 'Configurações', icon: Settings,        elite: false },
 ]
 
 interface SidebarProps {
@@ -59,8 +60,9 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
 
       {/* Navegação */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon, elite }) => {
           const ativo = pathname === href || pathname.startsWith(href + '/')
+          const showEliteBadge = elite && plano !== 'elite' && profile?.role !== 'admin'
           return (
             <Link
               key={href}
@@ -77,7 +79,12 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-sidebar-primary" />
               )}
               <Icon className={cn('h-4 w-4 shrink-0', ativo ? 'text-sidebar-primary' : 'text-[#64748B]')} />
-              {label}
+              <span className="flex-1">{label}</span>
+              {showEliteBadge && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 leading-none">
+                  Elite
+                </span>
+              )}
             </Link>
           )
         })}

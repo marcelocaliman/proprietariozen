@@ -31,6 +31,7 @@ export const LIMITES_PLANO = {
     pagina_inquilino: true,
     cobranca_automatica: false,
     suporte_prioritario: false,
+    relatorio_ir: false,
   },
   pago: {
     nome: 'Master',
@@ -45,6 +46,7 @@ export const LIMITES_PLANO = {
     pagina_inquilino: true,
     cobranca_automatica: false,
     suporte_prioritario: false,
+    relatorio_ir: false,
   },
   elite: {
     nome: 'Elite',
@@ -59,6 +61,7 @@ export const LIMITES_PLANO = {
     pagina_inquilino: true,
     cobranca_automatica: true,
     suporte_prioritario: true,
+    relatorio_ir: true,
   },
 } as const
 
