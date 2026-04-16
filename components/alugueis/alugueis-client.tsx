@@ -366,7 +366,7 @@ export function AlugueisClient({
   const [localAnoData, setLocalAnoData] = useState(anoData)
   useEffect(() => { setLocalAnoData(anoData) }, [anoData])
 
-  // Gerar antecipado modal
+  // Gerar antecipado modal — calendar context (optimistic update)
   const [gerarAntecipadoMes, setGerarAntecipadoMes] = useState<string | null>(null)
 
   function handleConfirmado(_mes: string, registros: { valor: number; mesReferencia: string }[]) {
@@ -379,6 +379,9 @@ export function AlugueisClient({
       } satisfies AnoResumoItem)),
     ])
   }
+
+  // Gerar antecipado modal — list view context (router.refresh after success)
+  const [gerarAntecipadoListaImovel, setGerarAntecipadoListaImovel] = useState<GerarAntecipadoItem | null>(null)
 
   // PagarModal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -908,37 +911,99 @@ export function AlugueisClient({
               const hoje = new Date()
               const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`
               const ehMesFuturo = mesSelecionado > mesAtual
+              const imoveisMes = ehMesFuturo
+                ? (imoveisVigencia as GerarAntecipadoItem[]).filter(im => {
+                    if (!im.data_inicio_contrato) return false
+                    const inicio = im.data_inicio_contrato.slice(0, 7)
+                    if (mesSelecionado < inicio) return false
+                    if (im.contrato_indeterminado) return true
+                    if (!im.data_fim_contrato) return false
+                    return mesSelecionado <= im.data_fim_contrato.slice(0, 7)
+                  })
+                : []
+
+              // Mês passado / atual sem registros
+              if (!ehMesFuturo) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                    <div className="p-3 rounded-full bg-slate-100">
+                      <Calendar className="h-10 w-10 text-slate-300" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-[#0F172A]">
+                        Nenhum aluguel em {labelMes(mesSelecionado)}
+                      </p>
+                      <p className="text-xs text-slate-400 max-w-[280px]">
+                        Os aluguéis são gerados automaticamente quando você cadastra um imóvel com inquilino ativo.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => router.push('/imoveis')} className="mt-1">
+                      <Building2 className="h-4 w-4 mr-1.5" />
+                      Ir para Imóveis
+                    </Button>
+                  </div>
+                )
+              }
+
+              // Mês futuro sem registros
               return (
-                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                  <div className="p-3 rounded-full bg-slate-100">
-                    <Calendar className="h-10 w-10 text-slate-300" />
-                  </div>
-                  <div className="space-y-1">
+                <div className="flex flex-col items-center py-10 gap-5 px-5">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className="p-3 rounded-full bg-slate-100">
+                      <Calendar className="h-10 w-10 text-slate-300" />
+                    </div>
                     <p className="text-sm font-semibold text-[#0F172A]">
-                      {ehMesFuturo
-                        ? `Nenhuma cobrança gerada para ${labelMes(mesSelecionado)}`
-                        : `Nenhum aluguel em ${labelMes(mesSelecionado)}`}
+                      Nenhuma cobrança gerada para {labelMes(mesSelecionado)}
                     </p>
-                    <p className="text-xs text-slate-400 max-w-[280px]">
-                      {ehMesFuturo
-                        ? 'Acesse o calendário para gerar esta cobrança com antecedência.'
-                        : 'Os aluguéis são gerados automaticamente quando você cadastra um imóvel com inquilino ativo.'}
+                    <p className="text-xs text-slate-400 max-w-[320px]">
+                      {imoveisMes.length > 0
+                        ? 'Você pode gerar a cobrança agora com antecedência ou aguardar o mês chegar.'
+                        : 'Nenhum imóvel com vigência ativa neste mês.'}
                     </p>
                   </div>
-                  {ehMesFuturo ? (
+
+                  {imoveisMes.length > 0 && (
+                    <div className="w-full max-w-md space-y-3">
+                      {imoveisMes.map(im => {
+                        const inquilino = im.inquilinos?.find(i => i.ativo)
+                        const nomeInq = inquilino?.nome ?? 'Sem inquilino'
+                        const inics = nomeInq.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()
+                        return (
+                          <div
+                            key={im.id}
+                            className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex items-center gap-3"
+                          >
+                            <div className={cn('h-9 w-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0', corAvatar(nomeInq))}>
+                              {inics}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-slate-900 leading-tight truncate">{nomeInq}</p>
+                              <p className="text-xs text-slate-500 truncate">{im.apelido}</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">
+                                Vencimento: Dia {im.dia_vencimento} · {formatarMoeda(im.valor_aluguel)}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setGerarAntecipadoListaImovel(im)}
+                              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold transition-colors whitespace-nowrap"
+                            >
+                              Gerar cobrança
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {imoveisMes.length === 0 && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => router.push(`/alugueis?view=calendario&ano=${mesSelecionado.slice(0, 4)}`)}
-                      className="mt-1"
                     >
                       <CalendarDays className="h-4 w-4 mr-1.5" />
                       Ver no calendário
-                    </Button>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => router.push('/imoveis')} className="mt-1">
-                      <Building2 className="h-4 w-4 mr-1.5" />
-                      Ir para Imóveis
                     </Button>
                   )}
                 </div>
@@ -1312,12 +1377,23 @@ export function AlugueisClient({
 
       </>}
 
-      {/* ── Gerar antecipado ── */}
+      {/* ── Gerar antecipado — calendário (atualização otimista) ── */}
       <GerarAntecipadoModal
         mes={gerarAntecipadoMes}
         imoveis={imoveisVigencia as GerarAntecipadoItem[]}
         onClose={() => setGerarAntecipadoMes(null)}
         onConfirmado={handleConfirmado}
+      />
+
+      {/* ── Gerar antecipado — lista (recarrega após confirmar) ── */}
+      <GerarAntecipadoModal
+        mes={gerarAntecipadoListaImovel ? mesSelecionado : null}
+        imoveis={gerarAntecipadoListaImovel ? [gerarAntecipadoListaImovel] : []}
+        onClose={() => setGerarAntecipadoListaImovel(null)}
+        onConfirmado={() => {
+          setGerarAntecipadoListaImovel(null)
+          router.refresh()
+        }}
       />
 
       {/* ── Modais de ação ── */}
