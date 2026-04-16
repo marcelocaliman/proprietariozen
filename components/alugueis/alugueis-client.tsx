@@ -103,6 +103,10 @@ function formatarDataCurta(data: string): string {
 
 // Vencimento cell with urgency indicator
 function VencimentoCell({ aluguel }: { aluguel: AluguelItem }) {
+  if (aluguel.status === 'cancelado' || aluguel.status === 'estornado') {
+    return <span className="text-slate-400 text-xs">—</span>
+  }
+
   if (aluguel.status === 'pago') {
     return (
       <span className="text-slate-400 line-through text-xs">
