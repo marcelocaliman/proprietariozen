@@ -306,8 +306,12 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
             return (
               <div
                 key={inquilino.id}
+                onClick={() => router.push(`/inquilinos/${inquilino.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') router.push(`/inquilinos/${inquilino.id}`) }}
                 className={cn(
-                  'bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden',
+                  'bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden cursor-pointer hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                   !inquilino.ativo && 'opacity-60',
                 )}
               >
@@ -321,12 +325,9 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        onClick={() => router.push(`/inquilinos/${inquilino.id}`)}
-                        className="font-bold text-[15px] text-[#0F172A] truncate leading-tight hover:text-emerald-700 transition-colors text-left"
-                      >
+                      <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">
                         {inquilino.nome}
-                      </button>
+                      </p>
                       <Badge className={cn(
                         'text-[10px] h-4 px-1.5 font-semibold shrink-0',
                         inquilino.ativo
@@ -379,7 +380,10 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                     <div className="flex items-center gap-2 text-xs">
                       <Building2 className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
                       <button
-                        onClick={() => router.push('/imoveis')}
+                        onClick={e => {
+                          e.stopPropagation()
+                          router.push(`/imoveis/${imovel.id}`)
+                        }}
                         className="text-[#059669] font-medium hover:underline truncate"
                       >
                         {imovel.apelido}
@@ -436,73 +440,68 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                 {/* ── Linha divisória ──────────────────────────────── */}
                 <div className="h-px bg-[#F1F5F9] mx-5" />
 
-                {/* ── Rodapé: status + ações ───────────────────────── */}
+                {/* ── Rodapé: status + ações principais ───────────── */}
                 <div className="px-5 py-3 flex items-center justify-between gap-2">
                   <StatusAluguelLine aluguel={inquilino.ativo ? aluguel : undefined} />
 
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2.5 gap-1.5 text-xs text-[#475569] hover:text-[#0F172A]"
+                  <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                    {/* Convite — proeminente quando aplicável */}
+                    {inquilino.ativo && inquilino.email && !inquilino.convite_enviado_em && (
+                      <button
+                        onClick={() => handleEnviarConvite(inquilino)}
+                        disabled={convidando === inquilino.id}
+                        className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-md px-3 py-1.5 transition-colors flex items-center gap-1.5"
+                      >
+                        <Mail className="h-3 w-3" />
+                        {convidando === inquilino.id ? 'Enviando...' : 'Convidar'}
+                      </button>
+                    )}
+                    <button
                       onClick={() => handleEditar(inquilino)}
+                      title="Editar inquilino"
+                      className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      Editar
-                    </Button>
+                    </button>
+                    <button
+                      onClick={() => setDocInquilino({ id: inquilino.id, nome: inquilino.nome })}
+                      title="Documentos"
+                      className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                    >
+                      <Paperclip className="h-3.5 w-3.5" />
+                    </button>
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="h-8 w-8 flex items-center justify-center rounded hover:bg-slate-100 transition-colors text-[#64748B]">
+                      <DropdownMenuTrigger className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors text-[#64748B]">
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem onClick={() => router.push(`/inquilinos/${inquilino.id}`)}>
-                          <Users className="h-3.5 w-3.5 mr-2" />Ver detalhes
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditar(inquilino)}>
-                          <Pencil className="h-3.5 w-3.5 mr-2" />Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => router.push('/alugueis')}>
-                          <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDocInquilino({ id: inquilino.id, nome: inquilino.nome })}>
-                          <Paperclip className="h-3.5 w-3.5 mr-2" />Documentos
-                        </DropdownMenuItem>
-                        {inquilino.ativo && inquilino.email && (
+                        {inquilino.ativo && inquilino.email && inquilino.convite_enviado_em && (
                           <>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleEnviarConvite(inquilino)}
                               disabled={convidando === inquilino.id}
                             >
                               <Mail className="h-3.5 w-3.5 mr-2" />
-                              {convidando === inquilino.id
-                                ? 'Enviando...'
-                                : inquilino.convite_enviado_em
-                                  ? 'Reenviar convite'
-                                  : 'Enviar convite'}
+                              {convidando === inquilino.id ? 'Enviando...' : 'Reenviar convite'}
                             </DropdownMenuItem>
-                            {inquilino.convite_enviado_em && (
-                              <DropdownMenuItem
-                                onClick={() => handleRevogar(inquilino)}
-                                disabled={revogando === inquilino.id}
-                                className="text-red-600 focus:text-red-600"
-                              >
-                                <ShieldOff className="h-3.5 w-3.5 mr-2" />
-                                {revogando === inquilino.id ? 'Revogando...' : 'Revogar acesso'}
-                              </DropdownMenuItem>
-                            )}
+                            <DropdownMenuItem
+                              onClick={() => handleRevogar(inquilino)}
+                              disabled={revogando === inquilino.id}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <ShieldOff className="h-3.5 w-3.5 mr-2" />
+                              {revogando === inquilino.id ? 'Revogando...' : 'Revogar acesso'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                           </>
                         )}
                         {inquilino.ativo && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleDesativar(inquilino)}
-                              className="text-red-600 focus:text-red-600"
-                            >
-                              <UserX className="h-3.5 w-3.5 mr-2" />Desativar
-                            </DropdownMenuItem>
-                          </>
+                          <DropdownMenuItem
+                            onClick={() => handleDesativar(inquilino)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <UserX className="h-3.5 w-3.5 mr-2" />Desativar
+                          </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

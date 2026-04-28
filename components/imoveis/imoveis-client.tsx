@@ -332,7 +332,14 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
             const aluguel        = aluguelMap[imovel.id]
 
             return (
-              <div key={imovel.id} className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col">
+              <div
+                key={imovel.id}
+                onClick={() => router.push(`/imoveis/${imovel.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') router.push(`/imoveis/${imovel.id}`) }}
+                className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+              >
 
                 {/* Header colorido — verde para ocupado, slate para vago */}
                 <div className={cn(
@@ -354,25 +361,6 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                       </DropdownMenuTrigger>
                       {ocupado ? (
                         <DropdownMenuContent align="start" className="w-52">
-                          <DropdownMenuItem onClick={() => router.push(`/imoveis/${imovel.id}`)}>
-                            <FileText className="h-3.5 w-3.5 mr-2" />Ver detalhes
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditar(imovel)}>
-                            <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditarContrato(imovel)}>
-                            <FileText className="h-3.5 w-3.5 mr-2" />Editar contrato
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
-                            <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setConfigGarantia(imovel)}>
-                            <Shield className="h-3.5 w-3.5 mr-2" />Garantia / fiador
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push('/alugueis')}>
-                            <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => setEncerrando(imovel)}
                             className="text-red-600 focus:text-red-600"
@@ -388,13 +376,6 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                         </DropdownMenuContent>
                       ) : (
                         <DropdownMenuContent align="start" className="w-52">
-                          <DropdownMenuItem onClick={() => handleEditar(imovel)}>
-                            <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setVinculandoImovel(imovel)}>
-                            <UserPlus className="h-3.5 w-3.5 mr-2" />Vincular inquilino
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleArquivar(imovel)}
                             className="text-[#94A3B8] focus:text-[#475569]"
@@ -446,14 +427,11 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
                 {/* Body */}
                 <div className="px-5 pt-4 pb-3 flex-1 space-y-3">
-                  {/* Linha 1: apelido (clicável) + tipo */}
+                  {/* Linha 1: apelido + tipo (card todo navega pro detalhe) */}
                   <div>
-                    <button
-                      onClick={() => router.push(`/imoveis/${imovel.id}`)}
-                      className="font-bold text-[15px] text-[#0F172A] truncate leading-tight hover:text-emerald-700 transition-colors text-left w-full"
-                    >
+                    <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">
                       {imovel.apelido}
-                    </button>
+                    </p>
                     <p className="text-xs text-[#94A3B8] truncate mt-0.5">
                       {imovel.endereco} · {labelsTipo[imovel.tipo] ?? imovel.tipo}
                     </p>
@@ -510,7 +488,9 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
                   {/* Linha 4: vigência sempre visível quando ocupado */}
                   {ocupado && imovel.valor_aluguel > 0 && (
-                    <VigenciaCardLine imovel={imovel} onEditar={() => handleEditarContrato(imovel)} />
+                    <div onClick={e => e.stopPropagation()}>
+                      <VigenciaCardLine imovel={imovel} onEditar={() => handleEditarContrato(imovel)} />
+                    </div>
                   )}
 
                   {/* Linha 5: adimplência (se tem histórico) */}
@@ -528,37 +508,63 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                   })()}
                 </div>
 
-                {/* Footer */}
-                <div className="px-5 py-3 border-t border-[#F1F5F9] space-y-1.5">
+                {/* Footer — ações principais */}
+                <div className="px-5 py-3 border-t border-[#F1F5F9]">
                   {ocupado ? (
                     <div className="flex items-center justify-between gap-2">
                       <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
-                      {aluguel && (aluguel.status === 'pendente' || aluguel.status === 'atrasado') ? (
-                        <button
-                          onClick={() => router.push(`/alugueis?cobrar=${aluguel.id}`)}
-                          className="shrink-0 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md px-3 py-1.5 transition-colors flex items-center gap-1.5"
-                        >
-                          <Send className="h-3 w-3" />
-                          Cobrar agora
-                        </button>
-                      ) : (
+                      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                        {aluguel && (aluguel.status === 'pendente' || aluguel.status === 'atrasado') && (
+                          <button
+                            onClick={() => router.push(`/alugueis?cobrar=${aluguel.id}`)}
+                            className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md px-3 py-1.5 transition-colors flex items-center gap-1.5"
+                          >
+                            <Send className="h-3 w-3" />
+                            Cobrar
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEditar(imovel)}
-                          className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
+                          title="Editar imóvel"
+                          className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
                         >
-                          <Pencil className="h-3 w-3" />Editar
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
-                      )}
+                        <button
+                          onClick={() => setConfigCobranca(imovel)}
+                          title="Configurar cobrança"
+                          className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                          <Settings2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setConfigGarantia(imovel)}
+                          title="Garantia / fiador"
+                          className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                          <Shield className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2" onClick={e => e.stopPropagation()}>
                       <span className="text-xs text-slate-400 italic">Sem inquilino vinculado</span>
-                      <button
-                        onClick={() => setVinculandoImovel(imovel)}
-                        className="shrink-0 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
-                      >
-                        <UserPlus className="h-3 w-3" />Vincular inquilino
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => setVinculandoImovel(imovel)}
+                          className="text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md px-3 py-1.5 transition-colors flex items-center gap-1.5"
+                        >
+                          <UserPlus className="h-3 w-3" />
+                          Vincular
+                        </button>
+                        <button
+                          onClick={() => handleEditar(imovel)}
+                          title="Editar imóvel"
+                          className="h-7 w-7 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
