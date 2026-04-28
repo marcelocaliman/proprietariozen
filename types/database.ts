@@ -84,6 +84,7 @@ export type Database = {
           data_fim_contrato: string | null
           contrato_indeterminado: boolean
           alerta_vencimento_enviado: boolean
+          dias_aviso_vencimento_contrato: number
           garantia_tipo: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
           garantia_valor: number | null
           garantia_observacao: string | null
@@ -122,6 +123,7 @@ export type Database = {
           data_fim_contrato?: string | null
           contrato_indeterminado?: boolean
           alerta_vencimento_enviado?: boolean
+          dias_aviso_vencimento_contrato?: number
           garantia_tipo?: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
           garantia_valor?: number | null
           garantia_observacao?: string | null
@@ -158,6 +160,7 @@ export type Database = {
           data_fim_contrato?: string | null
           contrato_indeterminado?: boolean
           alerta_vencimento_enviado?: boolean
+          dias_aviso_vencimento_contrato?: number
           garantia_tipo?: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
           garantia_valor?: number | null
           garantia_observacao?: string | null

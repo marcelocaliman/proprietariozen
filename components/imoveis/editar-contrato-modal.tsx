@@ -50,6 +50,11 @@ const schema = z.object({
   data_proximo_reajuste: z.string().optional(),
   indice_reajuste: z.enum(['igpm', 'ipca', 'fixo']),
   percentual_fixo: z.string().optional(),
+  dias_aviso_vencimento_contrato: z.string().refine(v => {
+    if (!v) return true
+    const n = Number(v)
+    return Number.isInteger(n) && n >= 1 && n <= 365
+  }, 'Entre 1 e 365 dias'),
 }).superRefine((d, ctx) => {
   if (d.indice_reajuste === 'fixo') {
     const v = Number(d.percentual_fixo)
@@ -87,6 +92,7 @@ export function EditarContratoModal({ open, onOpenChange, imovel }: Props) {
       data_proximo_reajuste: imovel.data_proximo_reajuste ?? '',
       indice_reajuste: imovel.indice_reajuste,
       percentual_fixo: imovel.percentual_fixo != null ? String(imovel.percentual_fixo) : '',
+      dias_aviso_vencimento_contrato: String(imovel.dias_aviso_vencimento_contrato ?? 60),
     })
     if (imovel.data_fim_contrato && imovel.data_inicio_contrato) {
       const inicio = new Date(imovel.data_inicio_contrato + 'T00:00:00')
@@ -118,6 +124,9 @@ export function EditarContratoModal({ open, onOpenChange, imovel }: Props) {
         data_fim_contrato: dataFimContrato,
         contrato_indeterminado: vigenciaMeses === null,
         alerta_vencimento_enviado: false,
+        dias_aviso_vencimento_contrato: data.dias_aviso_vencimento_contrato
+          ? Number(data.dias_aviso_vencimento_contrato)
+          : 60,
       })
       if (result.error) {
         toast.error(result.error)
@@ -249,6 +258,27 @@ export function EditarContratoModal({ open, onOpenChange, imovel }: Props) {
               )
             })()}
           </div>
+
+          {/* ── Aviso de vencimento ──────────────────────────────────────── */}
+          {vigenciaMeses !== null && (
+            <div className="space-y-1.5">
+              <Label htmlFor="dias_aviso">Avisar X dias antes do fim do contrato</Label>
+              <Input
+                id="dias_aviso"
+                type="number"
+                min={1}
+                max={365}
+                placeholder="60"
+                {...register('dias_aviso_vencimento_contrato')}
+              />
+              <p className="text-xs text-slate-400">
+                Você receberá email de alerta quando faltar essa quantidade de dias para o fim. Padrão: 60 dias.
+              </p>
+              {errors.dias_aviso_vencimento_contrato && (
+                <p className="text-destructive text-xs">{errors.dias_aviso_vencimento_contrato.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="-mx-4 -mb-4 flex gap-2 justify-end border-t bg-muted/50 p-4 rounded-b-xl">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

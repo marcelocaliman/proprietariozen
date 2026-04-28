@@ -53,6 +53,7 @@ type ImovelContrato = {
   apelido: string
   user_id: string
   data_fim_contrato: string
+  dias_aviso_vencimento_contrato: number
   inquilinos: { nome: string; ativo: boolean }[] | null
 }
 
@@ -266,28 +267,39 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── 4. Alertas de vencimento de contrato (≤ 60 dias) ─────────────────────────
-  const em60Dias = dateOffset(60)
+  // ── 4. Alertas de vencimento de contrato (configurável por imóvel) ──────────
+  // Antes era fixo em 60 dias. Agora cada imóvel pode definir
+  // `dias_aviso_vencimento_contrato` (default 60). Buscamos todos os contratos
+  // que vencem nos próximos 365 dias e filtramos em memória.
+  const em365Dias = dateOffset(365)
   const { data: contratosVencendo } = await admin
     .from('imoveis')
-    .select('id, apelido, user_id, data_fim_contrato, inquilinos(nome, ativo)')
+    .select('id, apelido, user_id, data_fim_contrato, dias_aviso_vencimento_contrato, inquilinos(nome, ativo)')
     .eq('ativo', true)
     .eq('contrato_indeterminado', false)
     .eq('alerta_vencimento_enviado', false)
     .not('data_fim_contrato', 'is', null)
-    .lte('data_fim_contrato', em60Dias)
+    .lte('data_fim_contrato', em365Dias)
     .gte('data_fim_contrato', hoje) as unknown as { data: ImovelContrato[] | null }
 
-  if (contratosVencendo?.length) {
-    const userIds = Array.from(new Set(contratosVencendo.map(i => i.user_id)))
+  // Filtra apenas os que JÁ entraram na janela de aviso definida por cada imóvel
+  const hojeDate = new Date(); hojeDate.setHours(0, 0, 0, 0)
+  const contratosNaJanela = (contratosVencendo ?? []).filter(imovel => {
+    const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
+    const diasRest = Math.round((fim.getTime() - hojeDate.getTime()) / 86_400_000)
+    const limite = imovel.dias_aviso_vencimento_contrato ?? 60
+    return diasRest <= limite
+  })
+
+  if (contratosNaJanela.length) {
+    const userIds = Array.from(new Set(contratosNaJanela.map(i => i.user_id)))
     const profiles = await getProfiles(userIds)
 
-    for (const imovel of contratosVencendo) {
+    for (const imovel of contratosNaJanela) {
       const profile = profiles.get(imovel.user_id)
       if (!profile?.email) continue
       const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
-      const hoje2 = new Date(); hoje2.setHours(0, 0, 0, 0)
-      const dias = Math.round((fim.getTime() - hoje2.getTime()) / 86_400_000)
+      const dias = Math.round((fim.getTime() - hojeDate.getTime()) / 86_400_000)
       const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
       try {
         await enviarAlertaVencimentoContrato({

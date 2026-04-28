@@ -31,6 +31,7 @@ export type Imovel = {
   data_fim_contrato: string | null
   contrato_indeterminado: boolean
   alerta_vencimento_enviado: boolean
+  dias_aviso_vencimento_contrato: number
   // Garantia / caução / fiador
   garantia_tipo: GarantiaTipo | null
   garantia_valor: number | null

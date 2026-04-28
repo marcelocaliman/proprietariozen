@@ -22,6 +22,7 @@ export type ContratoInput = {
   data_fim_contrato: string | null
   contrato_indeterminado: boolean
   alerta_vencimento_enviado?: boolean
+  dias_aviso_vencimento_contrato?: number
 }
 
 export async function criarImovel(input: ImovelInput): Promise<{ error?: string }> {
