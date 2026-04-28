@@ -241,13 +241,13 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="visao-geral" className="space-y-4">
-        <TabsList className="bg-white border border-slate-200 rounded-lg p-1 w-full sm:w-auto overflow-x-auto flex-nowrap">
-          <TabsTrigger value="visao-geral">Visão geral</TabsTrigger>
-          <TabsTrigger value="pagamentos">Pagamentos ({alugueis.length})</TabsTrigger>
-          <TabsTrigger value="inquilino">Inquilino</TabsTrigger>
-          <TabsTrigger value="garantia">Garantia</TabsTrigger>
-          <TabsTrigger value="historico">Histórico</TabsTrigger>
-          <TabsTrigger value="config">Configuração</TabsTrigger>
+        <TabsList className="bg-slate-100 border border-slate-200 rounded-lg p-1 h-auto w-full sm:w-auto overflow-x-auto flex-nowrap">
+          <TabsTrigger value="visao-geral" className="text-slate-600 data-[selected]:text-slate-900">Visão geral</TabsTrigger>
+          <TabsTrigger value="pagamentos" className="text-slate-600 data-[selected]:text-slate-900">Pagamentos ({alugueis.length})</TabsTrigger>
+          <TabsTrigger value="inquilino" className="text-slate-600 data-[selected]:text-slate-900">Inquilino</TabsTrigger>
+          <TabsTrigger value="garantia" className="text-slate-600 data-[selected]:text-slate-900">Garantia</TabsTrigger>
+          <TabsTrigger value="historico" className="text-slate-600 data-[selected]:text-slate-900">Histórico</TabsTrigger>
+          <TabsTrigger value="config" className="text-slate-600 data-[selected]:text-slate-900">Configuração</TabsTrigger>
         </TabsList>
 
         {/* ── Visão geral ── */}

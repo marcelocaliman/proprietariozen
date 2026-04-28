@@ -277,11 +277,11 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
 
       {/* ── Tabs ── */}
       <Tabs defaultValue="dados" className="space-y-4">
-        <TabsList className="bg-white border border-slate-200 rounded-lg p-1 w-full sm:w-auto overflow-x-auto flex-nowrap">
-          <TabsTrigger value="dados">Dados</TabsTrigger>
-          <TabsTrigger value="contrato">Contrato</TabsTrigger>
-          <TabsTrigger value="pagamentos">Pagamentos ({alugueis.length})</TabsTrigger>
-          <TabsTrigger value="acesso">Acesso</TabsTrigger>
+        <TabsList className="bg-slate-100 border border-slate-200 rounded-lg p-1 h-auto w-full sm:w-auto overflow-x-auto flex-nowrap">
+          <TabsTrigger value="dados" className="text-slate-600 data-[selected]:text-slate-900">Dados</TabsTrigger>
+          <TabsTrigger value="contrato" className="text-slate-600 data-[selected]:text-slate-900">Contrato</TabsTrigger>
+          <TabsTrigger value="pagamentos" className="text-slate-600 data-[selected]:text-slate-900">Pagamentos ({alugueis.length})</TabsTrigger>
+          <TabsTrigger value="acesso" className="text-slate-600 data-[selected]:text-slate-900">Acesso</TabsTrigger>
         </TabsList>
 
         {/* ── Dados pessoais ── */}
