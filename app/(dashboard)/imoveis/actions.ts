@@ -269,6 +269,7 @@ export async function encerrarContrato(
   })
 
   revalidatePath('/imoveis')
+  revalidatePath(`/imoveis/${imovelId}`)
   revalidatePath('/alugueis')
   revalidatePath('/dashboard')
   return { removidos }

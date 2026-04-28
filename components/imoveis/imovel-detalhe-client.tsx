@@ -7,7 +7,7 @@ import {
   Building2, Home, Square, Briefcase, MapPin,
   TrendingUp, CheckCircle2, AlertCircle,
   Phone, Mail, IdCard, Shield, FileText, Settings2, Pencil,
-  Send, ArrowRight, Banknote,
+  Send, ArrowRight, Banknote, LogOut, AlertTriangle,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
 import { GarantiaModal } from '@/components/imoveis/garantia-modal'
 import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
+import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-modal'
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { TimelineImovel } from '@/components/imoveis/timeline-imovel'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
@@ -114,6 +115,7 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
   const [editandoContrato, setEditandoContrato] = useState(false)
   const [configCobranca, setConfigCobranca] = useState(false)
   const [configGarantia, setConfigGarantia] = useState(false)
+  const [encerrando, setEncerrando] = useState(false)
 
   const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
   const TipoIcon = tipoIcone[imovel.tipo] ?? Building2
@@ -139,8 +141,69 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
     imovel.valor_aluguel + (imovel.iptu_mensal ?? 0) +
     (imovel.condominio_mensal ?? 0) + (imovel.outros_encargos ?? 0)
 
+  // Estado do contrato — usado pra banner de alerta no topo
+  const diasFimContrato = imovel.data_fim_contrato && !imovel.contrato_indeterminado
+    ? diasAte(imovel.data_fim_contrato)
+    : null
+  const contratoVencido = diasFimContrato != null && diasFimContrato < 0
+  const contratoVencendo = diasFimContrato != null && diasFimContrato >= 0 && diasFimContrato <= 60
+
   return (
     <div className="space-y-6">
+      {/* ── Banner de alerta sobre contrato (vencido ou vencendo) ── */}
+      {(contratoVencido || contratoVencendo) && imovel.data_fim_contrato && (
+        <div className={cn(
+          'rounded-xl border p-4 flex items-start gap-3',
+          contratoVencido ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50',
+        )}>
+          <AlertTriangle className={cn(
+            'h-5 w-5 shrink-0 mt-0.5',
+            contratoVencido ? 'text-red-600' : 'text-amber-600',
+          )} />
+          <div className="flex-1 min-w-0">
+            <p className={cn(
+              'text-sm font-semibold',
+              contratoVencido ? 'text-red-900' : 'text-amber-900',
+            )}>
+              {contratoVencido
+                ? `Contrato vencido há ${Math.abs(diasFimContrato!)} dias`
+                : `Contrato vence em ${diasFimContrato} dia${diasFimContrato !== 1 ? 's' : ''}`}
+            </p>
+            <p className={cn(
+              'text-xs mt-0.5',
+              contratoVencido ? 'text-red-700' : 'text-amber-700',
+            )}>
+              Vencimento: {formatarData(imovel.data_fim_contrato)}.
+              {' '}{contratoVencido
+                ? 'Atualize a vigência ou encerre o contrato.'
+                : 'Considere renovar (editar contrato) ou encerrar.'}
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditandoContrato(true)}
+              className="gap-1 text-xs"
+            >
+              <FileText className="h-3 w-3" />
+              {contratoVencido ? 'Renovar' : 'Editar contrato'}
+            </Button>
+            {inquilinoAtivo && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEncerrando(true)}
+                className="gap-1 text-xs text-red-600 border-red-200 hover:bg-red-100"
+              >
+                <LogOut className="h-3 w-3" />
+                Encerrar
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -571,7 +634,7 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
         </TabsContent>
 
         {/* ── Config ── */}
-        <TabsContent value="config">
+        <TabsContent value="config" className="space-y-4">
           <Card>
             <CardContent className="p-5 space-y-3">
               <ConfigItem
@@ -596,6 +659,36 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
               />
             </CardContent>
           </Card>
+
+          {/* Danger zone — só aparece quando ocupado */}
+          {inquilinoAtivo && (
+            <Card className="border-red-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="h-4 w-4" />
+                  Zona de risco
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <button
+                  onClick={() => setEncerrando(true)}
+                  className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-red-200 hover:border-red-400 hover:bg-red-50/50 transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-red-700 flex items-center gap-1.5">
+                      <LogOut className="h-3.5 w-3.5" />
+                      Encerrar contrato
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Remove cobranças futuras pendentes, opcionalmente desativa o inquilino
+                      e arquiva o imóvel. Não afeta pagamentos já registrados.
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-red-400 shrink-0" />
+                </button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -616,6 +709,14 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
         open={configGarantia}
         onOpenChange={setConfigGarantia}
         imovel={imovel}
+      />
+      <EncerrarContratoModal
+        imovel={imovel}
+        open={encerrando}
+        onClose={() => {
+          setEncerrando(false)
+          router.refresh()
+        }}
       />
     </div>
   )
