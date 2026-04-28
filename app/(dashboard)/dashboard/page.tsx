@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
+import { detectarPendenciasCobranca } from '@/lib/cobranca-health'
+import { CobrancaHealthCard } from '@/components/dashboard/cobranca-health-card'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { ReajusteAlertas } from '@/components/dashboard/reajuste-alertas'
@@ -141,6 +143,10 @@ export default async function DashboardPage({
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return null
+
+  const admin = createAdminClient()
+  const pixKey = (user.user_metadata?.pix_key as string | null) ?? null
+  const pendenciasCobranca = await detectarPendenciasCobranca(admin, user.id, pixKey)
 
   const hoje = new Date()
 
@@ -354,6 +360,9 @@ export default async function DashboardPage({
         </div>
         <MonthSelector value={selectedMesKey} />
       </div>
+
+      {/* Pendências que travam cobrança */}
+      <CobrancaHealthCard issues={pendenciasCobranca} />
 
       {/* Cards de resumo */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

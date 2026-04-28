@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, Copy, ExternalLink, Zap, Loader2, QrCode, KeyRound, Settings, Mail } from 'lucide-react'
+import { X, Copy, ExternalLink, Zap, Loader2, QrCode, KeyRound, Settings, Mail, CheckCircle2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -320,6 +320,18 @@ export function CobrancaModal({
   const inquilinoEmail = aluguel.inquilino?.email ?? null
   const valorEfetivo = aluguel.valor - (aluguel.desconto ?? 0)
 
+  // Status amigável que diz ao gestor o que está acontecendo
+  const statusInfo: { label: string; cls: string; icon: typeof Clock } =
+    isAutomatic && temCharge
+      ? { label: 'Cobrança ativa', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2 }
+      : isAutomatic
+      ? { label: 'Pendente de geração', cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: Clock }
+      : pixKey
+      ? { label: 'Pagamento manual', cls: 'bg-slate-50 text-slate-700 border-slate-200', icon: KeyRound }
+      : { label: 'Configure pagamento', cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: Settings }
+  const StatusIcon = statusInfo.icon
+  const modoLabel = isAutomatic ? 'Automático · Asaas' : 'Manual · PIX'
+
   function renderContent() {
     if (isAutomatic) {
       if (!temCharge) {
@@ -372,16 +384,25 @@ export function CobrancaModal({
       >
         {/* Header */}
         <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-slate-100">
-          <div className="space-y-0.5 min-w-0 pr-4">
+          <div className="space-y-1.5 min-w-0 pr-4">
             <p className="text-base font-bold text-slate-900">
               Cobrar aluguel{aluguel.inquilino?.nome ? ` de ${aluguel.inquilino.nome}` : ''}
             </p>
             <p className="text-xs text-slate-500">
-              {aluguel.imovel?.apelido ?? '—'} · {labelMes(aluguel.mes_referencia)} · {formatarMoeda(aluguel.valor)}
+              {aluguel.imovel?.apelido ?? '—'} · {labelMes(aluguel.mes_referencia)} · {formatarMoeda(valorEfetivo)}
             </p>
             <p className="text-xs text-slate-400">
               Vence {formatarDataCurta(aluguel.data_vencimento)}
             </p>
+            <div className="flex items-center gap-1.5 pt-1">
+              <span className={cn('inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border', statusInfo.cls)}>
+                <StatusIcon className="h-3 w-3" />
+                {statusInfo.label}
+              </span>
+              <span className="inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                {modoLabel}
+              </span>
+            </div>
           </div>
           <button
             onClick={onClose}

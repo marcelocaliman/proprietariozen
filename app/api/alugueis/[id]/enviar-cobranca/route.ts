@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { enviarCobrancaParaInquilino } from '@/lib/email'
+import { criarCobrancaAsaasInterno } from '@/lib/asaas/charge'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(
   _req: NextRequest,
@@ -13,34 +16,51 @@ export async function POST(
 
     const admin = createAdminClient()
 
-    // Busca aluguel com imovel e inquilino
-    const { data: aluguel, error: aluguelErr } = await admin
+    // Carrega aluguel inicial — usado para checks de propriedade e modo
+    const { data: aluguelBase, error: aluguelErr } = await admin
       .from('alugueis')
       .select(`
         id, valor, data_vencimento, mes_referencia,
-        asaas_pix_copiaecola, asaas_boleto_url,
+        asaas_charge_id, asaas_pix_copiaecola, asaas_boleto_url,
         imovel:imoveis!inner(apelido, user_id, billing_mode),
         inquilino:inquilinos(nome, email)
       `)
       .eq('id', params.id)
       .single()
 
-    if (aluguelErr || !aluguel) {
+    if (aluguelErr || !aluguelBase) {
       return NextResponse.json({ error: 'Aluguel não encontrado' }, { status: 404 })
     }
 
-    // Verifica propriedade
-    const imovel = aluguel.imovel as { apelido: string; user_id: string; billing_mode: string | null } | null
+    const imovel = aluguelBase.imovel as { apelido: string; user_id: string; billing_mode: string | null } | null
     if (imovel?.user_id !== user.id) {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 })
     }
 
-    const inquilino = aluguel.inquilino as { nome: string; email: string | null } | null
+    const inquilino = aluguelBase.inquilino as { nome: string; email: string | null } | null
     if (!inquilino?.email) {
       return NextResponse.json({ error: 'Inquilino sem e-mail cadastrado' }, { status: 400 })
     }
 
-    // Perfil do proprietário
+    const isAutomatic = imovel?.billing_mode === 'AUTOMATIC'
+
+    // Se for AUTOMATIC e ainda não há cobrança Asaas, gera agora.
+    // Mantém o fluxo "envio por email" sempre funcional sem o gestor ter que clicar em 2 lugares.
+    let pixCopiaECola = aluguelBase.asaas_pix_copiaecola as string | null ?? null
+    let boletoUrl = aluguelBase.asaas_boleto_url as string | null ?? null
+
+    if (isAutomatic && !aluguelBase.asaas_charge_id) {
+      const charge = await criarCobrancaAsaasInterno(admin, {
+        aluguelId: params.id,
+        userId: user.id,
+      })
+      if (!charge.ok) {
+        return NextResponse.json({ error: charge.error, code: charge.code }, { status: 400 })
+      }
+      pixCopiaECola = charge.pixCopiaECola
+      boletoUrl = charge.boletoUrl
+    }
+
     const { data: profile } = await admin
       .from('profiles')
       .select('nome')
@@ -49,20 +69,19 @@ export async function POST(
 
     const pixKey = (user.user_metadata?.pix_key as string | null) ?? null
     const pixKeyTipo = (user.user_metadata?.pix_key_tipo as string | null) ?? null
-    const isAutomatic = imovel?.billing_mode === 'AUTOMATIC'
 
     await enviarCobrancaParaInquilino({
       para: inquilino.email,
       nomeInquilino: inquilino.nome,
       nomeProprietario: profile?.nome ?? 'Proprietário',
       nomeImovel: imovel?.apelido ?? '',
-      valor: aluguel.valor,
-      mesReferencia: aluguel.mes_referencia,
-      dataVencimento: aluguel.data_vencimento,
+      valor: aluguelBase.valor,
+      mesReferencia: aluguelBase.mes_referencia,
+      dataVencimento: aluguelBase.data_vencimento,
       pixKey:            isAutomatic ? null : pixKey,
       pixKeyTipo:        isAutomatic ? null : pixKeyTipo,
-      asaasPixCopiaECola: isAutomatic ? (aluguel.asaas_pix_copiaecola ?? null) : null,
-      assasBoletoUrl:     isAutomatic ? (aluguel.asaas_boleto_url ?? null) : null,
+      asaasPixCopiaECola: isAutomatic ? pixCopiaECola : null,
+      assasBoletoUrl:     isAutomatic ? boletoUrl : null,
     })
 
     return NextResponse.json({ ok: true })
