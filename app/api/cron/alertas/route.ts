@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import {
   enviarLembreteVencimento,
+  enviarLembreteInquilino,
   enviarAlertaAtraso,
   enviarAlertaReajuste,
   enviarAlertaVencimentoContrato,
@@ -24,6 +25,17 @@ type AluguelAlerta = {
   imovel_id: string
   imoveis: { apelido: string; user_id: string } | null
   inquilinos: { nome: string } | null
+}
+
+type AluguelAlertaCompleto = {
+  id: string
+  valor: number
+  data_vencimento: string
+  mes_referencia: string
+  asaas_pix_copiaecola: string | null
+  asaas_boleto_url: string | null
+  imoveis: { apelido: string; user_id: string; billing_mode: 'MANUAL' | 'AUTOMATIC' | null } | null
+  inquilinos: { nome: string; email: string | null } | null
 }
 
 type ImovelAlerta = {
@@ -71,7 +83,15 @@ export async function GET(req: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const resultados = { atualizados: 0, vencimento: 0, atraso: 0, reajuste: 0, contrato: 0, erros: 0 }
+  const resultados = {
+    atualizados: 0,
+    vencimento: 0,
+    lembreteInquilino: 0,
+    atraso: 0,
+    reajuste: 0,
+    contrato: 0,
+    erros: 0,
+  }
 
   // ── 0. Marcar como atrasado todos os pendentes com vencimento passado ────────
   const hoje = dateOffset(0)
@@ -97,24 +117,45 @@ export async function GET(req: NextRequest) {
   }
 
   // ── 1. Lembretes de vencimento (3 dias antes) ────────────────────────────────
+  // Envia DOIS emails: um pro proprietário (acompanhamento) e um pro inquilino
+  // (lembrete com PIX/boleto), pra que o inquilino tenha o método de pagamento
+  // disponível mesmo que não tenha guardado o email inicial do início do mês.
   const { data: vencimentos } = await admin
     .from('alugueis')
     .select(`
       id, valor, data_vencimento, mes_referencia,
-      imoveis!inner(apelido, user_id),
-      inquilinos(nome)
+      asaas_pix_copiaecola, asaas_boleto_url,
+      imoveis!inner(apelido, user_id, billing_mode),
+      inquilinos(nome, email)
     `)
     .eq('status', 'pendente')
-    .eq('data_vencimento', dateOffset(3)) as unknown as { data: AluguelAlerta[] | null }
+    .eq('data_vencimento', dateOffset(3)) as unknown as { data: AluguelAlertaCompleto[] | null }
 
   if (vencimentos?.length) {
     const userIds = Array.from(new Set(vencimentos.map(a => a.imoveis?.user_id).filter(Boolean) as string[]))
     const profiles = await getProfiles(userIds)
 
+    // Para imóveis em modo MANUAL precisamos da chave PIX do proprietário,
+    // que vive em user_metadata. Carregamos uma vez por user.
+    const pixByUser = new Map<string, { key: string | null; tipo: string | null }>()
+    await Promise.all(userIds.map(async userId => {
+      try {
+        const { data } = await admin.auth.admin.getUserById(userId)
+        pixByUser.set(userId, {
+          key: (data?.user?.user_metadata?.pix_key as string | null) ?? null,
+          tipo: (data?.user?.user_metadata?.pix_key_tipo as string | null) ?? null,
+        })
+      } catch {
+        pixByUser.set(userId, { key: null, tipo: null })
+      }
+    }))
+
     for (const aluguel of vencimentos) {
       const userId = aluguel.imoveis?.user_id
       const profile = userId ? profiles.get(userId) : undefined
       if (!profile?.email) continue
+
+      // 1a — Lembrete pro proprietário (acompanhamento)
       try {
         await enviarLembreteVencimento({
           para: profile.email,
@@ -126,6 +167,31 @@ export async function GET(req: NextRequest) {
           mesReferencia: aluguel.mes_referencia,
         })
         resultados.vencimento++
+      } catch {
+        resultados.erros++
+      }
+
+      // 1b — Lembrete pro inquilino com PIX/boleto pra evitar atraso
+      const inquilino = aluguel.inquilinos
+      if (!inquilino?.email) continue
+
+      const isAutomatic = aluguel.imoveis?.billing_mode === 'AUTOMATIC'
+      const pixInfo = userId ? pixByUser.get(userId) : null
+
+      try {
+        await enviarLembreteInquilino({
+          para: inquilino.email,
+          nomeInquilino: inquilino.nome,
+          nomeProprietario: profile.nome,
+          nomeImovel: aluguel.imoveis?.apelido ?? 'Imóvel',
+          valor: aluguel.valor,
+          mesReferencia: aluguel.mes_referencia,
+          dataVencimento: aluguel.data_vencimento,
+          pixKey:             isAutomatic ? null : (pixInfo?.key ?? null),
+          asaasPixCopiaECola: isAutomatic ? aluguel.asaas_pix_copiaecola : null,
+          assasBoletoUrl:     isAutomatic ? aluguel.asaas_boleto_url : null,
+        })
+        resultados.lembreteInquilino++
       } catch {
         resultados.erros++
       }
@@ -244,8 +310,14 @@ export async function GET(req: NextRequest) {
     ok: true,
     executado_em: new Date().toISOString(),
     atualizados: resultados.atualizados,
-    enviados: { vencimento: resultados.vencimento, atraso: resultados.atraso, reajuste: resultados.reajuste, contrato: resultados.contrato },
-    total: resultados.vencimento + resultados.atraso + resultados.reajuste + resultados.contrato,
+    enviados: {
+      vencimento: resultados.vencimento,
+      lembrete_inquilino: resultados.lembreteInquilino,
+      atraso: resultados.atraso,
+      reajuste: resultados.reajuste,
+      contrato: resultados.contrato,
+    },
+    total: resultados.vencimento + resultados.lembreteInquilino + resultados.atraso + resultados.reajuste + resultados.contrato,
     erros: resultados.erros,
   })
 }
