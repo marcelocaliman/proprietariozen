@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { PagarModal } from './pagar-modal'
 import { CobrancaModal } from './cobranca-modal'
@@ -808,32 +809,32 @@ export function AlugueisClient({
 
       {/* Tabs, stat cards, banner e tabela — apenas no modo lista */}
       {view !== 'calendario' && <>
-      <div className="flex items-center gap-1 overflow-x-auto">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setFiltroStatus(tab.id)}
-            className={cn(
-              'shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-              filtroStatus === tab.id
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-transparent',
-            )}
-          >
-            <span className={filtroStatus !== tab.id ? tab.cls : ''}>{tab.label}</span>
-            <span className={cn(
-              'text-[11px] font-semibold px-1.5 py-0.5 rounded-full min-w-[20px] text-center',
-              filtroStatus === tab.id
-                ? 'bg-emerald-100 text-emerald-700'
-                : tab.id === 'atrasado' && tab.count > 0
-                  ? 'bg-red-100 text-red-600'
-                  : 'bg-slate-100 text-slate-500',
-            )}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
-      </div>
+      <Tabs value={filtroStatus} onValueChange={v => setFiltroStatus(v as typeof filtroStatus)}>
+        <TabsList className="bg-slate-100 border border-slate-200 rounded-lg p-1 h-auto w-full sm:w-auto overflow-x-auto flex-nowrap">
+          {TABS.map(tab => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className={cn(
+                'gap-1.5 text-slate-600 data-[selected]:text-slate-900 aria-selected:text-slate-900',
+                tab.id === 'atrasado' && tab.count > 0 && filtroStatus !== 'atrasado' && 'text-red-600',
+              )}
+            >
+              {tab.label}
+              <span className={cn(
+                'text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[18px] text-center',
+                filtroStatus === tab.id
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : tab.id === 'atrasado' && tab.count > 0
+                    ? 'bg-red-100 text-red-600'
+                    : 'bg-slate-200 text-slate-600',
+              )}>
+                {tab.count}
+              </span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {/* Cards de resumo */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
