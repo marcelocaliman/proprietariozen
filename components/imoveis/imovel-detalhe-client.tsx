@@ -7,7 +7,7 @@ import {
   Building2, Home, Square, Briefcase, MapPin,
   TrendingUp, CheckCircle2, AlertCircle,
   Phone, Mail, IdCard, Shield, FileText, Settings2, Pencil,
-  Send, ArrowRight, Banknote, LogOut, AlertTriangle,
+  Send, ArrowRight, Banknote, LogOut, AlertTriangle, CalendarPlus,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
 import { GarantiaModal } from '@/components/imoveis/garantia-modal'
 import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
 import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-modal'
+import { RenovarContratoModal } from '@/components/imoveis/renovar-contrato-modal'
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { TimelineImovel } from '@/components/imoveis/timeline-imovel'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
@@ -116,6 +117,7 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
   const [configCobranca, setConfigCobranca] = useState(false)
   const [configGarantia, setConfigGarantia] = useState(false)
   const [encerrando, setEncerrando] = useState(false)
+  const [renovando, setRenovando] = useState(false)
 
   const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
   const TipoIcon = tipoIcone[imovel.tipo] ?? Building2
@@ -182,12 +184,11 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
           <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
             <Button
               size="sm"
-              variant="outline"
-              onClick={() => setEditandoContrato(true)}
-              className="gap-1 text-xs"
+              onClick={() => setRenovando(true)}
+              className="gap-1 text-xs bg-emerald-600 hover:bg-emerald-700"
             >
-              <FileText className="h-3 w-3" />
-              {contratoVencido ? 'Renovar' : 'Editar contrato'}
+              <CalendarPlus className="h-3 w-3" />
+              Renovar
             </Button>
             {inquilinoAtivo && (
               <Button
@@ -647,6 +648,13 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
                 descricao="Vigência, datas de início e fim, índice de reajuste"
                 onClick={() => setEditandoContrato(true)}
               />
+              {!imovel.contrato_indeterminado && (
+                <ConfigItem
+                  titulo="Renovar contrato"
+                  descricao="Estender por +6/+12/+24 meses ou tornar indeterminado"
+                  onClick={() => setRenovando(true)}
+                />
+              )}
               <ConfigItem
                 titulo="Configurar cobrança"
                 descricao="Modo (Manual/Automático), multa, juros, desconto, encargos extras"
@@ -717,6 +725,12 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
           setEncerrando(false)
           router.refresh()
         }}
+      />
+      <RenovarContratoModal
+        open={renovando}
+        onOpenChange={setRenovando}
+        imovel={imovel}
+        onRenovado={() => router.refresh()}
       />
     </div>
   )

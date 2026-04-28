@@ -274,3 +274,43 @@ export async function encerrarContrato(
   revalidatePath('/dashboard')
   return { removidos }
 }
+
+// Renova o contrato — atalho pra estender data_fim_contrato sem precisar
+// abrir o form completo. Reseta o alerta de vencimento pra disparar de novo
+// quando faltar 60 dias da nova data.
+export async function renovarContrato(
+  imovelId: string,
+  novoFim: string | null, // YYYY-MM-DD ou null se indeterminado
+): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const update: {
+    data_fim_contrato: string | null
+    contrato_indeterminado: boolean
+    alerta_vencimento_enviado: boolean
+  } = {
+    data_fim_contrato: novoFim,
+    contrato_indeterminado: novoFim === null,
+    alerta_vencimento_enviado: false,
+  }
+
+  const { error } = await supabase
+    .from('imoveis')
+    .update(update)
+    .eq('id', imovelId)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+
+  await registrarLog(user.id, 'CONTRATO_RENOVADO', 'imovel', imovelId, {
+    novo_fim: novoFim,
+    indeterminado: novoFim === null,
+  })
+
+  revalidatePath('/imoveis')
+  revalidatePath(`/imoveis/${imovelId}`)
+  revalidatePath('/dashboard')
+  return {}
+}
