@@ -118,3 +118,76 @@ export async function desativarInquilino(id: string): Promise<{ error?: string }
   revalidatePath('/imoveis')
   return {}
 }
+
+/**
+ * Desvincula um inquilino do imóvel.
+ * - Marca ativo=false
+ * - Revoga tokens de acesso
+ * - Opcionalmente remove cobranças futuras pendentes/atrasadas (mês corrente é mantido)
+ *
+ * Mantém imovel_id e o histórico todo. O cadastro do inquilino fica salvo
+ * pra eventualmente ser reaproveitado em outro imóvel via "Editar inquilino".
+ */
+export async function desvincularInquilino(
+  id: string,
+  opcoes: { encerrarCobrancasFuturas: boolean },
+): Promise<{ error?: string; cobrancasRemovidas?: number }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  // Carrega inquilino + imovel pra log
+  const { data: inq } = await supabase
+    .from('inquilinos')
+    .select('nome, imovel_id, imovel:imoveis(apelido)')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+  if (!inq) return { error: 'Inquilino não encontrado' }
+
+  // 1. Desativa
+  const { error: errUpdate } = await supabase
+    .from('inquilinos')
+    .update({ ativo: false })
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (errUpdate) return { error: errUpdate.message }
+
+  // 2. Revoga tokens
+  await revogarTokensInquilino(id)
+
+  // 3. Opcionalmente, remove cobranças futuras pendentes/atrasadas
+  let cobrancasRemovidas = 0
+  if (opcoes.encerrarCobrancasFuturas && inq.imovel_id) {
+    const admin = createAdminClient()
+    const hoje = new Date()
+    const mesAtualRef = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`
+
+    const { data: aRemover } = await admin
+      .from('alugueis')
+      .select('id')
+      .eq('imovel_id', inq.imovel_id)
+      .in('status', ['pendente', 'atrasado'])
+      .gt('mes_referencia', mesAtualRef)
+
+    if (aRemover && aRemover.length > 0) {
+      const ids = aRemover.map(a => a.id)
+      const { error: errDel } = await admin.from('alugueis').delete().in('id', ids)
+      if (errDel) return { error: errDel.message }
+      cobrancasRemovidas = ids.length
+    }
+  }
+
+  await registrarLog(user.id, 'INQUILINO_DESVINCULADO', 'inquilino', id, {
+    nome: inq.nome,
+    encerrou_cobrancas: opcoes.encerrarCobrancasFuturas,
+    cobrancas_removidas: cobrancasRemovidas,
+  })
+
+  revalidatePath('/inquilinos')
+  revalidatePath(`/inquilinos/${id}`)
+  revalidatePath('/imoveis')
+  if (inq.imovel_id) revalidatePath(`/imoveis/${inq.imovel_id}`)
+  revalidatePath('/dashboard')
+  return { cobrancasRemovidas }
+}

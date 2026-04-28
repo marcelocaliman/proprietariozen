@@ -3,9 +3,9 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Plus, Users, Pencil, UserX, Phone, Building2,
+  Plus, Users, Pencil, Phone, Building2,
   Search, MoreHorizontal, CheckCircle2, Clock, AlertTriangle, Paperclip,
-  Mail, ShieldOff, IdCard, AlertCircle, CalendarDays,
+  Mail, ShieldOff, IdCard, AlertCircle, CalendarDays, LogOut,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/sheet'
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { DocumentosInquilino } from '@/components/documentos/DocumentosInquilino'
-import { desativarInquilino } from '@/app/(dashboard)/inquilinos/actions'
+import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-inquilino-modal'
 import { formatarTelefone, formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
 import { cn } from '@/lib/utils'
@@ -160,6 +160,7 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
   const [docInquilino, setDocInquilino] = useState<{ id: string; nome: string } | null>(null)
   const [convidando, setConvidando] = useState<string | null>(null)
   const [revogando, setRevogando]   = useState<string | null>(null)
+  const [desvinculando, setDesvinculando] = useState<{ id: string; nome: string; imovelApelido?: string | null } | null>(null)
 
   const aluguelMap = Object.fromEntries(
     alugueisMes.map(a => [a.inquilino_id, a])
@@ -185,13 +186,6 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
 
   function handleNovo()           { setEditando(null); setOpen(true) }
   function handleEditar(i: Inquilino) { setEditando(i); setOpen(true) }
-
-  async function handleDesativar(inquilino: Inquilino) {
-    if (!confirm(`Desativar "${inquilino.nome}"?`)) return
-    const result = await desativarInquilino(inquilino.id)
-    if (result.error) toast.error(result.error)
-    else toast.success('Inquilino desativado')
-  }
 
   async function handleEnviarConvite(inquilino: InquilinoRich) {
     if (!inquilino.email) {
@@ -497,10 +491,14 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                         )}
                         {inquilino.ativo && (
                           <DropdownMenuItem
-                            onClick={() => handleDesativar(inquilino)}
-                            className="text-red-600 focus:text-red-600"
+                            onClick={() => setDesvinculando({
+                              id: inquilino.id,
+                              nome: inquilino.nome,
+                              imovelApelido: inquilino.imovel?.apelido ?? null,
+                            })}
+                            className="text-amber-700 focus:text-amber-700"
                           >
-                            <UserX className="h-3.5 w-3.5 mr-2" />Desativar
+                            <LogOut className="h-3.5 w-3.5 mr-2" />Desvincular do imóvel
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -519,6 +517,13 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
         inquilino={editando}
         imoveis={editando ? imoveis : imoveisVagos}
         imovelIdPrefill={null}
+      />
+
+      <DesvincularInquilinoModal
+        open={!!desvinculando}
+        onOpenChange={v => { if (!v) setDesvinculando(null) }}
+        inquilino={desvinculando}
+        imovelApelido={desvinculando?.imovelApelido}
       />
 
       {/* Sheet de documentos do inquilino */}

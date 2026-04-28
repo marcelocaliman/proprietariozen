@@ -7,7 +7,8 @@ import {
   Building2, Home, Square, Briefcase, MapPin,
   TrendingUp, CheckCircle2, AlertCircle,
   Phone, Mail, IdCard, Shield, FileText, Settings2, Pencil,
-  Send, ArrowRight, Banknote, LogOut, AlertTriangle, CalendarPlus,
+  Send, ArrowRight, Banknote, LogOut, AlertTriangle, CalendarPlus, ArrowLeftRight,
+  Download,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,9 @@ import { RenovarContratoModal } from '@/components/imoveis/renovar-contrato-moda
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { TimelineImovel } from '@/components/imoveis/timeline-imovel'
 import { DocumentosImovel } from '@/components/documentos/DocumentosImovel'
+import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-inquilino-modal'
+import { TrocarInquilinoModal } from '@/components/imoveis/trocar-inquilino-modal'
+import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Imovel, GarantiaTipo } from '@/types'
 import type { TimelineEvento } from '@/lib/timeline'
@@ -119,6 +123,9 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
   const [configGarantia, setConfigGarantia] = useState(false)
   const [encerrando, setEncerrando] = useState(false)
   const [renovando, setRenovando] = useState(false)
+  const [desvinculandoInq, setDesvinculandoInq] = useState(false)
+  const [trocandoInq, setTrocandoInq] = useState(false)
+  const [vinculandoNovoInq, setVinculandoNovoInq] = useState(false)
 
   const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
   const TipoIcon = tipoIcone[imovel.tipo] ?? Building2
@@ -493,19 +500,39 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
           {inquilinoAtivo ? (
             <Card>
               <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">{inquilinoAtivo.nome}</h3>
                     <p className="text-xs text-slate-500">
                       Inquilino ativo desde {formatarData(inquilinoAtivo.criado_em)}
                     </p>
                   </div>
-                  <Link
-                    href="/inquilinos"
-                    className="text-xs text-emerald-600 hover:underline whitespace-nowrap"
-                  >
-                    Ver perfil →
-                  </Link>
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    <Link
+                      href={`/inquilinos/${inquilinoAtivo.id}`}
+                      className="text-xs text-emerald-600 hover:underline whitespace-nowrap"
+                    >
+                      Ver perfil →
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 text-xs"
+                      onClick={() => setTrocandoInq(true)}
+                    >
+                      <ArrowLeftRight className="h-3 w-3" />
+                      Trocar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 text-xs text-amber-700 border-amber-200 hover:bg-amber-50"
+                      onClick={() => setDesvinculandoInq(true)}
+                    >
+                      <LogOut className="h-3 w-3" />
+                      Desvincular
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3 pt-2">
@@ -636,6 +663,32 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
         <TabsContent value="historico">
           <Card>
             <CardContent className="p-5">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Linha do tempo</p>
+                  <p className="text-xs text-slate-500">
+                    {timeline.length} evento{timeline.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                {timeline.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      const { gerarTimelinePDF } = await import('@/lib/pdf')
+                      gerarTimelinePDF({
+                        imovel: { apelido: imovel.apelido, endereco: imovel.endereco },
+                        inquilino_atual: inquilinoAtivo?.nome ?? null,
+                        eventos: timeline,
+                      })
+                    }}
+                    className="gap-1.5"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    Exportar PDF
+                  </Button>
+                )}
+              </div>
               <TimelineImovel eventos={timeline} />
             </CardContent>
           </Card>
@@ -738,6 +791,34 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
         onOpenChange={setRenovando}
         imovel={imovel}
         onRenovado={() => router.refresh()}
+      />
+      {inquilinoAtivo && (
+        <DesvincularInquilinoModal
+          open={desvinculandoInq}
+          onOpenChange={setDesvinculandoInq}
+          inquilino={{ id: inquilinoAtivo.id, nome: inquilinoAtivo.nome }}
+          imovelApelido={imovel.apelido}
+          onDesvinculado={() => router.refresh()}
+        />
+      )}
+
+      {/* Fluxo de troca: encerra atual → abre form de novo inquilino */}
+      <TrocarInquilinoModal
+        open={trocandoInq}
+        onOpenChange={setTrocandoInq}
+        imovel={{ id: imovel.id, apelido: imovel.apelido }}
+        inquilinoAtualNome={inquilinoAtivo?.nome ?? null}
+        onPronto={() => setVinculandoNovoInq(true)}
+      />
+      <InquilinoModal
+        open={vinculandoNovoInq}
+        onOpenChange={v => {
+          setVinculandoNovoInq(v)
+          if (!v) router.refresh()
+        }}
+        inquilino={null}
+        imoveis={[{ id: imovel.id, apelido: imovel.apelido }]}
+        imovelIdPrefill={imovel.id}
       />
     </div>
   )

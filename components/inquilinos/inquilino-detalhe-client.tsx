@@ -7,13 +7,15 @@ import { toast } from 'sonner'
 import {
   User, IdCard, Phone, Mail, Building2, CalendarDays,
   CheckCircle2, AlertCircle, Send, Pencil, Banknote,
-  ArrowRight, Shield,
+  ArrowRight, Shield, LogOut,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
+import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-inquilino-modal'
+import { DocumentosInquilino } from '@/components/documentos/DocumentosInquilino'
 import { formatarMoeda, formatarData, formatarTelefone } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
 import { cn } from '@/lib/utils'
@@ -88,6 +90,7 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
   const router = useRouter()
   const [editando, setEditando] = useState(false)
   const [convidando, setConvidando] = useState(false)
+  const [desvinculando, setDesvinculando] = useState(false)
 
   const imovel = inquilino.imovel
 
@@ -217,6 +220,17 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
               {inquilino.convite_enviado_em ? 'Reenviar convite' : 'Enviar convite'}
             </Button>
           )}
+          {inquilino.ativo && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-amber-700 border-amber-200 hover:bg-amber-50"
+              onClick={() => setDesvinculando(true)}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Desvincular
+            </Button>
+          )}
         </div>
       </div>
 
@@ -281,6 +295,7 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
           <TabsTrigger value="dados" className="text-slate-600 data-[selected]:text-slate-900">Dados</TabsTrigger>
           <TabsTrigger value="contrato" className="text-slate-600 data-[selected]:text-slate-900">Contrato</TabsTrigger>
           <TabsTrigger value="pagamentos" className="text-slate-600 data-[selected]:text-slate-900">Pagamentos ({alugueis.length})</TabsTrigger>
+          <TabsTrigger value="documentos" className="text-slate-600 data-[selected]:text-slate-900">Documentos</TabsTrigger>
           <TabsTrigger value="acesso" className="text-slate-600 data-[selected]:text-slate-900">Acesso</TabsTrigger>
         </TabsList>
 
@@ -469,6 +484,11 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
           </Card>
         </TabsContent>
 
+        {/* ── Documentos ── */}
+        <TabsContent value="documentos">
+          <DocumentosInquilino inquilinoId={inquilino.id} nomeInquilino={inquilino.nome} />
+        </TabsContent>
+
         {/* ── Acesso ── */}
         <TabsContent value="acesso">
           <Card>
@@ -534,6 +554,13 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
         onOpenChange={setEditando}
         inquilino={inquilino as unknown as Inquilino}
         imoveis={imovel ? [{ id: imovel.id, apelido: imovel.apelido }] : []}
+      />
+
+      <DesvincularInquilinoModal
+        open={desvinculando}
+        onOpenChange={setDesvinculando}
+        inquilino={{ id: inquilino.id, nome: inquilino.nome }}
+        imovelApelido={imovel?.apelido ?? null}
       />
     </div>
   )

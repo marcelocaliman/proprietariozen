@@ -198,3 +198,167 @@ export function gerarReciboPDF({ pagamento, proprietario }: DadosRecibo): void {
   const inquilinoSlug = inquilino.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_')
   doc.save(`recibo_${pagamento.mes_referencia}_${inquilinoSlug}.pdf`)
 }
+
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+// TIMELINE PDF \u2014 Hist\u00f3rico cronol\u00f3gico de eventos do im\u00f3vel
+// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+
+interface TimelineEventoPDF {
+  data: string
+  tipo: string
+  titulo: string
+  descricao?: string | null
+  futuro?: boolean
+}
+
+interface DadosTimeline {
+  imovel: { apelido: string; endereco: string }
+  inquilino_atual?: string | null
+  eventos: TimelineEventoPDF[]
+}
+
+function formatarDataPDF(data: string): string {
+  return new Date(data + 'T00:00:00')
+    .toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .replace('.', '')
+}
+
+const TITULO_TIPO_PDF: Record<string, string> = {
+  contrato_iniciado: 'Contrato iniciado',
+  contrato_renovado: 'Contrato renovado',
+  contrato_encerrado: 'Contrato encerrado',
+  inquilino_ativo: 'Inquilino ativo',
+  inquilino_anterior: 'Inquilino anterior',
+  pagamento: 'Pagamento',
+  atraso: 'Atraso',
+  cancelamento: 'Cancelamento',
+  reajuste_aplicado: 'Reajuste aplicado',
+  reajuste_previsto: 'Reajuste previsto',
+  fim_contrato: 'Fim do contrato',
+  fim_contrato_previsto: 'Fim previsto',
+}
+
+export function gerarTimelinePDF({ imovel, inquilino_atual, eventos }: DadosTimeline): void {
+  const doc = new jsPDF()
+  const preta: [number, number, number] = [15, 23, 42]
+  const cinza: [number, number, number] = [100, 116, 139]
+  const verde: [number, number, number] = [5, 150, 105]
+  const mEsq = 16
+  const mDir = 194  // 210 - 16
+
+  // \u2500\u2500 Cabe\u00e7alho \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  doc.setFillColor(...verde)
+  doc.rect(0, 0, 210, 32, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(18)
+  doc.text('Hist\u00f3rico do im\u00f3vel', mEsq, 14)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(11)
+  doc.text(imovel.apelido, mEsq, 22)
+  doc.setFontSize(9)
+  doc.setTextColor(220, 252, 231)
+  doc.text(imovel.endereco, mEsq, 27)
+
+  // \u2500\u2500 Info inicial \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  let y = 40
+  doc.setTextColor(...cinza)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.text(`Gerado em ${formatarDataPDF(new Date().toISOString().slice(0, 10))}`, mEsq, y)
+  if (inquilino_atual) {
+    doc.text(`Inquilino atual: ${inquilino_atual}`, mDir, y, { align: 'right' })
+  }
+  y += 8
+
+  // Linha divis\u00f3ria
+  doc.setDrawColor(226, 232, 240)
+  doc.line(mEsq, y, mDir, y)
+  y += 6
+
+  // Separar futuros e passados
+  const futuros = eventos.filter(e => e.futuro)
+  const passados = eventos.filter(e => !e.futuro)
+
+  function ensureSpace(neededMm: number) {
+    if (y + neededMm > 280) {
+      doc.addPage()
+      y = 16
+    }
+  }
+
+  function renderSecao(titulo: string, lista: TimelineEventoPDF[]) {
+    if (!lista.length) return
+    ensureSpace(18)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(...preta)
+    doc.text(titulo, mEsq, y)
+    y += 2
+    doc.setDrawColor(226, 232, 240)
+    doc.line(mEsq, y, mDir, y)
+    y += 6
+
+    for (const evento of lista) {
+      ensureSpace(14)
+      // Data + t\u00edtulo
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.setTextColor(...preta)
+      doc.text(evento.titulo, mEsq, y)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...cinza)
+      doc.text(formatarDataPDF(evento.data), mDir, y, { align: 'right' })
+      y += 4
+
+      // Descri\u00e7\u00e3o
+      if (evento.descricao) {
+        doc.setFont('helvetica', 'italic')
+        doc.setFontSize(8)
+        doc.setTextColor(...cinza)
+        const linhas = doc.splitTextToSize(evento.descricao, mDir - mEsq)
+        for (const linha of linhas) {
+          ensureSpace(4)
+          doc.text(linha, mEsq, y)
+          y += 4
+        }
+      }
+
+      // Pequena marca de tipo (r\u00f3tulo cinza)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7)
+      doc.setTextColor(150, 150, 150)
+      doc.text(TITULO_TIPO_PDF[evento.tipo] ?? evento.tipo, mEsq, y)
+      y += 6
+    }
+    y += 2
+  }
+
+  if (futuros.length) renderSecao('PR\u00d3XIMOS EVENTOS', futuros)
+  if (passados.length) renderSecao('HIST\u00d3RICO', passados)
+
+  if (!eventos.length) {
+    doc.setFont('helvetica', 'italic')
+    doc.setFontSize(10)
+    doc.setTextColor(...cinza)
+    doc.text('Nenhum evento registrado ainda.', mEsq, y)
+  }
+
+  // \u2500\u2500 Rodap\u00e9 \u2500\u2500
+  const totalPaginas = doc.internal.pages.length - 1
+  for (let i = 1; i <= totalPaginas; i++) {
+    doc.setPage(i)
+    doc.setFont('helvetica', 'italic')
+    doc.setFontSize(7)
+    doc.setTextColor(150, 150, 150)
+    doc.text(
+      `Propriet\u00e1rioZen \u2014 ${imovel.apelido} \u00b7 ${i}/${totalPaginas}`,
+      105, 290, { align: 'center' },
+    )
+  }
+
+  const slug = imovel.apelido.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '_')
+  const dataStr = new Date().toISOString().slice(0, 10)
+  doc.save(`historico_${slug}_${dataStr}.pdf`)
+}
