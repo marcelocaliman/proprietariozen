@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import type { Imovel } from '@/types'
 import { ImovelDetalheClient } from '@/components/imoveis/imovel-detalhe-client'
+import { montarTimeline } from '@/lib/timeline'
 
 export default async function ImovelDetalhePage({ params }: { params: { id: string } }) {
   const supabase = await createServerSupabaseClient()
@@ -33,12 +34,33 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
       id, valor, status, mes_referencia, data_vencimento, data_pagamento,
       valor_pago, valor_aluguel_base, valor_iptu, valor_condominio, valor_outros_encargos,
       asaas_charge_id, asaas_pix_copiaecola, asaas_boleto_url,
-      lembrete_enviado_em, recibo_gerado, desconto, isento
+      lembrete_enviado_em, recibo_gerado, desconto, isento, motivo_cancelamento
     `)
     .eq('imovel_id', params.id)
     .gte('mes_referencia', inicioJanela)
     .lte('mes_referencia', fimJanela)
     .order('mes_referencia', { ascending: false })
+
+  const inquilinosArr = ((imovel as { inquilinos?: { nome: string; ativo: boolean; criado_em: string }[] }).inquilinos) ?? []
+  const timeline = montarTimeline(
+    {
+      data_inicio_contrato: imovel.data_inicio_contrato,
+      data_fim_contrato: imovel.data_fim_contrato,
+      contrato_indeterminado: imovel.contrato_indeterminado,
+      data_proximo_reajuste: imovel.data_proximo_reajuste,
+      indice_reajuste: imovel.indice_reajuste as 'igpm' | 'ipca' | 'fixo',
+      percentual_fixo: imovel.percentual_fixo,
+    },
+    inquilinosArr,
+    (alugueis ?? []).map(a => ({
+      status: a.status as string,
+      mes_referencia: a.mes_referencia as string,
+      data_vencimento: a.data_vencimento as string,
+      data_pagamento: a.data_pagamento as string | null,
+      valor: a.valor as number,
+      motivo_cancelamento: (a as { motivo_cancelamento?: string | null }).motivo_cancelamento ?? null,
+    })),
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -67,6 +89,7 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
           asaas_boleto_url: string | null; lembrete_enviado_em: string | null
           recibo_gerado: boolean; desconto: number | null; isento: boolean | null
         }[]}
+        timeline={timeline}
       />
     </div>
   )

@@ -17,8 +17,10 @@ import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
 import { GarantiaModal } from '@/components/imoveis/garantia-modal'
 import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
+import { TimelineImovel } from '@/components/imoveis/timeline-imovel'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Imovel, GarantiaTipo } from '@/types'
+import type { TimelineEvento } from '@/lib/timeline'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -103,9 +105,10 @@ function diasAte(data: string): number {
 interface Props {
   imovel: ImovelDetalhado
   alugueis: Aluguel[]
+  timeline: TimelineEvento[]
 }
 
-export function ImovelDetalheClient({ imovel, alugueis }: Props) {
+export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
   const router = useRouter()
   const [editandoImovel, setEditandoImovel] = useState(false)
   const [editandoContrato, setEditandoContrato] = useState(false)
@@ -243,6 +246,7 @@ export function ImovelDetalheClient({ imovel, alugueis }: Props) {
           <TabsTrigger value="pagamentos">Pagamentos ({alugueis.length})</TabsTrigger>
           <TabsTrigger value="inquilino">Inquilino</TabsTrigger>
           <TabsTrigger value="garantia">Garantia</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="config">Configuração</TabsTrigger>
         </TabsList>
 
@@ -553,6 +557,15 @@ export function ImovelDetalheClient({ imovel, alugueis }: Props) {
                   <p className="text-sm text-slate-700">{imovel.garantia_observacao}</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Histórico (timeline) ── */}
+        <TabsContent value="historico">
+          <Card>
+            <CardContent className="p-5">
+              <TimelineImovel eventos={timeline} />
             </CardContent>
           </Card>
         </TabsContent>
