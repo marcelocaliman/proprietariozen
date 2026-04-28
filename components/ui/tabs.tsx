@@ -24,10 +24,13 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         'disabled:pointer-events-none disabled:opacity-50',
-        'data-[selected]:bg-background data-[selected]:text-foreground data-[selected]:shadow',
+        // base-ui Tab seta aria-selected="true" e data-selected no ativo —
+        // usar aria-selected garante que funcione independente da versao.
+        'aria-selected:bg-white aria-selected:text-slate-900 aria-selected:shadow-sm',
+        'data-[selected]:bg-white data-[selected]:text-slate-900 data-[selected]:shadow-sm',
         className,
       )}
       {...props}
