@@ -4,6 +4,8 @@ export type TimelineEvento = {
   data: string  // ISO yyyy-mm-dd
   tipo:
     | 'contrato_iniciado'
+    | 'contrato_renovado'
+    | 'contrato_encerrado'
     | 'inquilino_ativo'
     | 'inquilino_anterior'
     | 'pagamento'
@@ -43,6 +45,12 @@ type AluguelInfo = {
   motivo_cancelamento: string | null
 }
 
+export type ActivityLogInfo = {
+  action: string
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
 const indiceLabel: Record<string, string> = {
   igpm: 'IGP-M',
   ipca: 'IPCA',
@@ -58,6 +66,7 @@ export function montarTimeline(
   imovel: ImovelInfo,
   inquilinos: InquilinoInfo[],
   alugueis: AluguelInfo[],
+  logs: ActivityLogInfo[] = [],
 ): TimelineEvento[] {
   const eventos: TimelineEvento[] = []
   const hojeStr = new Date().toISOString().slice(0, 10)
@@ -110,6 +119,36 @@ export function montarTimeline(
         tipo: 'cancelamento',
         titulo: `Cobrança cancelada · ${formatarMesCurto(a.mes_referencia)}`,
         descricao: a.motivo_cancelamento ?? null,
+      })
+    }
+  }
+
+  // Eventos de logs do imovel (renovacoes, encerramentos)
+  for (const log of logs) {
+    const dataLog = log.created_at.slice(0, 10)
+    if (log.action === 'CONTRATO_RENOVADO') {
+      const novoFim = (log.details?.novo_fim as string | null) ?? null
+      const indeterminado = log.details?.indeterminado === true
+      eventos.push({
+        data: dataLog,
+        tipo: 'contrato_renovado',
+        titulo: 'Contrato renovado',
+        descricao: indeterminado
+          ? 'Passou para vigência indeterminada'
+          : novoFim
+            ? `Novo fim: ${formatarDataBR(novoFim)}`
+            : null,
+      })
+    } else if (log.action === 'CONTRATO_ENCERRADO') {
+      const ultimoMes = (log.details?.ultimoMes as string | undefined)
+      const removidos = (log.details?.removidos as number | undefined) ?? 0
+      eventos.push({
+        data: dataLog,
+        tipo: 'contrato_encerrado',
+        titulo: 'Contrato encerrado',
+        descricao: ultimoMes
+          ? `Último mês: ${formatarMesCurto(ultimoMes + '-01')}${removidos > 0 ? ` · ${removidos} cobrança(s) futura(s) removida(s)` : ''}`
+          : null,
       })
     }
   }

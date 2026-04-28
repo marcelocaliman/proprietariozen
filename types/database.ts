@@ -476,6 +476,35 @@ export type Database = {
           }
         ]
       }
+      activity_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          action: string
+          entity_type: string | null
+          entity_id: string | null
+          details: Record<string, unknown> | null
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          action: string
+          entity_type?: string | null
+          entity_id?: string | null
+          details?: Record<string, unknown> | null
+          ip_address?: string | null
+        }
+        Update: {
+          action?: string
+          entity_type?: string | null
+          entity_id?: string | null
+          details?: Record<string, unknown> | null
+          ip_address?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }

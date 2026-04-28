@@ -1,6 +1,6 @@
 import {
   Play, UserPlus, UserMinus, CheckCircle2, AlertTriangle, Ban,
-  TrendingUp, FileText, Clock,
+  TrendingUp, FileText, Clock, CalendarPlus, LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
@@ -8,6 +8,8 @@ import type { TimelineEvento } from '@/lib/timeline'
 
 const ICONE_POR_TIPO: Record<TimelineEvento['tipo'], LucideIcon> = {
   contrato_iniciado: Play,
+  contrato_renovado: CalendarPlus,
+  contrato_encerrado: LogOut,
   inquilino_ativo: UserPlus,
   inquilino_anterior: UserMinus,
   pagamento: CheckCircle2,
@@ -21,6 +23,8 @@ const ICONE_POR_TIPO: Record<TimelineEvento['tipo'], LucideIcon> = {
 
 const COR_POR_TIPO: Record<TimelineEvento['tipo'], string> = {
   contrato_iniciado: 'bg-blue-100 text-blue-700',
+  contrato_renovado: 'bg-emerald-100 text-emerald-700',
+  contrato_encerrado: 'bg-red-100 text-red-700',
   inquilino_ativo: 'bg-emerald-100 text-emerald-700',
   inquilino_anterior: 'bg-slate-100 text-slate-500',
   pagamento: 'bg-emerald-100 text-emerald-700',

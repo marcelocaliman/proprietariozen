@@ -42,6 +42,16 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
     .order('mes_referencia', { ascending: false })
 
   const inquilinosArr = ((imovel as { inquilinos?: { nome: string; ativo: boolean; criado_em: string }[] }).inquilinos) ?? []
+
+  // Logs deste imóvel relevantes para a timeline (renovação, encerramento)
+  const { data: logs } = await admin
+    .from('activity_logs')
+    .select('action, details, created_at')
+    .eq('entity_type', 'imovel')
+    .eq('entity_id', params.id)
+    .in('action', ['CONTRATO_RENOVADO', 'CONTRATO_ENCERRADO'])
+    .order('created_at', { ascending: false })
+
   const timeline = montarTimeline(
     {
       data_inicio_contrato: imovel.data_inicio_contrato,
@@ -60,6 +70,7 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
       valor: a.valor as number,
       motivo_cancelamento: (a as { motivo_cancelamento?: string | null }).motivo_cancelamento ?? null,
     })),
+    (logs ?? []) as { action: string; details: Record<string, unknown> | null; created_at: string }[],
   )
 
   return (
