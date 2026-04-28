@@ -354,6 +354,9 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                       </DropdownMenuTrigger>
                       {ocupado ? (
                         <DropdownMenuContent align="start" className="w-52">
+                          <DropdownMenuItem onClick={() => router.push(`/imoveis/${imovel.id}`)}>
+                            <FileText className="h-3.5 w-3.5 mr-2" />Ver detalhes
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEditar(imovel)}>
                             <Pencil className="h-3.5 w-3.5 mr-2" />Editar imóvel
                           </DropdownMenuItem>
@@ -443,9 +446,14 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
                 {/* Body */}
                 <div className="px-5 pt-4 pb-3 flex-1 space-y-3">
-                  {/* Linha 1: apelido + tipo */}
+                  {/* Linha 1: apelido (clicável) + tipo */}
                   <div>
-                    <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">{imovel.apelido}</p>
+                    <button
+                      onClick={() => router.push(`/imoveis/${imovel.id}`)}
+                      className="font-bold text-[15px] text-[#0F172A] truncate leading-tight hover:text-emerald-700 transition-colors text-left w-full"
+                    >
+                      {imovel.apelido}
+                    </button>
                     <p className="text-xs text-[#94A3B8] truncate mt-0.5">
                       {imovel.endereco} · {labelsTipo[imovel.tipo] ?? imovel.tipo}
                     </p>
