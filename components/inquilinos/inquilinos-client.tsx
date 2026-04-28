@@ -321,9 +321,12 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">
+                      <button
+                        onClick={() => router.push(`/inquilinos/${inquilino.id}`)}
+                        className="font-bold text-[15px] text-[#0F172A] truncate leading-tight hover:text-emerald-700 transition-colors text-left"
+                      >
                         {inquilino.nome}
-                      </p>
+                      </button>
                       <Badge className={cn(
                         'text-[10px] h-4 px-1.5 font-semibold shrink-0',
                         inquilino.ativo
@@ -452,6 +455,9 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => router.push(`/inquilinos/${inquilino.id}`)}>
+                          <Users className="h-3.5 w-3.5 mr-2" />Ver detalhes
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEditar(inquilino)}>
                           <Pencil className="h-3.5 w-3.5 mr-2" />Editar
                         </DropdownMenuItem>
