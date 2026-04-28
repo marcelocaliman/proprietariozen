@@ -5,6 +5,7 @@ export type IndiceReajuste = 'igpm' | 'ipca' | 'fixo'
 export type StatusPagamento = 'pendente' | 'pago' | 'atrasado' | 'cancelado' | 'estornado'
 export type BillingMode = 'MANUAL' | 'AUTOMATIC'
 export type StatusImovel = 'disponivel' | 'alugado' | 'manutencao'
+export type GarantiaTipo = 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia'
 
 export type Imovel = {
   id: string
@@ -30,6 +31,22 @@ export type Imovel = {
   data_fim_contrato: string | null
   contrato_indeterminado: boolean
   alerta_vencimento_enviado: boolean
+  // Garantia / caução / fiador
+  garantia_tipo: GarantiaTipo | null
+  garantia_valor: number | null
+  garantia_observacao: string | null
+  fiador_nome: string | null
+  fiador_cpf: string | null
+  fiador_telefone: string | null
+  fiador_email: string | null
+  seguro_fianca_seguradora: string | null
+  seguro_fianca_apolice: string | null
+  seguro_fianca_validade: string | null
+  // Encargos extras mensais
+  iptu_mensal: number
+  condominio_mensal: number
+  outros_encargos: number
+  outros_encargos_descricao: string | null
   inquilinos?: { id: string; nome: string; ativo: boolean }[]
 }
 

@@ -7,7 +7,7 @@ import {
   Plus, Building2, Home, Square, Briefcase, MapPin,
   Zap, Loader2, MoreHorizontal, LayoutGrid, List,
   CheckCircle2, Clock, AlertTriangle, Pencil, Archive, LogOut,
-  Settings2, FileText, UserPlus, AlertCircle, Send,
+  Settings2, FileText, UserPlus, AlertCircle, Send, Shield,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
 import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-modal'
 import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
+import { GarantiaModal } from '@/components/imoveis/garantia-modal'
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
@@ -197,6 +198,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
   const [editContrato, setEditContrato]         = useState<Imovel | null>(null)
   const [encerrando, setEncerrando]             = useState<Imovel | null>(null)
   const [configCobranca, setConfigCobranca]     = useState<Imovel | null>(null)
+  const [configGarantia, setConfigGarantia]     = useState<Imovel | null>(null)
   const [vinculandoImovel, setVinculandoImovel] = useState<Imovel | null>(null)
   const [upgradeOpen, setUpgradeOpen]           = useState(false)
   const [loadingCheckout, setLoadingCheckout]   = useState(false)
@@ -360,6 +362,9 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setConfigCobranca(imovel)}>
                             <Settings2 className="h-3.5 w-3.5 mr-2" />Configurar cobrança
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setConfigGarantia(imovel)}>
+                            <Shield className="h-3.5 w-3.5 mr-2" />Garantia / fiador
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => router.push('/alugueis')}>
                             <Building2 className="h-3.5 w-3.5 mr-2" />Ver aluguéis
@@ -708,6 +713,12 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
         onOpenChange={v => { if (!v) setConfigCobranca(null) }}
         imovel={configCobranca}
         plano={plano}
+      />
+
+      <GarantiaModal
+        open={!!configGarantia}
+        onOpenChange={v => { if (!v) setConfigGarantia(null) }}
+        imovel={configGarantia}
       />
 
       <EncerrarContratoModal

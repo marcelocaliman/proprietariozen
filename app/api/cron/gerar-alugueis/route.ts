@@ -27,6 +27,9 @@ type ImovelRow = {
   dia_vencimento: number
   data_inicio_contrato: string | null
   billing_mode: 'MANUAL' | 'AUTOMATIC' | null
+  iptu_mensal: number | null
+  condominio_mensal: number | null
+  outros_encargos: number | null
   inquilinos: { id: string; ativo: boolean }[]
 }
 
@@ -54,7 +57,7 @@ export async function GET(req: NextRequest) {
 
   const { data: imoveis, error: errImoveis } = await admin
     .from('imoveis')
-    .select('id, user_id, apelido, valor_aluguel, dia_vencimento, data_inicio_contrato, billing_mode, inquilinos(id, ativo)')
+    .select('id, user_id, apelido, valor_aluguel, dia_vencimento, data_inicio_contrato, billing_mode, iptu_mensal, condominio_mensal, outros_encargos, inquilinos(id, ativo)')
     .eq('ativo', true) as unknown as { data: ImovelRow[] | null; error: unknown }
 
   if (errImoveis || !imoveis) {
@@ -83,11 +86,19 @@ export async function GET(req: NextRequest) {
     .filter(imovel => !existentesSet.has(imovel.id))
     .map(imovel => {
       const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      const iptu = imovel.iptu_mensal ?? 0
+      const condominio = imovel.condominio_mensal ?? 0
+      const outros = imovel.outros_encargos ?? 0
+      const valorTotal = imovel.valor_aluguel + iptu + condominio + outros
       return {
         imovel_id: imovel.id,
         inquilino_id: inquilinoAtivo?.id ?? null,
         mes_referencia: mesReferencia,
-        valor: imovel.valor_aluguel,
+        valor: valorTotal,
+        valor_aluguel_base: imovel.valor_aluguel,
+        valor_iptu: iptu,
+        valor_condominio: condominio,
+        valor_outros_encargos: outros,
         data_vencimento: calcularVencimento(mesStr, imovel.dia_vencimento),
         status: 'pendente' as const,
       }

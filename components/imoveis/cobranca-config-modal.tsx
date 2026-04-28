@@ -20,11 +20,20 @@ import type { Imovel } from '@/types'
 import type { PlanoTipo } from '@/lib/stripe'
 import { cn } from '@/lib/utils'
 
+const numericNonNegative = (msg = 'Inválido') => z.string().refine(
+  v => !v || (!isNaN(Number(v)) && Number(v) >= 0),
+  msg,
+)
+
 const schema = z.object({
   billing_mode: z.enum(['MANUAL', 'AUTOMATIC']),
-  multa_percentual: z.string().refine(v => !isNaN(Number(v)) && Number(v) >= 0, 'Inválido'),
-  juros_percentual: z.string().refine(v => !isNaN(Number(v)) && Number(v) >= 0, 'Inválido'),
-  desconto_percentual: z.string().refine(v => !isNaN(Number(v)) && Number(v) >= 0, 'Inválido'),
+  multa_percentual: numericNonNegative(),
+  juros_percentual: numericNonNegative(),
+  desconto_percentual: numericNonNegative(),
+  iptu_mensal: numericNonNegative(),
+  condominio_mensal: numericNonNegative(),
+  outros_encargos: numericNonNegative(),
+  outros_encargos_descricao: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -46,10 +55,22 @@ export function CobrancaConfigModal({ open, onOpenChange, imovel, plano }: Props
       multa_percentual: '2',
       juros_percentual: '1',
       desconto_percentual: '0',
+      iptu_mensal: '0',
+      condominio_mensal: '0',
+      outros_encargos: '0',
+      outros_encargos_descricao: '',
     },
   })
 
   const billingMode = watch('billing_mode')
+  const iptuMensal = watch('iptu_mensal')
+  const condominioMensal = watch('condominio_mensal')
+  const outrosEncargos = watch('outros_encargos')
+  const totalEncargos =
+    (Number(iptuMensal) || 0) +
+    (Number(condominioMensal) || 0) +
+    (Number(outrosEncargos) || 0)
+  const aluguelTotal = (imovel?.valor_aluguel ?? 0) + totalEncargos
 
   useEffect(() => {
     if (!open || !imovel) return
@@ -58,6 +79,10 @@ export function CobrancaConfigModal({ open, onOpenChange, imovel, plano }: Props
       multa_percentual: String(imovel.multa_percentual ?? 2),
       juros_percentual: String(imovel.juros_percentual ?? 1),
       desconto_percentual: String(imovel.desconto_percentual ?? 0),
+      iptu_mensal: imovel.iptu_mensal ? String(imovel.iptu_mensal) : '0',
+      condominio_mensal: imovel.condominio_mensal ? String(imovel.condominio_mensal) : '0',
+      outros_encargos: imovel.outros_encargos ? String(imovel.outros_encargos) : '0',
+      outros_encargos_descricao: imovel.outros_encargos_descricao ?? '',
     })
   }, [open, imovel, reset])
 
@@ -70,6 +95,10 @@ export function CobrancaConfigModal({ open, onOpenChange, imovel, plano }: Props
         multa_percentual: Number(data.multa_percentual),
         juros_percentual: Number(data.juros_percentual),
         desconto_percentual: Number(data.desconto_percentual),
+        iptu_mensal: Number(data.iptu_mensal) || 0,
+        condominio_mensal: Number(data.condominio_mensal) || 0,
+        outros_encargos: Number(data.outros_encargos) || 0,
+        outros_encargos_descricao: data.outros_encargos_descricao || null,
       })
       if (result.error) {
         toast.error(result.error)
@@ -86,7 +115,7 @@ export function CobrancaConfigModal({ open, onOpenChange, imovel, plano }: Props
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configurar cobrança — {imovel.apelido}</DialogTitle>
         </DialogHeader>
@@ -204,6 +233,53 @@ export function CobrancaConfigModal({ open, onOpenChange, imovel, plano }: Props
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Encargos extras mensais */}
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm">Encargos extras mensais</Label>
+              <p className="text-xs text-slate-400 mt-0.5">Valores que serão somados ao aluguel base na cobrança</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="iptu" className="text-xs">IPTU mensal (R$)</Label>
+                <Input id="iptu" type="number" step="0.01" min="0" placeholder="0" {...register('iptu_mensal')} />
+                {errors.iptu_mensal && <p className="text-destructive text-xs">{errors.iptu_mensal.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="condominio" className="text-xs">Condomínio (R$)</Label>
+                <Input id="condominio" type="number" step="0.01" min="0" placeholder="0" {...register('condominio_mensal')} />
+                {errors.condominio_mensal && <p className="text-destructive text-xs">{errors.condominio_mensal.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="outros" className="text-xs">Outros (R$)</Label>
+                <Input id="outros" type="number" step="0.01" min="0" placeholder="0" {...register('outros_encargos')} />
+                {errors.outros_encargos && <p className="text-destructive text-xs">{errors.outros_encargos.message}</p>}
+              </div>
+            </div>
+            {(Number(outrosEncargos) || 0) > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="outros-desc" className="text-xs">Descrição de &quot;outros&quot;</Label>
+                <Input id="outros-desc" placeholder="Ex: água, luz, IPTU rateado" {...register('outros_encargos_descricao')} />
+              </div>
+            )}
+            {totalEncargos > 0 && imovel && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Aluguel base</span>
+                  <span>R$ {imovel.valor_aluguel?.toFixed(2) ?? '0.00'}</span>
+                </div>
+                <div className="flex justify-between text-slate-600 mt-1">
+                  <span>+ Encargos</span>
+                  <span>R$ {totalEncargos.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-emerald-900 mt-1.5 pt-1.5 border-t border-emerald-200">
+                  <span>Total mensal</span>
+                  <span>R$ {aluguelTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="-mx-4 -mb-4 flex gap-2 justify-end border-t bg-muted/50 p-4 rounded-b-xl">

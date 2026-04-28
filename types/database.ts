@@ -84,6 +84,20 @@ export type Database = {
           data_fim_contrato: string | null
           contrato_indeterminado: boolean
           alerta_vencimento_enviado: boolean
+          garantia_tipo: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
+          garantia_valor: number | null
+          garantia_observacao: string | null
+          fiador_nome: string | null
+          fiador_cpf: string | null
+          fiador_telefone: string | null
+          fiador_email: string | null
+          seguro_fianca_seguradora: string | null
+          seguro_fianca_apolice: string | null
+          seguro_fianca_validade: string | null
+          iptu_mensal: number
+          condominio_mensal: number
+          outros_encargos: number
+          outros_encargos_descricao: string | null
         }
         Insert: {
           id?: string
@@ -108,6 +122,20 @@ export type Database = {
           data_fim_contrato?: string | null
           contrato_indeterminado?: boolean
           alerta_vencimento_enviado?: boolean
+          garantia_tipo?: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
+          garantia_valor?: number | null
+          garantia_observacao?: string | null
+          fiador_nome?: string | null
+          fiador_cpf?: string | null
+          fiador_telefone?: string | null
+          fiador_email?: string | null
+          seguro_fianca_seguradora?: string | null
+          seguro_fianca_apolice?: string | null
+          seguro_fianca_validade?: string | null
+          iptu_mensal?: number
+          condominio_mensal?: number
+          outros_encargos?: number
+          outros_encargos_descricao?: string | null
         }
         Update: {
           apelido?: string
@@ -130,6 +158,20 @@ export type Database = {
           data_fim_contrato?: string | null
           contrato_indeterminado?: boolean
           alerta_vencimento_enviado?: boolean
+          garantia_tipo?: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
+          garantia_valor?: number | null
+          garantia_observacao?: string | null
+          fiador_nome?: string | null
+          fiador_cpf?: string | null
+          fiador_telefone?: string | null
+          fiador_email?: string | null
+          seguro_fianca_seguradora?: string | null
+          seguro_fianca_apolice?: string | null
+          seguro_fianca_validade?: string | null
+          iptu_mensal?: number
+          condominio_mensal?: number
+          outros_encargos?: number
+          outros_encargos_descricao?: string | null
         }
         Relationships: [
           {
@@ -220,6 +262,10 @@ export type Database = {
           motivo_isencao: string | null
           lembrete_enviado_em: string | null
           recibo_reenviado_em: string | null
+          valor_aluguel_base: number | null
+          valor_iptu: number
+          valor_condominio: number
+          valor_outros_encargos: number
         }
         Insert: {
           id?: string
@@ -245,6 +291,10 @@ export type Database = {
           motivo_isencao?: string | null
           lembrete_enviado_em?: string | null
           recibo_reenviado_em?: string | null
+          valor_aluguel_base?: number | null
+          valor_iptu?: number
+          valor_condominio?: number
+          valor_outros_encargos?: number
         }
         Update: {
           inquilino_id?: string | null
@@ -267,6 +317,10 @@ export type Database = {
           motivo_isencao?: string | null
           lembrete_enviado_em?: string | null
           recibo_reenviado_em?: string | null
+          valor_aluguel_base?: number | null
+          valor_iptu?: number
+          valor_condominio?: number
+          valor_outros_encargos?: number
         }
         Relationships: [
           {

@@ -143,6 +143,10 @@ export async function configurarCobranca(
     multa_percentual: number
     juros_percentual: number
     desconto_percentual: number
+    iptu_mensal?: number
+    condominio_mensal?: number
+    outros_encargos?: number
+    outros_encargos_descricao?: string | null
   },
 ): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient()
@@ -152,6 +156,38 @@ export async function configurarCobranca(
   const { error } = await supabase
     .from('imoveis')
     .update(config)
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/imoveis')
+  return {}
+}
+
+export type GarantiaInput = {
+  garantia_tipo: 'caucao' | 'fiador' | 'seguro_fianca' | 'titulo_capitalizacao' | 'sem_garantia' | null
+  garantia_valor: number | null
+  garantia_observacao: string | null
+  fiador_nome: string | null
+  fiador_cpf: string | null
+  fiador_telefone: string | null
+  fiador_email: string | null
+  seguro_fianca_seguradora: string | null
+  seguro_fianca_apolice: string | null
+  seguro_fianca_validade: string | null
+}
+
+export async function configurarGarantia(
+  id: string,
+  input: GarantiaInput,
+): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { error } = await supabase
+    .from('imoveis')
+    .update(input)
     .eq('id', id)
     .eq('user_id', user.id)
 
