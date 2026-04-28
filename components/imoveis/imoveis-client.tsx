@@ -7,7 +7,7 @@ import {
   Plus, Building2, Home, Square, Briefcase, MapPin,
   Zap, Loader2, MoreHorizontal, LayoutGrid, List,
   CheckCircle2, Clock, AlertTriangle, Pencil, Archive, LogOut,
-  Settings2, FileText, UserPlus,
+  Settings2, FileText, UserPlus, AlertCircle, Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -44,10 +44,59 @@ const tipoIcone: Record<string, LucideIcon> = {
 }
 
 type AluguelMes = {
+  id: string
   imovel_id: string
   status: string
   data_pagamento: string | null
   data_vencimento: string
+  asaas_charge_id: string | null
+}
+
+type AluguelHistorico = {
+  imovel_id: string
+  status: string
+  mes_referencia: string
+}
+
+function formatarDataCurta(data: string): string {
+  const d = new Date(data + 'T00:00:00')
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
+    .format(d)
+    .replace('.', '')
+}
+
+function formatarCpfCurto(cpf: string | null): string {
+  if (!cpf) return ''
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return cpf
+  return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`
+}
+
+function calcularAdimplencia(historico: AluguelHistorico[]): { porcentagem: number; total: number } | null {
+  if (!historico.length) return null
+  const total = historico.length
+  const pagos = historico.filter(a => a.status === 'pago').length
+  const porcentagem = Math.round((pagos / total) * 100)
+  return { porcentagem, total }
+}
+
+/** Próxima data de vencimento — calcula a partir do dia_vencimento do imóvel */
+function proximoVencimento(diaVencimento: number): string {
+  const hoje = new Date()
+  const ano = hoje.getFullYear()
+  const mes = hoje.getMonth()
+  const dia = hoje.getDate()
+  // Se ainda não chegou no dia deste mês, é este mês. Senão, próximo mês.
+  if (dia < diaVencimento) {
+    const ultimoDia = new Date(ano, mes + 1, 0).getDate()
+    const diaAjustado = Math.min(diaVencimento, ultimoDia)
+    return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaAjustado).padStart(2, '0')}`
+  }
+  const proxAno = mes === 11 ? ano + 1 : ano
+  const proxMes = mes === 11 ? 0 : mes + 1
+  const ultimoDia = new Date(proxAno, proxMes + 1, 0).getDate()
+  const diaAjustado = Math.min(diaVencimento, ultimoDia)
+  return `${proxAno}-${String(proxMes + 1).padStart(2, '0')}-${String(diaAjustado).padStart(2, '0')}`
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -133,14 +182,15 @@ function VigenciaCardLine({ imovel, onEditar }: { imovel: Imovel; onEditar: () =
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  imoveis: Imovel[]
+  imoveis: (Imovel & { inquilinos?: { id: string; nome: string; cpf: string | null; ativo: boolean }[] })[]
   plano: PlanoTipo
   alugueisMes: AluguelMes[]
+  alugueisHistorico: AluguelHistorico[]
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
+export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }: Props) {
   const router = useRouter()
   const [open, setOpen]                         = useState(false)
   const [editando, setEditando]                 = useState<Imovel | null>(null)
@@ -165,6 +215,13 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
   const atingiuLimite = imoveis.length >= limite
 
   const aluguelMap = Object.fromEntries(alugueisMes.map(a => [a.imovel_id, a]))
+
+  // Agrupa histórico por imóvel pra calcular adimplência
+  const historicoPorImovel = alugueisHistorico.reduce<Record<string, AluguelHistorico[]>>((acc, a) => {
+    if (!acc[a.imovel_id]) acc[a.imovel_id] = []
+    acc[a.imovel_id].push(a)
+    return acc
+  }, {})
 
   function handleNovo() {
     if (atingiuLimite) { setUpgradeOpen(true); return }
@@ -266,7 +323,8 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
         /* ── Grid de cards ─────────────────────────────────────────────── */
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {imoveis.map(imovel => {
-            const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+            const inquilinoAtivo = (imovel.inquilinos as { id: string; nome: string; cpf: string | null; ativo: boolean }[] | undefined)
+              ?.find(i => i.ativo) as { id: string; nome: string; cpf: string | null; ativo: boolean } | undefined
             const ocupado        = !!inquilinoAtivo
             const TipoIcon       = tipoIcone[imovel.tipo] ?? Building2
             const aluguel        = aluguelMap[imovel.id]
@@ -379,48 +437,106 @@ export function ImoveisClient({ imoveis, plano, alugueisMes }: Props) {
                 </div>
 
                 {/* Body */}
-                <div className="px-5 pt-4 pb-3 flex-1">
-                  <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">{imovel.apelido}</p>
-                  <p className="text-xs text-[#94A3B8] truncate mt-0.5 mb-3">{imovel.endereco}</p>
-
-                  {/* Grade 2×2 de info */}
-                  <div className="grid grid-cols-2 border border-[#F1F5F9] rounded-lg overflow-hidden">
-                    {[
-                      { label: 'ALUGUEL',    value: imovel.valor_aluguel > 0 ? formatarMoeda(imovel.valor_aluguel) : '—' },
-                      { label: 'VENCIMENTO', value: imovel.valor_aluguel > 0 ? `Dia ${imovel.dia_vencimento}` : '—' },
-                      { label: 'INQUILINO',  value: inquilinoAtivo?.nome ?? '—' },
-                      { label: 'TIPO',       value: labelsTipo[imovel.tipo] ?? imovel.tipo },
-                    ].map(({ label, value }, idx) => (
-                      <div
-                        key={label}
-                        className={cn(
-                          'px-3 py-2.5',
-                          idx % 2 === 0 ? 'border-r border-[#F1F5F9]' : '',
-                          idx < 2 ? 'border-b border-[#F1F5F9]' : '',
-                        )}
-                      >
-                        <p className="text-[10px] uppercase tracking-[0.06em] text-[#94A3B8] font-medium">{label}</p>
-                        <p className="text-[13px] font-medium text-[#334155] mt-0.5 truncate">{value}</p>
-                      </div>
-                    ))}
+                <div className="px-5 pt-4 pb-3 flex-1 space-y-3">
+                  {/* Linha 1: apelido + tipo */}
+                  <div>
+                    <p className="font-bold text-[15px] text-[#0F172A] truncate leading-tight">{imovel.apelido}</p>
+                    <p className="text-xs text-[#94A3B8] truncate mt-0.5">
+                      {imovel.endereco} · {labelsTipo[imovel.tipo] ?? imovel.tipo}
+                    </p>
                   </div>
+
+                  {/* Linha 2: 3-col strip — aluguel / próximo vencimento / modo */}
+                  {imovel.valor_aluguel > 0 && (
+                    <div className="grid grid-cols-3 border border-[#F1F5F9] rounded-lg overflow-hidden">
+                      <div className="px-3 py-2.5 border-r border-[#F1F5F9]">
+                        <p className="text-[10px] uppercase tracking-[0.06em] text-[#94A3B8] font-medium">ALUGUEL</p>
+                        <p className="text-[13px] font-bold text-[#0F172A] mt-0.5 truncate">
+                          {formatarMoeda(imovel.valor_aluguel)}
+                        </p>
+                      </div>
+                      <div className="px-3 py-2.5 border-r border-[#F1F5F9]">
+                        <p className="text-[10px] uppercase tracking-[0.06em] text-[#94A3B8] font-medium">PRÓX. VENC.</p>
+                        <p className="text-[13px] font-medium text-[#334155] mt-0.5 truncate">
+                          {formatarDataCurta(proximoVencimento(imovel.dia_vencimento))}
+                        </p>
+                      </div>
+                      <div className="px-3 py-2.5">
+                        <p className="text-[10px] uppercase tracking-[0.06em] text-[#94A3B8] font-medium">MODO</p>
+                        <p className={cn(
+                          'text-[13px] font-medium mt-0.5 truncate',
+                          imovel.billing_mode === 'AUTOMATIC' ? 'text-emerald-700' : 'text-slate-700',
+                        )}>
+                          {imovel.billing_mode === 'AUTOMATIC' ? 'Asaas' : 'Manual'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Linha 3: inquilino — avatar + nome + CPF (ou alerta de pendência) */}
+                  {ocupado && inquilinoAtivo && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-semibold text-slate-600 shrink-0">
+                        {inquilinoAtivo.nome.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-[#334155] truncate">{inquilinoAtivo.nome}</p>
+                        {inquilinoAtivo.cpf ? (
+                          <p className="text-[11px] text-[#94A3B8] font-mono">{formatarCpfCurto(inquilinoAtivo.cpf)}</p>
+                        ) : imovel.billing_mode === 'AUTOMATIC' ? (
+                          <p className="text-[11px] text-red-600 font-medium flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3 shrink-0" />
+                            CPF necessário pro Asaas
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-slate-400">CPF não cadastrado</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Linha 4: vigência sempre visível quando ocupado */}
+                  {ocupado && imovel.valor_aluguel > 0 && (
+                    <VigenciaCardLine imovel={imovel} onEditar={() => handleEditarContrato(imovel)} />
+                  )}
+
+                  {/* Linha 5: adimplência (se tem histórico) */}
+                  {ocupado && (() => {
+                    const adimp = calcularAdimplencia(historicoPorImovel[imovel.id] ?? [])
+                    if (!adimp) return null
+                    const cor = adimp.porcentagem >= 90 ? 'text-emerald-600' :
+                                 adimp.porcentagem >= 70 ? 'text-amber-600' : 'text-red-600'
+                    return (
+                      <p className="text-[11px] text-slate-500">
+                        Adimplência: <span className={cn('font-semibold', cor)}>{adimp.porcentagem}%</span>
+                        {' '}<span className="text-slate-400">({adimp.total} mês{adimp.total !== 1 ? 'es' : ''})</span>
+                      </p>
+                    )
+                  })()}
                 </div>
 
                 {/* Footer */}
                 <div className="px-5 py-3 border-t border-[#F1F5F9] space-y-1.5">
                   {ocupado ? (
-                    <>
-                      <div className="flex items-center justify-between gap-2">
-                        <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusAluguelLine aluguel={aluguel} inquilinoNome={inquilinoAtivo?.nome} />
+                      {aluguel && (aluguel.status === 'pendente' || aluguel.status === 'atrasado') ? (
+                        <button
+                          onClick={() => router.push(`/alugueis?cobrar=${aluguel.id}`)}
+                          className="shrink-0 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md px-3 py-1.5 transition-colors flex items-center gap-1.5"
+                        >
+                          <Send className="h-3 w-3" />
+                          Cobrar agora
+                        </button>
+                      ) : (
                         <button
                           onClick={() => handleEditar(imovel)}
                           className="shrink-0 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md px-2.5 py-1 transition-colors flex items-center gap-1"
                         >
                           <Pencil className="h-3 w-3" />Editar
                         </button>
-                      </div>
-                      <VigenciaCardLine imovel={imovel} onEditar={() => handleEditarContrato(imovel)} />
-                    </>
+                      )}
+                    </div>
                   ) : (
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-slate-400 italic">Sem inquilino vinculado</span>

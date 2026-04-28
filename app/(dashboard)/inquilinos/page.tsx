@@ -9,11 +9,13 @@ export default async function InquilinosPage() {
 
   const agora = new Date()
   const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`
+  const mesInicioHistorico = new Date(agora.getFullYear(), agora.getMonth() - 5, 1)
+    .toISOString().slice(0, 10)
 
-  const [{ data: inquilinos }, { data: imoveis }, { data: alugueisMes }] = await Promise.all([
+  const [{ data: inquilinos }, { data: imoveis }, { data: alugueisMes }, { data: alugueisHistorico }] = await Promise.all([
     supabase
       .from('inquilinos')
-      .select('*, imovel:imoveis(id, apelido, valor_aluguel)')
+      .select('*, imovel:imoveis(id, apelido, valor_aluguel, billing_mode, data_inicio_contrato, data_fim_contrato, contrato_indeterminado)')
       .eq('user_id', user.id)
       .order('criado_em', { ascending: false }),
 
@@ -30,6 +32,14 @@ export default async function InquilinosPage() {
       .gte('mes_referencia', mesAtual)
       .lte('mes_referencia', mesAtual.slice(0, 7) + '-31')
       .not('inquilino_id', 'is', null),
+
+    supabase
+      .from('alugueis')
+      .select('inquilino_id, status, mes_referencia')
+      .gte('mes_referencia', mesInicioHistorico)
+      .lt('mes_referencia', mesAtual)
+      .not('inquilino_id', 'is', null)
+      .order('mes_referencia', { ascending: false }),
   ])
 
   // Imóveis sem inquilino ativo
@@ -43,10 +53,19 @@ export default async function InquilinosPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <InquilinosClient
-        inquilinos={(inquilinos ?? []) as (Inquilino & { imovel?: { id: string; apelido: string; valor_aluguel?: number } | null })[]}
+        inquilinos={(inquilinos ?? []) as (Inquilino & {
+          imovel?: {
+            id: string; apelido: string; valor_aluguel?: number;
+            billing_mode?: 'MANUAL' | 'AUTOMATIC' | null;
+            data_inicio_contrato?: string | null;
+            data_fim_contrato?: string | null;
+            contrato_indeterminado?: boolean;
+          } | null
+        })[]}
         imoveis={(imoveis ?? []).map(im => ({ id: im.id, apelido: im.apelido }))}
         imoveisVagos={imoveisVagos}
         alugueisMes={(alugueisMes ?? []) as { inquilino_id: string; status: string; data_pagamento: string | null; data_vencimento: string }[]}
+        alugueisHistorico={(alugueisHistorico ?? []) as { inquilino_id: string; status: string; mes_referencia: string }[]}
       />
     </div>
   )

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Users, Pencil, UserX, Phone, Building2,
   Search, MoreHorizontal, CheckCircle2, Clock, AlertTriangle, Paperclip,
-  Mail, ShieldOff,
+  Mail, ShieldOff, IdCard, AlertCircle, CalendarDays,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -31,7 +31,15 @@ type ImovelOpcao = { id: string; apelido: string }
 type ImovelVago  = { id: string; apelido: string }
 
 type InquilinoRich = Inquilino & {
-  imovel?: { id: string; apelido: string; valor_aluguel?: number } | null
+  imovel?: {
+    id: string
+    apelido: string
+    valor_aluguel?: number
+    billing_mode?: 'MANUAL' | 'AUTOMATIC' | null
+    data_inicio_contrato?: string | null
+    data_fim_contrato?: string | null
+    contrato_indeterminado?: boolean
+  } | null
 }
 
 type AluguelMes = {
@@ -39,6 +47,40 @@ type AluguelMes = {
   status: string
   data_pagamento: string | null
   data_vencimento: string
+}
+
+type AluguelHistorico = {
+  inquilino_id: string
+  status: string
+  mes_referencia: string
+}
+
+function formatarCpf(cpf: string | null): string {
+  if (!cpf) return ''
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return cpf
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`
+}
+
+function calcularAdimplencia(historico: AluguelHistorico[]): { porcentagem: number; total: number } | null {
+  if (!historico.length) return null
+  const total = historico.length
+  const pagos = historico.filter(a => a.status === 'pago').length
+  return { porcentagem: Math.round((pagos / total) * 100), total }
+}
+
+function vigenciaContratoLabel(imovel: NonNullable<InquilinoRich['imovel']>): string | null {
+  if (imovel.contrato_indeterminado) return 'Sem prazo definido'
+  if (!imovel.data_fim_contrato) return null
+  const fim = new Date(imovel.data_fim_contrato + 'T00:00:00')
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+  const dias = Math.round((fim.getTime() - hoje.getTime()) / 86_400_000)
+  const dataFormatada = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+    .format(fim).replace('.', '')
+  if (dias < 0) return `Vencido em ${dataFormatada}`
+  if (dias <= 60) return `Até ${dataFormatada} · ${dias}d`
+  const meses = Math.round(dias / 30)
+  return `Até ${dataFormatada} · ${meses} meses`
 }
 
 // ─── Helpers de avatar ────────────────────────────────────────────────────────
@@ -107,9 +149,10 @@ interface Props {
   imoveis: ImovelOpcao[]
   imoveisVagos: ImovelVago[]
   alugueisMes: AluguelMes[]
+  alugueisHistorico: AluguelHistorico[]
 }
 
-export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMes }: Props) {
+export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMes, alugueisHistorico }: Props) {
   const router = useRouter()
   const [open, setOpen]         = useState(false)
   const [editando, setEditando] = useState<Inquilino | null>(null)
@@ -121,6 +164,12 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
   const aluguelMap = Object.fromEntries(
     alugueisMes.map(a => [a.inquilino_id, a])
   )
+
+  const historicoPorInquilino = alugueisHistorico.reduce<Record<string, AluguelHistorico[]>>((acc, a) => {
+    if (!acc[a.inquilino_id]) acc[a.inquilino_id] = []
+    acc[a.inquilino_id].push(a)
+    return acc
+  }, {})
 
   const ativos   = inquilinos.filter(i => i.ativo)
   const inativos = inquilinos.filter(i => !i.ativo)
@@ -299,14 +348,30 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                 {/* ── Linha divisória ──────────────────────────────── */}
                 <div className="h-px bg-[#F1F5F9] mx-5" />
 
-                {/* ── Detalhes: telefone + imóvel ──────────────────── */}
+                {/* ── Detalhes: CPF + telefone + imóvel + vigência ─── */}
                 <div className="px-5 py-3 space-y-2">
+                  {/* CPF — destaque ou alerta */}
+                  <div className="flex items-center gap-2 text-xs">
+                    <IdCard className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
+                    {inquilino.cpf ? (
+                      <span className="font-mono text-[#475569]">{formatarCpf(inquilino.cpf)}</span>
+                    ) : imovel?.billing_mode === 'AUTOMATIC' ? (
+                      <span className="text-red-600 font-medium flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        CPF necessário pro Asaas
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">CPF não cadastrado</span>
+                    )}
+                  </div>
+
                   {inquilino.telefone && (
                     <div className="flex items-center gap-2 text-xs text-[#475569]">
                       <Phone className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
                       {formatarTelefone(inquilino.telefone)}
                     </div>
                   )}
+
                   {imovel && (
                     <div className="flex items-center gap-2 text-xs">
                       <Building2 className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
@@ -322,8 +387,47 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                           <span className="text-[#64748B]">{formatarMoeda(imovel.valor_aluguel)}/mês</span>
                         </>
                       )}
+                      {imovel.billing_mode && (
+                        <>
+                          <span className="text-[#CBD5E1]">·</span>
+                          <span className={cn(
+                            'text-[10px] font-medium px-1.5 py-0.5 rounded',
+                            imovel.billing_mode === 'AUTOMATIC'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600',
+                          )}>
+                            {imovel.billing_mode === 'AUTOMATIC' ? 'Asaas' : 'Manual'}
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
+
+                  {/* Vigência do contrato */}
+                  {imovel && (() => {
+                    const label = vigenciaContratoLabel(imovel)
+                    if (!label) return null
+                    return (
+                      <div className="flex items-center gap-2 text-xs text-[#64748B]">
+                        <CalendarDays className="h-3.5 w-3.5 text-[#94A3B8] shrink-0" />
+                        {label}
+                      </div>
+                    )
+                  })()}
+
+                  {/* Adimplência (últimos 6 meses) */}
+                  {(() => {
+                    const adimp = calcularAdimplencia(historicoPorInquilino[inquilino.id] ?? [])
+                    if (!adimp) return null
+                    const cor = adimp.porcentagem >= 90 ? 'text-emerald-600' :
+                                 adimp.porcentagem >= 70 ? 'text-amber-600' : 'text-red-600'
+                    return (
+                      <p className="text-[11px] text-slate-500">
+                        Adimplência: <span className={cn('font-semibold', cor)}>{adimp.porcentagem}%</span>
+                        {' '}<span className="text-slate-400">({adimp.total} mês{adimp.total !== 1 ? 'es' : ''})</span>
+                      </p>
+                    )
+                  })()}
                 </div>
 
                 {/* ── Linha divisória ──────────────────────────────── */}

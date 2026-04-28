@@ -10,11 +10,14 @@ export default async function ImoveisPage() {
 
   const agora = new Date()
   const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`
+  // 6 meses pra trás pra calcular adimplência/histórico no card
+  const mesInicioHistorico = new Date(agora.getFullYear(), agora.getMonth() - 5, 1)
+    .toISOString().slice(0, 10)
 
-  const [{ data }, { data: profile }, { data: alugueisMes }] = await Promise.all([
+  const [{ data }, { data: profile }, { data: alugueisMes }, { data: alugueisHistorico }] = await Promise.all([
     supabase
       .from('imoveis')
-      .select('*, inquilinos(id, nome, ativo)')
+      .select('*, inquilinos(id, nome, cpf, ativo)')
       .eq('user_id', user.id)
       .eq('ativo', true)
       .order('criado_em', { ascending: false }),
@@ -27,9 +30,16 @@ export default async function ImoveisPage() {
 
     supabase
       .from('alugueis')
-      .select('imovel_id, status, data_pagamento, data_vencimento')
+      .select('id, imovel_id, status, data_pagamento, data_vencimento, asaas_charge_id')
       .gte('mes_referencia', mesAtual)
       .lte('mes_referencia', mesAtual.slice(0, 7) + '-31'),
+
+    supabase
+      .from('alugueis')
+      .select('imovel_id, status, mes_referencia')
+      .gte('mes_referencia', mesInicioHistorico)
+      .lt('mes_referencia', mesAtual)
+      .order('mes_referencia', { ascending: false }),
   ])
 
   const plano = (profile?.role === 'admin' ? 'elite' : profile?.plano ?? 'gratis') as PlanoTipo
@@ -37,9 +47,10 @@ export default async function ImoveisPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <ImoveisClient
-        imoveis={(data ?? []) as Imovel[]}
+        imoveis={(data ?? []) as unknown as (Imovel & { inquilinos?: { id: string; nome: string; cpf: string | null; ativo: boolean }[] })[]}
         plano={plano}
-        alugueisMes={(alugueisMes ?? []) as { imovel_id: string; status: string; data_pagamento: string | null; data_vencimento: string }[]}
+        alugueisMes={(alugueisMes ?? []) as { id: string; imovel_id: string; status: string; data_pagamento: string | null; data_vencimento: string; asaas_charge_id: string | null }[]}
+        alugueisHistorico={(alugueisHistorico ?? []) as { imovel_id: string; status: string; mes_referencia: string }[]}
       />
     </div>
   )
