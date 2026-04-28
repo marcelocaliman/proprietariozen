@@ -20,6 +20,7 @@ import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-mo
 import { RenovarContratoModal } from '@/components/imoveis/renovar-contrato-modal'
 import { ImovelModal } from '@/components/imoveis/imovel-modal'
 import { TimelineImovel } from '@/components/imoveis/timeline-imovel'
+import { DocumentosImovel } from '@/components/documentos/DocumentosImovel'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Imovel, GarantiaTipo } from '@/types'
 import type { TimelineEvento } from '@/lib/timeline'
@@ -310,6 +311,7 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
           <TabsTrigger value="pagamentos" className="text-slate-600 data-[selected]:text-slate-900">Pagamentos ({alugueis.length})</TabsTrigger>
           <TabsTrigger value="inquilino" className="text-slate-600 data-[selected]:text-slate-900">Inquilino</TabsTrigger>
           <TabsTrigger value="garantia" className="text-slate-600 data-[selected]:text-slate-900">Garantia</TabsTrigger>
+          <TabsTrigger value="documentos" className="text-slate-600 data-[selected]:text-slate-900">Documentos</TabsTrigger>
           <TabsTrigger value="historico" className="text-slate-600 data-[selected]:text-slate-900">Histórico</TabsTrigger>
           <TabsTrigger value="config" className="text-slate-600 data-[selected]:text-slate-900">Configuração</TabsTrigger>
         </TabsList>
@@ -623,6 +625,11 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Documentos ── */}
+        <TabsContent value="documentos">
+          <DocumentosImovel imovelId={imovel.id} />
         </TabsContent>
 
         {/* ── Histórico (timeline) ── */}

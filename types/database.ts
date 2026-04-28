@@ -479,6 +479,40 @@ export type Database = {
           }
         ]
       }
+      documentos_imovel: {
+        Row: {
+          id: string
+          user_id: string
+          imovel_id: string
+          tipo: 'contrato' | 'escritura' | 'planta' | 'iptu' | 'foto' | 'vistoria' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao: string | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          imovel_id: string
+          tipo: 'contrato' | 'escritura' | 'planta' | 'iptu' | 'foto' | 'vistoria' | 'outro'
+          nome_arquivo: string
+          tamanho_bytes: number
+          mime_type: string
+          storage_path: string
+          descricao?: string | null
+        }
+        Update: {
+          tipo?: 'contrato' | 'escritura' | 'planta' | 'iptu' | 'foto' | 'vistoria' | 'outro'
+          nome_arquivo?: string
+          tamanho_bytes?: number
+          mime_type?: string
+          storage_path?: string
+          descricao?: string | null
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           id: string
