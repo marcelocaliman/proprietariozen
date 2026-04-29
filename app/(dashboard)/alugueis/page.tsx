@@ -75,7 +75,7 @@ export default async function AlugueisPage({
   const pix_key_tipo = (user.user_metadata?.pix_key_tipo as string | null) ?? null
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
       <AlugueisClient
         alugueis={(alugueis ?? []) as unknown as AluguelItem[]}
         mesSelecionado={mesParam}

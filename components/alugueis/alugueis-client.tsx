@@ -674,22 +674,31 @@ export function AlugueisClient({
   return (
     <>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Aluguéis</h1>
-          <p className="text-sm text-[#475569] mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0">
+          <p className="text-sm text-slate-500 font-medium flex flex-wrap items-center gap-x-1.5 gap-y-0">
             <span>{listaAlugueis.length} registro{listaAlugueis.length !== 1 ? 's' : ''}</span>
             <span className="text-slate-300">·</span>
-            <span className="text-emerald-600 font-medium">{qtdPago} pago{qtdPago !== 1 ? 's' : ''}</span>
-            <span className="text-slate-300">·</span>
-            <span className="text-amber-600 font-medium">{qtdPendente} pendente{qtdPendente !== 1 ? 's' : ''}</span>
+            <span className="text-emerald-600 font-semibold">{qtdPago} pago{qtdPago !== 1 ? 's' : ''}</span>
+            {qtdPendente > 0 && (
+              <>
+                <span className="text-slate-300">·</span>
+                <span className="text-amber-600 font-semibold">{qtdPendente} pendente{qtdPendente !== 1 ? 's' : ''}</span>
+              </>
+            )}
             {qtdAtrasado > 0 && (
               <>
                 <span className="text-slate-300">·</span>
-                <span className="text-red-600 font-medium">{qtdAtrasado} em atraso</span>
+                <span className="text-red-600 font-semibold">{qtdAtrasado} em atraso</span>
               </>
             )}
           </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            Aluguéis
+          </h1>
         </div>
 
         {/* Right controls: cobrar todos + month nav + filter + view toggle */}
@@ -836,40 +845,89 @@ export function AlugueisClient({
         </TabsList>
       </Tabs>
 
-      {/* Cards de resumo */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          titulo="Recebido"
-          valor={formatarMoeda(totalPago)}
-          descricao={`${qtdPago} pago${qtdPago !== 1 ? 's' : ''}`}
-          icon={CheckCircle2}
-          cor="verde"
-        />
-        <StatCard
-          titulo="Pendente"
-          valor={formatarMoeda(totalPendente)}
-          descricao={`${qtdPendente} aguardando`}
-          icon={Clock}
-          cor="amarelo"
-          todoEmDia={totalPendente === 0}
-          zeroText="Nenhum pendente"
-        />
-        <StatCard
-          titulo="Em atraso"
-          valor={formatarMoeda(totalAtrasado)}
-          descricao={`${qtdAtrasado} em atraso`}
-          icon={AlertCircle}
-          cor="vermelho"
-          todoEmDia={totalAtrasado === 0}
-          zeroText="Nenhum em atraso"
-        />
-        <StatCard
-          titulo="Total mês"
-          valor={formatarMoeda(totalPago + totalPendente + totalAtrasado)}
-          descricao={`${listaAlugueis.length} imóve${listaAlugueis.length !== 1 ? 'is' : 'l'}`}
-          icon={TrendingUp}
-          cor="padrao"
-        />
+      {/* ── Stats hero ── */}
+      <div className="grid gap-4 lg:grid-cols-7">
+        {/* Hero — Recebido este mês */}
+        <div
+          className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+          style={{
+            background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+            boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+          }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+          <div className="relative z-10">
+            <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+              Recebido em {labelMes(mesSelecionado).toLowerCase()}
+            </p>
+            <p
+              className="font-extrabold leading-none mt-2"
+              style={{
+                fontSize: 'clamp(36px, 4.5vw, 52px)',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {formatarMoeda(totalPago)}
+            </p>
+          </div>
+          <div className="relative z-10 mt-5">
+            <div className="flex justify-between text-[11px] text-emerald-200/80 mb-1.5">
+              <span>
+                {(() => {
+                  const total = totalPago + totalPendente + totalAtrasado
+                  return total > 0 ? `${Math.round((totalPago / total) * 100)}% do mês recebido` : 'sem cobranças'
+                })()}
+              </span>
+              <span>{qtdPago}/{listaAlugueis.length} pago{qtdPago !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${(() => {
+                    const total = totalPago + totalPendente + totalAtrasado
+                    return total > 0 ? Math.round((totalPago / total) * 100) : 0
+                  })()}%`,
+                  background: 'linear-gradient(90deg, #34D399, #6EE7B7)',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Stats secundários */}
+        <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            titulo="Pendente"
+            valor={formatarMoeda(totalPendente)}
+            descricao={`${qtdPendente} aguardando`}
+            icon={Clock}
+            cor="amarelo"
+            todoEmDia={totalPendente === 0}
+            zeroText="Nenhum pendente"
+          />
+          <StatCard
+            titulo="Em atraso"
+            valor={formatarMoeda(totalAtrasado)}
+            descricao={`${qtdAtrasado} em atraso`}
+            icon={AlertCircle}
+            cor="vermelho"
+            todoEmDia={totalAtrasado === 0}
+            zeroText="Nenhum em atraso"
+          />
+          <StatCard
+            titulo="Total mês"
+            valor={formatarMoeda(totalPago + totalPendente + totalAtrasado)}
+            descricao={`${listaAlugueis.length} ${listaAlugueis.length !== 1 ? 'imóveis' : 'imóvel'}`}
+            icon={TrendingUp}
+            cor="padrao"
+          />
+        </div>
       </div>
 
       {/* Banner de orientação — primeira vez na página, sem nenhuma cobrança enviada */}
@@ -906,7 +964,7 @@ export function AlugueisClient({
 
       {/* Table card */}
       {listaAlugueis.length === 0 ? (
-        <Card>
+        <Card className="rounded-2xl border-slate-100 shadow-sm">
           <CardContent className="p-0">
             {(() => {
               const hoje = new Date()
@@ -1013,7 +1071,7 @@ export function AlugueisClient({
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden rounded-2xl border-slate-100 shadow-sm">
           {/* Table header */}
           <div className="hidden md:grid grid-cols-[36px_2fr_1.5fr_100px_80px_130px_90px_120px] gap-3 px-5 items-center bg-slate-50 border-b border-slate-100 h-10">
             <div className="flex items-center justify-center">
