@@ -45,7 +45,7 @@ export default async function ImoveisPage() {
   const plano = (profile?.role === 'admin' ? 'elite' : profile?.plano ?? 'gratis') as PlanoTipo
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
       <ImoveisClient
         imoveis={(data ?? []) as unknown as (Imovel & { inquilinos?: { id: string; nome: string; cpf: string | null; ativo: boolean }[] })[]}
         plano={plano}

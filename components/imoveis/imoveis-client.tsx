@@ -225,6 +225,23 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
     return acc
   }, {})
 
+  // ── Stats hero ──
+  const ocupados = imoveis.filter(im => {
+    const inqs = (im.inquilinos as { ativo: boolean }[] | undefined) ?? []
+    return inqs.some(i => i.ativo)
+  }).length
+  const vagos = imoveis.length - ocupados
+  const pctOcupacao = imoveis.length > 0 ? Math.round((ocupados / imoveis.length) * 100) : 0
+  const receitaEsperada = imoveis.reduce((s, im) => {
+    const inqs = (im.inquilinos as { ativo: boolean }[] | undefined) ?? []
+    if (!inqs.some(i => i.ativo)) return s
+    const base = im.valor_aluguel ?? 0
+    const iptu = im.iptu_mensal ?? 0
+    const cond = im.condominio_mensal ?? 0
+    const outros = im.outros_encargos ?? 0
+    return s + base + iptu + cond + outros
+  }, 0)
+
   function handleNovo() {
     if (atingiuLimite) { setUpgradeOpen(true); return }
     setEditando(null); setOpen(true)
@@ -252,50 +269,163 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
   return (
     <>
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
+      {/* ── Header ── */}
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Imóveis</h1>
-          <p className="text-sm text-[#475569] mt-0.5">
-            {imoveis.length} de {limite} imóve{imoveis.length !== 1 ? 'is' : 'l'} · plano {LIMITES_PLANO[plano].nome}
+          <p className="text-sm text-slate-500 font-medium">
+            {imoveis.length} de {limite} {imoveis.length === 1 ? 'imóvel' : 'imóveis'} · plano {LIMITES_PLANO[plano].nome}
           </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            Seus imóveis
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {/* Toggle grid / lista */}
-          <div className="flex items-center rounded-lg border border-[#E2E8F0] bg-white p-0.5">
+          <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             <button
               onClick={() => toggleView('grid')}
               className={cn(
-                'flex items-center justify-center h-7 w-7 rounded-md transition-colors',
-                view === 'grid' ? 'bg-[#0F172A] text-white' : 'text-[#94A3B8] hover:text-[#475569]',
+                'flex items-center justify-center h-8 w-8 rounded-lg transition-colors',
+                view === 'grid' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-700',
               )}
               title="Grade"
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
+              <LayoutGrid className="h-4 w-4" />
             </button>
             <button
               onClick={() => toggleView('list')}
               className={cn(
-                'flex items-center justify-center h-7 w-7 rounded-md transition-colors',
-                view === 'list' ? 'bg-[#0F172A] text-white' : 'text-[#94A3B8] hover:text-[#475569]',
+                'flex items-center justify-center h-8 w-8 rounded-lg transition-colors',
+                view === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-700',
               )}
               title="Lista"
             >
-              <List className="h-3.5 w-3.5" />
+              <List className="h-4 w-4" />
             </button>
           </div>
-          <Button onClick={handleNovo} className="gap-2 bg-[#059669] hover:bg-[#047857]">
+          <Button onClick={handleNovo} className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm h-10">
             <Plus className="h-4 w-4" />
             Novo imóvel
           </Button>
         </div>
       </div>
 
-      {/* ── Banner plano Grátis ───────────────────────────────────────────── */}
+      {/* ── Stats hero ── */}
+      {imoveis.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-7">
+          {/* Hero — Receita esperada do mês */}
+          <div
+            className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+            style={{
+              background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+              boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+            }}
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+            <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+            <div className="relative z-10">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+                Receita esperada deste mês
+              </p>
+              <p
+                className="font-extrabold leading-none mt-2"
+                style={{
+                  fontSize: 'clamp(36px, 4.5vw, 52px)',
+                  background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                {formatarMoeda(receitaEsperada)}
+              </p>
+            </div>
+            <div className="relative z-10 mt-5">
+              <div className="flex justify-between text-[11px] text-emerald-200/80 mb-1.5">
+                <span>{pctOcupacao}% de ocupação</span>
+                <span>{ocupados}/{imoveis.length} ocupados</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${pctOcupacao}%`,
+                    background: 'linear-gradient(90deg, #34D399, #6EE7B7)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Stats secundários */}
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Total</p>
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Building2 className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {imoveis.length}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {imoveis.length === 1 ? 'imóvel ativo' : 'imóveis ativos'}
+                </p>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Ocupados</p>
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                  <UserPlus className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {ocupados}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {pctOcupacao}% de ocupação
+                </p>
+              </div>
+            </div>
+            <div className={cn(
+              'rounded-2xl border py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all',
+              vagos > 0 ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-slate-100',
+            )}>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Vagos</p>
+                <div className={cn(
+                  'h-9 w-9 rounded-xl flex items-center justify-center shrink-0',
+                  vagos > 0 ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-100 text-slate-400',
+                )}>
+                  <AlertCircle className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {vagos}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {vagos === 0 ? 'todos ocupados' : `aguardando inquilino`}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Banner plano Grátis ── */}
       {plano === 'gratis' && imoveis.length > 0 && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-sm text-amber-700">
-            Plano Grátis: {imoveis.length}/{limite} imóvel usado. Faça upgrade para cadastrar mais imóveis.
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm">
+          <p className="text-sm text-amber-800 font-medium">
+            <strong>Plano Grátis:</strong> {imoveis.length}/{limite} {imoveis.length === 1 ? 'imóvel usado' : 'imóveis usados'}. Faça upgrade para cadastrar mais.
           </p>
           <Button size="sm" className="shrink-0 bg-amber-500 hover:bg-amber-600 gap-1.5 text-white" onClick={() => router.push('/planos')}>
             <Zap className="h-3.5 w-3.5" />Fazer upgrade
@@ -338,7 +468,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                 role="button"
                 tabIndex={0}
                 onKeyDown={e => { if (e.key === 'Enter') router.push(`/imoveis/${imovel.id}`) }}
-                className="bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
 
                 {/* Header colorido — verde para ocupado, slate para vago */}
@@ -575,7 +705,7 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
       ) : (
         /* ── Modo lista ────────────────────────────────────────────────── */
-        <div className="rounded-xl border border-[#E2E8F0] overflow-hidden bg-white">
+        <div className="rounded-2xl border border-slate-100 overflow-hidden bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-[#E2E8F0]">
               <tr>
