@@ -348,67 +348,134 @@ export default async function DashboardPage({
   const vencimentosVisiveis = (proximosVencimentos ?? []).slice(0, 3)
   const temMaisVencimentos = (proximosVencimentos?.length ?? 0) > 3
 
+  // Indicadores secundários para o hero
+  const pctRecebido = (totalReceber + totalRecebido + totalAtrasado) > 0
+    ? Math.round((totalRecebido / (totalReceber + totalRecebido + totalAtrasado)) * 100)
+    : 0
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Cabeçalho */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
+      {/* ── HEADER ── */}
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Dashboard</h1>
-          <p className="text-sm text-[#475569] mt-0.5">
-            {saudacao}{primeiroNome ? `, ${primeiroNome}` : ''} — Resumo de {labelMesCap}
+          <p className="text-sm text-slate-500 font-medium">
+            {saudacao}{primeiroNome ? `, ${primeiroNome}` : ''}
           </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            {labelMesCap}
+          </h1>
         </div>
         <MonthSelector value={selectedMesKey} />
       </div>
 
-      {/* Pendências que travam cobrança */}
+      {/* ── HEALTH ── */}
       <CobrancaHealthCard issues={pendenciasCobranca} />
 
-      {/* Cards de resumo */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          titulo="A receber"
-          valor={formatarMoeda(totalReceber)}
-          descricao={totalReceber === 0 ? 'tudo recebido' : `${qtdPendentes + qtdAtrasados} pendente${qtdPendentes + qtdAtrasados !== 1 ? 's' : ''}`}
-          icon={TrendingUp}
-          cor="padrao"
-          todoEmDia={totalReceber === 0}
-          zeroText="Tudo recebido"
-          tendencia={trendReceber}
-        />
-        <StatCard
-          titulo="Recebido"
-          valor={formatarMoeda(totalRecebido)}
-          descricao={`${qtdPagos} pagamento${qtdPagos !== 1 ? 's' : ''}`}
-          icon={CheckCircle}
-          cor="verde"
-          tendencia={trendRecebido}
-        />
-        <StatCard
-          titulo="Em atraso"
-          valor={formatarMoeda(totalAtrasado)}
-          descricao={`${qtdAtrasados} pagamento${qtdAtrasados !== 1 ? 's' : ''}`}
-          icon={AlertCircle}
-          cor="vermelho"
-          todoEmDia={totalAtrasado === 0}
-          tendencia={trendAtrasado}
-        />
-        <StatCard
-          titulo="Imóveis ativos"
-          valor={String(qtdImoveisAtivos)}
-          descricao="cadastrados e ativos"
-          icon={Building2}
-          cor="padrao"
-        />
+      {/* ── HERO METRIC + STATS ── */}
+      <div className="grid gap-4 lg:grid-cols-7">
+        {/* Hero — Recebido em destaque */}
+        <div
+          className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[200px]"
+          style={{
+            background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+            boxShadow: '0 8px 32px rgba(5, 150, 105, 0.25)',
+          }}
+        >
+          {/* Glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+                Recebido este mês
+              </p>
+              {trendRecebido && (
+                <div className={cn(
+                  'inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full',
+                  trendRecebido.positivo ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200',
+                )}>
+                  {trendRecebido.positivo ? <TrendingUp className="h-3 w-3" /> : null}
+                  {trendRecebido.positivo ? '+' : '−'}{trendRecebido.percentual}%
+                </div>
+              )}
+            </div>
+            <p
+              className="font-extrabold leading-none mt-1"
+              style={{
+                fontSize: 'clamp(36px, 4.5vw, 56px)',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {formatarMoeda(totalRecebido)}
+            </p>
+          </div>
+
+          <div className="relative z-10 mt-5 space-y-3">
+            {/* Progress bar */}
+            <div>
+              <div className="flex justify-between text-[11px] text-emerald-200/80 mb-1.5">
+                <span>{pctRecebido}% do esperado</span>
+                <span>{qtdPagos} pago{qtdPagos !== 1 ? 's' : ''}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${pctRecebido}%`,
+                    background: 'linear-gradient(90deg, #34D399, #6EE7B7)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats secundários */}
+        <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            titulo="A receber"
+            valor={formatarMoeda(totalReceber)}
+            descricao={totalReceber === 0 ? 'tudo recebido' : `${qtdPendentes + qtdAtrasados} pendente${qtdPendentes + qtdAtrasados !== 1 ? 's' : ''}`}
+            icon={TrendingUp}
+            cor="padrao"
+            todoEmDia={totalReceber === 0}
+            zeroText="Tudo recebido"
+            tendencia={trendReceber}
+          />
+          <StatCard
+            titulo="Em atraso"
+            valor={formatarMoeda(totalAtrasado)}
+            descricao={`${qtdAtrasados} pagamento${qtdAtrasados !== 1 ? 's' : ''}`}
+            icon={AlertCircle}
+            cor="vermelho"
+            todoEmDia={totalAtrasado === 0}
+            tendencia={trendAtrasado}
+          />
+          <StatCard
+            titulo="Imóveis ativos"
+            valor={String(qtdImoveisAtivos)}
+            descricao="cadastrados e ativos"
+            icon={Building2}
+            cor="padrao"
+          />
+        </div>
       </div>
 
-      {/* Layout 60/40 */}
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto] xl:grid-cols-[3fr_2fr]">
+      {/* ── MAIN 2-COL ── */}
+      <div className="grid gap-5 lg:grid-cols-[1.7fr_1fr]">
         {/* Coluna esquerda — Aluguéis do mês */}
-        <Card className="flex flex-col">
-          <CardHeader className="pb-0 pt-4 px-5">
-            <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
-              <Banknote className="h-4 w-4" />Aluguéis do mês
+        <Card className="flex flex-col rounded-2xl border-slate-100 shadow-sm">
+          <CardHeader className="pb-0 pt-5 px-6">
+            <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-emerald-600" />Aluguéis do mês
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 mt-2 flex-1">
@@ -488,12 +555,12 @@ export default async function DashboardPage({
         </Card>
 
         {/* Coluna direita — empilhada */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           {/* Próximos vencimentos */}
           <Card>
-            <CardHeader className="pb-0 pt-4 px-5">
-              <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
-                <Calendar className="h-4 w-4" />Próximos 7 dias
+            <CardHeader className="pb-0 pt-5 px-6">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-emerald-600" />Próximos 7 dias
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 mt-2">
@@ -550,10 +617,10 @@ export default async function DashboardPage({
           </Card>
 
           {/* Atividade recente */}
-          <Card>
-            <CardHeader className="pb-0 pt-4 px-5">
-              <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
-                <Activity className="h-4 w-4" />Atividade recente
+          <Card className="rounded-2xl border-slate-100 shadow-sm">
+            <CardHeader className="pb-0 pt-5 px-6">
+              <CardTitle className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="h-4 w-4 text-emerald-600" />Atividade recente
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 mt-2">
@@ -597,10 +664,10 @@ export default async function DashboardPage({
 
           {/* Contratos próximos do vencimento */}
           {(contratosVencendo?.length ?? 0) > 0 && (
-            <Card>
-              <CardHeader className="pb-0 pt-4 px-5">
-                <CardTitle className="text-sm font-semibold text-[#94A3B8] uppercase tracking-wider flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-amber-500" />Contratos vencendo
+            <Card className="rounded-2xl border-amber-200 bg-amber-50/30 shadow-sm">
+              <CardHeader className="pb-0 pt-5 px-6">
+                <CardTitle className="text-[11px] font-bold text-amber-700 uppercase tracking-widest flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-amber-600" />Contratos vencendo
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0 mt-2">
@@ -638,44 +705,91 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* Cobranças previstas — próximos 2 meses */}
+      {/* ── GRÁFICO DE RECEITA ── full width, em destaque */}
+      <Card className="rounded-2xl border-slate-100 shadow-sm overflow-hidden">
+        <CardHeader className="pt-6 px-7 pb-2">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <CardTitle
+                className="font-bold text-slate-900"
+                style={{ letterSpacing: '-0.015em', fontSize: 'clamp(20px, 2vw, 26px)' }}
+              >
+                Receita dos últimos 6 meses
+              </CardTitle>
+              <p className="text-sm text-slate-500 mt-1">Total recebido por mês</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-slate-400">Acumulado</p>
+              <p
+                className="font-extrabold leading-none mt-1"
+                style={{
+                  fontSize: 'clamp(22px, 2.5vw, 32px)',
+                  background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {formatarMoeda(chartData.reduce((s, d) => s + d.total, 0))}
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-7 pb-6 pt-3">
+          <RevenueChart data={chartData} />
+        </CardContent>
+      </Card>
+
+      {/* ── COBRANÇAS PREVISTAS — próximos 2 meses ── */}
       {proximasCobrancas.length > 0 && (
-        <Card>
-          <CardHeader className="pt-5 px-6 pb-2">
+        <Card className="rounded-2xl border-slate-100 shadow-sm">
+          <CardHeader className="pt-6 px-7 pb-2">
             <div className="flex items-baseline justify-between gap-4">
               <div>
-                <CardTitle className="text-base font-semibold text-[#0F172A]">Cobranças previstas</CardTitle>
-                <p className="text-xs text-slate-400 mt-0.5">Previsão calculada a partir dos imóveis ativos</p>
+                <CardTitle
+                  className="font-bold text-slate-900"
+                  style={{ letterSpacing: '-0.015em', fontSize: 'clamp(20px, 2vw, 26px)' }}
+                >
+                  Cobranças previstas
+                </CardTitle>
+                <p className="text-sm text-slate-500 mt-1">Previsão calculada a partir dos imóveis ativos</p>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-6 pb-5 pt-2">
+          <CardContent className="px-7 pb-6 pt-3">
             <div className="grid gap-4 sm:grid-cols-2">
               {proximasCobrancas.map(m => (
                 <Link
                   key={m.mes}
                   href={`/alugueis?mes=${m.mes}`}
-                  className="rounded-xl border border-slate-100 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-100 transition-colors p-4 block group"
+                  className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white hover:from-emerald-50 hover:to-white hover:border-emerald-200 transition-all p-5 block group hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700">{m.mesLabel}</span>
-                    <span className="text-sm font-bold text-slate-800 group-hover:text-emerald-700">{formatarMoeda(m.total)}</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-semibold text-slate-400">Próximo mês</p>
+                      <p className="text-base font-bold text-slate-900 group-hover:text-emerald-700">{m.mesLabel}</p>
+                    </div>
+                    <p className="text-xl font-extrabold text-slate-900 group-hover:text-emerald-700" style={{ letterSpacing: '-0.02em' }}>
+                      {formatarMoeda(m.total)}
+                    </p>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 pb-2">
                     {m.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-xs text-slate-500">
+                      <div key={idx} className="flex items-center justify-between text-xs text-slate-500 py-1 border-b border-slate-100 last:border-0">
                         <span className="truncate max-w-[60%]">
-                          {item.apelido}
+                          <span className="font-medium text-slate-700">{item.apelido}</span>
                           <span className="text-slate-400"> · {item.inquilino}</span>
                         </span>
-                        <span className="font-medium text-slate-600 shrink-0 ml-2">
+                        <span className="font-semibold text-slate-600 shrink-0 ml-2">
                           dia {item.dia} · {formatarMoeda(item.valor)}
                         </span>
                       </div>
                     ))}
                   </div>
-                  <p className="text-[11px] text-emerald-600 font-medium mt-3 group-hover:underline">
-                    Ver cobranças de {m.mesLabel.split(' ')[0].toLowerCase()} →
+                  <p className="text-xs text-emerald-600 font-semibold mt-3 group-hover:underline flex items-center gap-1">
+                    Ver cobranças de {m.mesLabel.split(' ')[0].toLowerCase()}
+                    <ArrowRight className="h-3 w-3" />
                   </p>
                 </Link>
               ))}
@@ -683,23 +797,6 @@ export default async function DashboardPage({
           </CardContent>
         </Card>
       )}
-
-      {/* Gráfico de receita — largura total */}
-      <Card>
-        <CardHeader className="pt-5 px-6 pb-2">
-          <div className="flex items-baseline justify-between gap-4">
-            <div>
-              <CardTitle className="text-base font-semibold text-[#0F172A]">
-                Receita dos últimos 6 meses
-              </CardTitle>
-              <p className="text-xs text-slate-400 mt-0.5">Total recebido por mês</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="px-6 pb-5 pt-2">
-          <RevenueChart data={chartData} />
-        </CardContent>
-      </Card>
     </div>
   )
 }
