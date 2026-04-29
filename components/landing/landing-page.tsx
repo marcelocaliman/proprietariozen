@@ -267,9 +267,11 @@ export function LandingPage() {
       <main id="main-content">
 
         {/* ── HERO ── */}
-        <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden bg-white" style={{ padding: '80px 0 100px' }}>
+        <section id="hero" aria-labelledby="hero-title" className="relative overflow-hidden bg-white" style={{ padding: '96px 0 120px' }}>
           {/* Subtle bg gradient */}
-          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(209,250,229,0.35) 0%, transparent 70%)' }} aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(209,250,229,0.4) 0%, transparent 70%)' }} aria-hidden="true" />
+          {/* Soft grid overlay */}
+          <div className="pointer-events-none absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} aria-hidden="true" />
 
           <div className="max-w-6xl mx-auto px-6 relative">
             <div className="grid lg:grid-cols-[55fr_45fr] gap-12 lg:gap-16 items-center">
@@ -277,21 +279,31 @@ export function LandingPage() {
               {/* ── Left: Text ── */}
               <div>
                 {/* Badge */}
-                <div className="inline-flex items-center gap-1.5 mb-6 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 font-medium" style={{ fontSize: 13, padding: '6px 14px' }}>
+                <div className="inline-flex items-center gap-1.5 mb-7 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 font-medium" style={{ fontSize: 13, padding: '6px 14px' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   Mais de 2.400 proprietários confiam
                 </div>
 
-                {/* Headline */}
-                <h1 id="hero-title" className="font-extrabold leading-[1.1] mb-6" style={{ letterSpacing: '-0.02em' }}>
-                  <span className="block text-slate-900" style={{ fontSize: 'clamp(36px, 4.5vw, 56px)' }}>O app completo para</span>
-                  <span className="block text-emerald-600" style={{ fontSize: 'clamp(36px, 4.5vw, 56px)' }}>quem aluga imóveis.</span>
+                {/* Headline — amplificado */}
+                <h1 id="hero-title" className="font-extrabold leading-[0.95] mb-7" style={{ letterSpacing: '-0.035em' }}>
+                  <span className="block text-slate-900" style={{ fontSize: 'clamp(44px, 6.5vw, 80px)' }}>Gestão de</span>
+                  <span className="block" style={{ fontSize: 'clamp(44px, 6.5vw, 80px)', background: 'linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>aluguéis,</span>
+                  <span className="block text-slate-900" style={{ fontSize: 'clamp(44px, 6.5vw, 80px)' }}>de verdade.</span>
                 </h1>
 
                 {/* Subheadline */}
-                <p className="text-slate-500 font-normal leading-relaxed mb-10 max-w-[480px]" style={{ fontSize: 20 }}>
-                  Cobrança automática Pix + boleto, controle de garantia, encargos, documentos, timeline — tudo num lugar. O que era planilha agora é gestão profissional.
+                <p className="text-slate-600 font-normal leading-relaxed mb-7 max-w-[520px]" style={{ fontSize: 22 }}>
+                  Cobrança automática <strong className="text-slate-900">Pix + boleto</strong>, controle de garantia, encargos, documentos e linha do tempo. Tudo num lugar.
                 </p>
+
+                {/* Feature ticker */}
+                <div className="flex flex-wrap gap-2 mb-9">
+                  {['Asaas', 'Multa & juros', 'IPTU + condomínio', 'Fiador & seguro', 'Reajuste IGP-M', 'Recibo PDF'].map(tag => (
+                    <span key={tag} className="text-[12px] font-medium px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-700">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
 
                 {/* CTA */}
                 <div className="mb-8">
@@ -366,6 +378,43 @@ export function LandingPage() {
           </div>
         </section>
 
+        {/* ── STATS BAND DARK — números impactantes ── */}
+        <section aria-labelledby="stats-title" className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #022C22 100%)' }}>
+          {/* Glow effects */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(16,185,129,0.15)', filter: 'blur(120px)' }} aria-hidden="true" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(52,211,153,0.10)', filter: 'blur(120px)' }} aria-hidden="true" />
+
+          <div className="max-w-6xl mx-auto px-6 py-20 lg:py-24 relative">
+            <h2 id="stats-title" className="sr-only">Estatísticas</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
+              {[
+                { num: '2.400+', sub: 'proprietários ativos', accent: 'do Brasil inteiro' },
+                { num: 'R$ 12M', sub: 'em aluguéis processados', accent: 'todo mês, automático' },
+                { num: '99.8%', sub: 'tempo no ar', accent: 'deploy em São Paulo' },
+                { num: '14', sub: 'dias grátis no Master', accent: 'sem cartão de crédito' },
+              ].map(({ num, sub, accent }) => (
+                <div key={num} className="lp-fade text-center lg:text-left">
+                  <p
+                    className="font-extrabold leading-none mb-3"
+                    style={{
+                      fontSize: 'clamp(48px, 6vw, 72px)',
+                      background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      letterSpacing: '-0.03em',
+                    }}
+                  >
+                    {num}
+                  </p>
+                  <p className="text-emerald-50 font-semibold text-[16px]">{sub}</p>
+                  <p className="text-emerald-300/70 text-[13px] mt-1">{accent}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── SOCIAL PROOF ── */}
         <section aria-label="Mais de 2.400 proprietários de imóveis confiam no ProprietárioZen" className="bg-[#F0FDF4]">
           <div className="max-w-6xl mx-auto px-6 pt-8 pb-10">
@@ -386,15 +435,18 @@ export function LandingPage() {
         </section>
 
         {/* ── FEATURES ── */}
-        <section id="funcionalidades" aria-labelledby="funcionalidades-title" className="py-24">
+        <section id="funcionalidades" aria-labelledby="funcionalidades-title" className="py-28">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-16 lp-fade">
+            <div className="mb-16 lp-fade max-w-3xl">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Funcionalidades</span>
-              <h2 id="funcionalidades-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3 mb-4">
-                Tudo que você precisa.<br />Nada que você não precisa.
+              <h2 id="funcionalidades-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4 mb-5" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 60px)' }}>
+                Tudo que você precisa.<br />
+                <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  Nada que você não precisa.
+                </span>
               </h2>
-              <p className="text-[17px] text-[#6B7280] max-w-lg leading-relaxed">
-                Feito para quem tem 1 a 5 imóveis e não quer virar gerente de imobiliária.
+              <p className="text-[19px] text-slate-600 leading-relaxed">
+                Feito pra quem tem de 1 a 50 imóveis e quer parar de improvisar com planilhas, WhatsApp e papelada.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -410,15 +462,15 @@ export function LandingPage() {
         </section>
 
         {/* ── SPOTLIGHTS — Telas reais do app ── */}
-        <section aria-labelledby="spotlights-title" className="py-24 bg-gradient-to-b from-white to-emerald-50/40">
+        <section aria-labelledby="spotlights-title" className="py-28 bg-gradient-to-b from-white to-emerald-50/40">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 lp-fade">
+            <div className="text-center mb-20 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Por dentro do app</span>
-              <h2 id="spotlights-title" className="text-[36px] lg:text-[44px] font-bold text-[#1F2937] leading-[1.15] mt-3 max-w-2xl mx-auto">
-                Cada imóvel ganha uma página completa
+              <h2 id="spotlights-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4 max-w-3xl mx-auto" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 60px)' }}>
+                Cada imóvel ganha uma <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>página completa</span>
               </h2>
-              <p className="text-[17px] text-[#6B7280] mt-4 max-w-xl mx-auto leading-relaxed">
-                Veja tudo o que importa de cada propriedade num lugar só — financeiro, contrato, inquilino, garantia, documentos e histórico.
+              <p className="text-[19px] text-slate-600 mt-5 max-w-xl mx-auto leading-relaxed">
+                Financeiro, contrato, inquilino, garantia, documentos e histórico — tudo organizado num lugar só.
               </p>
             </div>
 
@@ -426,8 +478,11 @@ export function LandingPage() {
               {/* Spotlight 1 — Detalhe do imóvel */}
               <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div className="lp-fade order-2 lg:order-1">
-                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Página de detalhe do imóvel</span>
-                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-[40px] font-extrabold leading-none" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.03em' }}>01</span>
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded">Página de detalhe</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 leading-[1.05] mb-5" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(30px, 3.5vw, 44px)' }}>
                     Tudo do imóvel <br/>numa única tela
                   </h3>
                   <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
@@ -458,8 +513,11 @@ export function LandingPage() {
                   <MockupCobranca />
                 </div>
                 <div className="lp-fade lp-delay-1">
-                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Cobrança automática Pix + boleto</span>
-                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-[40px] font-extrabold leading-none" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.03em' }}>02</span>
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded">Cobrança automática</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 leading-[1.05] mb-5" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(30px, 3.5vw, 44px)' }}>
                     O app cobra. <br/>Você só recebe.
                   </h3>
                   <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
@@ -484,8 +542,11 @@ export function LandingPage() {
               {/* Spotlight 3 — Documentos */}
               <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                 <div className="lp-fade order-2 lg:order-1">
-                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Documentos digitais</span>
-                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-[40px] font-extrabold leading-none" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.03em' }}>03</span>
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded">Documentos digitais</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 leading-[1.05] mb-5" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(30px, 3.5vw, 44px)' }}>
                     Adeus pasta <br/>de papel
                   </h3>
                   <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
@@ -516,8 +577,11 @@ export function LandingPage() {
                   <MockupTimeline />
                 </div>
                 <div className="lp-fade lp-delay-1">
-                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Histórico cronológico</span>
-                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                  <div className="flex items-center gap-3 mb-5">
+                    <span className="text-[40px] font-extrabold leading-none" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #059669 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', letterSpacing: '-0.03em' }}>04</span>
+                    <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded">Histórico cronológico</span>
+                  </div>
+                  <h3 className="font-extrabold text-slate-900 leading-[1.05] mb-5" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(30px, 3.5vw, 44px)' }}>
                     Toda a história <br/>do imóvel, visual
                   </h3>
                   <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
@@ -542,55 +606,71 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ── APP COMPLETO — Checklist ── */}
-        <section aria-labelledby="completo-title" className="py-24 bg-white">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-14 lp-fade">
-              <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Solução completa</span>
-              <h2 id="completo-title" className="text-[36px] lg:text-[44px] font-bold text-[#1F2937] leading-[1.15] mt-3">
-                Tudo que um gestor profissional precisa
+        {/* ── APP COMPLETO — Dark dramático ── */}
+        <section aria-labelledby="completo-title" className="relative overflow-hidden py-28 lg:py-32" style={{ background: 'linear-gradient(180deg, #022C22 0%, #064E3B 60%, #022C22 100%)' }}>
+          {/* Glow effects */}
+          <div className="absolute top-1/4 -left-20 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(16,185,129,0.15)', filter: 'blur(120px)' }} aria-hidden="true" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(52,211,153,0.10)', filter: 'blur(120px)' }} aria-hidden="true" />
+          {/* Subtle grid */}
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} aria-hidden="true" />
+
+          <div className="max-w-6xl mx-auto px-6 relative">
+            <div className="text-center mb-20 lp-fade">
+              <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-emerald-300 bg-emerald-900/40 border border-emerald-700/40 px-3 py-1.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 lp-blink" />
+                Plataforma completa
+              </span>
+              <h2 id="completo-title" className="font-extrabold leading-[1.05] mt-6 mb-5" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(40px, 5.5vw, 68px)' }}>
+                <span className="block text-white">36 funcionalidades.</span>
+                <span className="block" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  Um só app.
+                </span>
               </h2>
-              <p className="text-[17px] text-[#6B7280] mt-4 max-w-xl mx-auto">
-                Não é uma planilha turbinada. É uma plataforma de gestão imobiliária pensada de ponta a ponta.
+              <p className="text-emerald-100/80 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: 19 }}>
+                Não é planilha turbinada. É uma plataforma de gestão imobiliária pensada de ponta a ponta — pra quem trata aluguel como negócio.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8 lp-fade">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lp-fade">
               {[
                 {
+                  num: '01',
                   titulo: 'Cobrança',
                   items: [
-                    'Cobrança Pix + boleto via Asaas',
-                    'Geração automática dia 1 do mês',
+                    'Pix + boleto via Asaas',
+                    'Geração automática dia 1',
                     'Email automático ao inquilino',
-                    'Lembrete 3 dias antes do vencimento',
-                    'Multa, juros e desconto configuráveis',
-                    'Webhook atualiza status do pagamento',
+                    'Lembrete 3 dias antes',
+                    'Multa, juros e desconto',
+                    'Webhook atualiza pagamento',
                   ],
                 },
                 {
+                  num: '02',
                   titulo: 'Contratos',
                   items: [
-                    'Vigência com prazos pré-definidos',
-                    'Renovação em 1 clique (+6/+12/+24 meses)',
-                    'Reajuste IGP-M, IPCA ou percentual fixo',
-                    'Encerramento de contrato guiado',
-                    'Alerta de fim configurável por imóvel',
+                    'Vigência com prazos',
+                    'Renovação em 1 clique',
+                    'Reajuste IGP-M, IPCA ou fixo',
+                    'Encerramento guiado',
+                    'Alerta de fim configurável',
                     'Trocar inquilino sem perder histórico',
                   ],
                 },
                 {
+                  num: '03',
                   titulo: 'Garantia',
                   items: [
-                    'Caução com valor cadastrado',
+                    'Caução com valor',
                     'Fiador com dados completos',
                     'Seguro fiança com apólice',
                     'Título de capitalização',
-                    'Aviso de validade do seguro',
+                    'Aviso de validade',
                     'Sem garantia (registrado)',
                   ],
                 },
                 {
+                  num: '04',
                   titulo: 'Financeiro',
                   items: [
                     'IPTU mensalizado',
@@ -598,44 +678,70 @@ export function LandingPage() {
                     'Outros encargos extras',
                     'Snapshot histórico para IR',
                     'Relatório de IR pronto',
-                    'Adimplência calculada por imóvel',
+                    'Adimplência por imóvel',
                   ],
                 },
                 {
+                  num: '05',
                   titulo: 'Documentos',
                   items: [
                     'Contrato em PDF',
                     'Escritura / matrícula',
                     'Plantas e fotos',
                     'IPTU do imóvel',
-                    'RG, CPF e comprovantes do inquilino',
+                    'RG, CPF e comprovantes',
                     'Drag-and-drop por categoria',
                   ],
                 },
                 {
+                  num: '06',
                   titulo: 'Visibilidade',
                   items: [
-                    'Dashboard com pendências críticas',
-                    'Card por imóvel com status do mês',
-                    'Card por inquilino com adimplência',
+                    'Dashboard com pendências',
+                    'Card de imóvel com status',
+                    'Card de inquilino com adimplência',
                     'Linha do tempo cronológica',
                     'Exportação de histórico em PDF',
                     'Recibo profissional em 1 clique',
                   ],
                 },
-              ].map(({ titulo, items }) => (
-                <div key={titulo} className="bg-emerald-50/30 rounded-2xl border border-emerald-100 p-6">
-                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-4">{titulo}</p>
+              ].map(({ num, titulo, items }) => (
+                <div
+                  key={titulo}
+                  className="relative rounded-2xl p-7 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                    border: '1px solid rgba(110, 231, 183, 0.15)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  <div className="flex items-baseline justify-between mb-4">
+                    <p className="text-emerald-300/40 font-extrabold text-[28px] leading-none" style={{ letterSpacing: '-0.05em' }}>{num}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-300">{titulo}</p>
+                  </div>
                   <ul className="space-y-2.5">
                     {items.map(it => (
-                      <li key={it} className="flex items-start gap-2 text-[14px] text-slate-700">
-                        <svg className="shrink-0 mt-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <li key={it} className="flex items-start gap-2.5 text-[14px] text-emerald-50/90">
+                        <svg className="shrink-0 mt-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
                         {it}
                       </li>
                     ))}
                   </ul>
                 </div>
               ))}
+            </div>
+
+            {/* Footer CTA */}
+            <div className="text-center mt-16 lp-fade">
+              <Link
+                href="/cadastro"
+                className="inline-flex items-center gap-2 bg-white text-emerald-900 hover:bg-emerald-50 font-bold rounded-xl transition-all hover:-translate-y-0.5"
+                style={{ padding: '16px 32px', fontSize: 16, boxShadow: '0 12px 40px rgba(255,255,255,0.15)' }}
+              >
+                Começar grátis agora
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </Link>
+              <p className="mt-3 text-emerald-200/60 text-[13px]">14 dias grátis · Sem cartão de crédito</p>
             </div>
           </div>
         </section>
@@ -645,8 +751,10 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Como funciona</span>
-              <h2 id="como-funciona-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Comece a usar em minutos</h2>
-              <p className="text-[17px] text-[#6B7280] mt-3 max-w-md mx-auto">Sem instalação, sem configuração complicada.</p>
+              <h2 id="como-funciona-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                Comece a usar <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>em minutos</span>
+              </h2>
+              <p className="text-[19px] text-slate-600 mt-5 max-w-md mx-auto">Sem instalação, sem configuração complicada.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {[
@@ -699,8 +807,10 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Depoimentos</span>
-              <h2 id="depoimentos-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">O que dizem nossos proprietários</h2>
-              <p className="text-[17px] text-[#6B7280] mt-3">Pessoas reais. Imóveis reais. Resultados reais.</p>
+              <h2 id="depoimentos-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                O que dizem nossos <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>proprietários</span>
+              </h2>
+              <p className="text-[19px] text-slate-600 mt-5">Pessoas reais. Imóveis reais. Resultados reais.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               {TESTIMONIALS.map(({ photo, name, role, text }, i) => (
@@ -738,8 +848,10 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Diferenciais</span>
-              <h2 id="comparacao-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Chega de improvisar</h2>
-              <p className="text-[17px] text-[#6B7280] mt-3 max-w-md mx-auto">Veja por que proprietários trocam planilhas e imobiliárias pelo ProprietárioZen.</p>
+              <h2 id="comparacao-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                Chega de <span className="text-slate-400 line-through">improvisar</span>.
+              </h2>
+              <p className="text-[19px] text-slate-600 mt-5 max-w-lg mx-auto">Veja por que proprietários trocam planilhas e imobiliárias pelo ProprietárioZen.</p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Left — old way */}
@@ -797,8 +909,10 @@ export function LandingPage() {
           <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-14 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Dúvidas frequentes</span>
-              <h2 id="faq-title" className="text-[36px] font-bold text-[#1F2937] leading-[1.2] mt-3">Perguntas frequentes</h2>
-              <p className="text-[16px] text-[#6B7280] mt-3">Tudo que você precisa saber sobre o ProprietárioZen.</p>
+              <h2 id="faq-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 52px)' }}>
+                Tem <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>perguntas?</span>
+              </h2>
+              <p className="text-[18px] text-slate-600 mt-4">Tudo que você precisa saber sobre o ProprietárioZen.</p>
             </div>
             <dl className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
               {FAQ.map(({ q, a }, i) => (
@@ -828,8 +942,10 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center mb-16 lp-fade">
               <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Preços</span>
-              <h2 id="precos-title" className="text-[36px] lg:text-[40px] font-bold text-[#1F2937] leading-[1.2] mt-3">Simples e transparente</h2>
-              <p className="text-[17px] text-[#6B7280] mt-3">Sem taxa de adesão. Sem fidelidade. Cancele quando quiser.</p>
+              <h2 id="precos-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 56px)' }}>
+                Simples e <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>transparente</span>
+              </h2>
+              <p className="text-[19px] text-slate-600 mt-5">Sem taxa de adesão. Sem fidelidade. Cancele quando quiser.</p>
             </div>
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
 
@@ -916,21 +1032,25 @@ export function LandingPage() {
         </section>
 
         {/* ── CTA FINAL ── */}
-        <section aria-labelledby="cta-title" className="relative overflow-hidden py-28 text-center" style={{ background: 'linear-gradient(135deg,#065F46 0%,#0F172A 100%)' }}>
-          <div className="lp-blob-1 absolute w-80 h-80 rounded-full -top-20 -left-20 pointer-events-none" style={{ background: 'rgba(52,211,153,0.1)', filter: 'blur(72px)' }} aria-hidden="true" />
-          <div className="lp-blob-2 absolute w-64 h-64 rounded-full -bottom-16 -right-16 pointer-events-none" style={{ background: 'rgba(16,185,129,0.09)', filter: 'blur(64px)' }} aria-hidden="true" />
+        <section aria-labelledby="cta-title" className="relative overflow-hidden py-32 text-center" style={{ background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #0F172A 100%)' }}>
+          <div className="lp-blob-1 absolute w-[500px] h-[500px] rounded-full -top-32 -left-32 pointer-events-none" style={{ background: 'rgba(52,211,153,0.18)', filter: 'blur(100px)' }} aria-hidden="true" />
+          <div className="lp-blob-2 absolute w-[400px] h-[400px] rounded-full -bottom-32 -right-32 pointer-events-none" style={{ background: 'rgba(16,185,129,0.14)', filter: 'blur(80px)' }} aria-hidden="true" />
+          <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} aria-hidden="true" />
           <div className="max-w-6xl mx-auto px-6 relative z-10 lp-fade">
-            <h2 id="cta-title" className="font-bold leading-[1.12] mb-4" style={{ fontSize: 'clamp(36px, 4vw, 48px)' }}>
+            <h2 id="cta-title" className="font-extrabold leading-[0.95] mb-6" style={{ letterSpacing: '-0.035em', fontSize: 'clamp(44px, 6.5vw, 84px)' }}>
               <span className="block text-white">Pare de improvisar.</span>
-              <span className="block text-emerald-300">Comece a controlar.</span>
+              <span className="block" style={{ background: 'linear-gradient(135deg, #6EE7B7 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                Comece a controlar.
+              </span>
             </h2>
-            <p className="mb-10 text-emerald-100" style={{ fontSize: 18 }}>Grátis por 14 dias. Sem cartão de crédito.</p>
+            <p className="mb-12 text-emerald-100/80 max-w-xl mx-auto" style={{ fontSize: 22 }}>Grátis por 14 dias. Sem cartão de crédito. Sem letras miúdas.</p>
             <Link
               href="/cadastro"
-              className="inline-flex items-center gap-2 bg-white hover:bg-[#F0FDF4] text-emerald-800 font-bold transition-all hover:-translate-y-1 hover:shadow-2xl"
-              style={{ padding: '18px 40px', fontSize: 16, borderRadius: 10 }}
+              className="inline-flex items-center gap-2 bg-white hover:bg-emerald-50 text-emerald-900 font-bold transition-all hover:-translate-y-1"
+              style={{ padding: '20px 44px', fontSize: 18, borderRadius: 12, boxShadow: '0 20px 50px rgba(255,255,255,0.18)' }}
             >
-              Criar conta grátis agora →
+              Criar conta grátis agora
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </Link>
             <div className="flex items-center justify-center gap-6 mt-8 flex-wrap">
               {[
