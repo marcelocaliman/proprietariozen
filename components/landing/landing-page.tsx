@@ -128,29 +128,6 @@ const FEATURES = [
   },
 ]
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
-
-const TESTIMONIALS = [
-  {
-    photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=56&h=56&fit=crop&crop=face',
-    name: 'Carla Mendes',
-    role: 'Proprietária · 2 apartamentos · São Paulo, SP',
-    text: 'Eu cobrava aluguel pelo WhatsApp há 6 anos. Tinha vergonha de cobrar de novo quando atrasava. Agora o app manda, não eu. Mudou minha relação com os inquilinos.',
-  },
-  {
-    photo: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=56&h=56&fit=crop&crop=face',
-    name: 'Roberto Farias',
-    role: 'Proprietário · 3 imóveis · Rio de Janeiro, RJ',
-    text: 'Herdei 3 imóveis do meu pai e não sabia como gerenciar. O ProprietárioZen me deu controle total em menos de uma semana. Inclusive o reajuste pelo IGPM que eu sempre esquecia.',
-  },
-  {
-    photo: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=56&h=56&fit=crop&crop=face',
-    name: 'Fernanda Santos',
-    role: 'Proprietária · 1 kitnet · Curitiba, PR',
-    text: 'Tenho só uma kitnet mas perdia muito tempo com isso. Agora recebo o recibo no email, o inquilino recebe o dele e eu não preciso fazer nada. Vale muito os R$ 49,90.',
-  },
-]
-
 // ─── FAQ data ─────────────────────────────────────────────────────────────────
 
 const FAQ = [
@@ -232,7 +209,7 @@ export function LandingPage() {
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <LogoColor href="/" iconSize={36} />
             <ul className="hidden md:flex items-center gap-8 list-none m-0 p-0">
-              {[['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#depoimentos','Depoimentos'],['#precos','Preços']].map(([href,label]) => (
+              {[['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#precos','Preços']].map(([href,label]) => (
                 <li key={href}><a href={href} className="text-[#374151] hover:text-[#059669] font-medium text-sm transition-colors">{label}</a></li>
               ))}
             </ul>
@@ -251,7 +228,7 @@ export function LandingPage() {
           </div>
           {mobileOpen && (
             <div className="md:hidden border-t border-[#D1FAE5] bg-white px-6 py-4 flex flex-col gap-1">
-              {[['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#depoimentos','Depoimentos'],['#precos','Preços']].map(([href,label]) => (
+              {[['#funcionalidades','Funcionalidades'],['#como-funciona','Como funciona'],['#precos','Preços']].map(([href,label]) => (
                 <a key={href} href={href} onClick={() => setMobileOpen(false)} className="text-[#374151] font-medium py-2.5 text-base">{label}</a>
               ))}
               <div className="flex gap-3 mt-3 pt-3 border-t border-[#F1F5F9]">
@@ -280,8 +257,8 @@ export function LandingPage() {
               <div>
                 {/* Badge */}
                 <div className="inline-flex items-center gap-1.5 mb-7 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 font-medium" style={{ fontSize: 13, padding: '6px 14px' }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  Mais de 2.400 proprietários confiam
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 lp-blink" />
+                  Plataforma 100% brasileira · LGPD
                 </div>
 
                 {/* Headline — amplificado */}
@@ -317,33 +294,20 @@ export function LandingPage() {
                   <p className="mt-2.5 text-slate-400" style={{ fontSize: 12 }}>Sem cartão de crédito · Cancele quando quiser</p>
                 </div>
 
-                {/* Social proof inline */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex" aria-hidden="true">
-                    {[
-                      { src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face', alt: '' },
-                      { src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=face', alt: '' },
-                      { src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face', alt: '' },
-                      { src: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face', alt: '' },
-                      { src: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face', alt: '' },
-                    ].map(({ src, alt }, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        key={i}
-                        src={src}
-                        alt={alt}
-                        width={32}
-                        height={32}
-                        loading="lazy"
-                        className="w-8 h-8 rounded-full border-2 border-white object-cover"
-                        style={{ marginLeft: i > 0 ? -8 : 0 }}
-                      />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 13 }} className="text-slate-600">
-                    <span className="text-amber-400">★★★★★</span>
-                    <span className="ml-1">Avaliado por proprietários em todo o Brasil</span>
-                  </p>
+                {/* Trust indicators inline */}
+                <div className="flex items-center gap-5 flex-wrap text-slate-500" style={{ fontSize: 13 }}>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Sem instalação
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Pagamento opcional
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    LGPD compliant
+                  </span>
                 </div>
               </div>
 
@@ -385,13 +349,13 @@ export function LandingPage() {
           <div className="absolute bottom-0 right-1/4 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'rgba(52,211,153,0.10)', filter: 'blur(120px)' }} aria-hidden="true" />
 
           <div className="max-w-6xl mx-auto px-6 py-20 lg:py-24 relative">
-            <h2 id="stats-title" className="sr-only">Estatísticas</h2>
+            <h2 id="stats-title" className="sr-only">O que o app entrega</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4">
               {[
-                { num: '2.400+', sub: 'proprietários ativos', accent: 'do Brasil inteiro' },
-                { num: 'R$ 12M', sub: 'em aluguéis processados', accent: 'todo mês, automático' },
-                { num: '99.8%', sub: 'tempo no ar', accent: 'deploy em São Paulo' },
-                { num: '14', sub: 'dias grátis no Master', accent: 'sem cartão de crédito' },
+                { num: '36', sub: 'funcionalidades incluídas', accent: 'em 6 áreas de gestão' },
+                { num: 'R$ 0', sub: 'no plano gratuito', accent: 'pra começar a usar' },
+                { num: '2 min', sub: 'do cadastro ao primeiro imóvel', accent: 'sem instalação' },
+                { num: '100%', sub: 'cobrança automática', accent: 'PIX + boleto via Asaas' },
               ].map(({ num, sub, accent }) => (
                 <div key={num} className="lp-fade text-center lg:text-left">
                   <p
@@ -415,11 +379,11 @@ export function LandingPage() {
           </div>
         </section>
 
-        {/* ── SOCIAL PROOF ── */}
-        <section aria-label="Mais de 2.400 proprietários de imóveis confiam no ProprietárioZen" className="bg-[#F0FDF4]">
+        {/* ── INTEGRAÇÕES ── */}
+        <section aria-label="Integrações e tecnologias usadas pelo ProprietárioZen" className="bg-[#F0FDF4]">
           <div className="max-w-6xl mx-auto px-6 pt-8 pb-10">
             <div className="border-b border-slate-200 mb-6" />
-            <p className="text-center text-[13px] text-slate-400 mb-8">Proprietários de todo o Brasil já usam o ProprietárioZen</p>
+            <p className="text-center text-[13px] text-slate-400 mb-8">Construído com tecnologia confiável</p>
             <div className="flex flex-wrap items-center justify-center gap-10 opacity-50" aria-hidden="true">
               {[
                 [<svg key="v" width="16" height="16" viewBox="0 0 24 24" fill="#374151"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21" stroke="#374151" strokeWidth="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="#374151" strokeWidth="2"/></svg>,'VivaReal'],
@@ -741,7 +705,7 @@ export function LandingPage() {
                 Começar grátis agora
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </Link>
-              <p className="mt-3 text-emerald-200/60 text-[13px]">14 dias grátis · Sem cartão de crédito</p>
+              <p className="mt-3 text-emerald-200/60 text-[13px]">Plano gratuito · Sem cartão de crédito</p>
             </div>
           </div>
         </section>
@@ -798,47 +762,6 @@ export function LandingPage() {
               <Link href="/cadastro" className="text-[#059669] font-semibold text-[15px] hover:underline">
                 Pronto para começar? →
               </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ── TESTIMONIALS ── */}
-        <section id="depoimentos" aria-labelledby="depoimentos-title" className="py-24">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center mb-16 lp-fade">
-              <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Depoimentos</span>
-              <h2 id="depoimentos-title" className="font-extrabold text-slate-900 leading-[1.05] mt-4" style={{ letterSpacing: '-0.03em', fontSize: 'clamp(36px, 5vw, 56px)' }}>
-                O que dizem nossos <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>proprietários</span>
-              </h2>
-              <p className="text-[19px] text-slate-600 mt-5">Pessoas reais. Imóveis reais. Resultados reais.</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {TESTIMONIALS.map(({ photo, name, role, text }, i) => (
-                <article key={name} className={`lp-fade lp-delay-${i} lp-card bg-white rounded-[16px] border border-slate-100 flex flex-col`} style={{ padding: 28 }}>
-                  <div className="flex gap-0.5 mb-4" aria-label="Avaliação 5 estrelas" role="img">
-                    {Array.from({ length: 5 }).map((_, j) => <span key={j} className="text-amber-400 text-base" aria-hidden="true">★</span>)}
-                  </div>
-                  <div className="relative mb-5 flex-1">
-                    <span className="text-emerald-200 font-serif leading-none float-left mr-1" style={{ fontSize: 64, lineHeight: 0.8 }} aria-hidden="true">&ldquo;</span>
-                    <p className="text-[15px] text-slate-700 leading-[1.7] italic">{text}</p>
-                  </div>
-                  <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={photo}
-                      alt={`Foto de ${name}, ${role}`}
-                      width={48}
-                      height={48}
-                      loading="lazy"
-                      className="w-12 h-12 rounded-full object-cover shrink-0"
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-[#1F2937]">{name}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{role}</p>
-                    </div>
-                  </div>
-                </article>
-              ))}
             </div>
           </div>
         </section>
@@ -1043,7 +966,7 @@ export function LandingPage() {
                 Comece a controlar.
               </span>
             </h2>
-            <p className="mb-12 text-emerald-100/80 max-w-xl mx-auto" style={{ fontSize: 22 }}>Grátis por 14 dias. Sem cartão de crédito. Sem letras miúdas.</p>
+            <p className="mb-12 text-emerald-100/80 max-w-xl mx-auto" style={{ fontSize: 22 }}>Plano gratuito pra começar. Sem cartão de crédito. Sem letras miúdas.</p>
             <Link
               href="/cadastro"
               className="inline-flex items-center gap-2 bg-white hover:bg-emerald-50 text-emerald-900 font-bold transition-all hover:-translate-y-1"

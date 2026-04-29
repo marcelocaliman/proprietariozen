@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   // Title: 53 chars as specified — do not alter
   title: 'ProprietárioZen | Gestão de Imóveis Simplificada para Proprietários',
   // Description: max 155 chars
-  description: 'Gerencie seus imóveis, contratos de aluguel e cobranças em um só lugar. App gratuito para proprietários que querem controle total. Experimente grátis por 14 dias.',
+  description: 'Gerencie imóveis, contratos e cobranças em um só app. Cobrança automática Pix + boleto, garantia, encargos e documentos. Plano gratuito disponível.',
   authors: [{ name: 'ProprietárioZen' }],
   robots: {
     index: true,
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://proprietariozen.com.br',
     title: 'ProprietárioZen — Gestão de Imóveis sem Complicação',
-    description: 'Controle aluguéis, contratos e cobranças em um único app. Mais de 2.400 proprietários já simplificaram sua gestão. Comece grátis hoje.',
+    description: 'Controle aluguéis, contratos e cobranças em um único app. Cobrança automática Pix + boleto, encargos, documentos e timeline. Comece grátis hoje.',
     images: [
       {
         url: 'https://proprietariozen.com.br/og-image.png',
@@ -59,13 +59,7 @@ const jsonLdSoftware = {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'BRL',
-    description: 'Plano gratuito com 14 dias de trial Pro',
-  },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    reviewCount: '312',
-    bestRating: '5',
+    description: 'Plano gratuito disponível',
   },
   description:
     'App brasileiro de gestão de imóveis para proprietários. Controle de aluguéis, contratos digitais, cobranças automáticas e relatórios financeiros.',
@@ -91,7 +85,7 @@ const jsonLdFaq = {
       name: 'ProprietárioZen é gratuito?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Sim, possui plano gratuito e 14 dias de trial do plano Pro sem cartão de crédito.',
+        text: 'Sim, há um plano gratuito permanente que permite gerenciar 1 imóvel e 1 inquilino sem custo nem cartão de crédito.',
       },
     },
     {
