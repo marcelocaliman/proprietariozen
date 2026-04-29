@@ -175,6 +175,19 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
   const ativos   = inquilinos.filter(i => i.ativo)
   const inativos = inquilinos.filter(i => !i.ativo)
 
+  // ── Stats hero ──
+  const recebidoMes = alugueisMes
+    .filter(a => a.status === 'pago')
+    .reduce((s, a) => {
+      // Para encontrar o valor, vamos usar valor_aluguel do imóvel do inquilino
+      const inq = inquilinos.find(i => i.id === a.inquilino_id)
+      return s + (inq?.imovel?.valor_aluguel ?? 0)
+    }, 0)
+  const qtdPendentes = alugueisMes.filter(a => a.status === 'pendente' || a.status === 'atrasado').length
+  const qtdPagos = alugueisMes.filter(a => a.status === 'pago').length
+  const totalCobrancas = qtdPendentes + qtdPagos
+  const pctRecebido = totalCobrancas > 0 ? Math.round((qtdPagos / totalCobrancas) * 100) : 0
+
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
     if (!q) return inquilinos
@@ -233,14 +246,19 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
 
   return (
     <>
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Inquilinos</h1>
-          <p className="text-sm text-[#475569] mt-0.5">
+          <p className="text-sm text-slate-500 font-medium">
             {ativos.length} ativo{ativos.length !== 1 ? 's' : ''}
             {inativos.length > 0 && ` · ${inativos.length} inativo${inativos.length !== 1 ? 's' : ''}`}
           </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            Seus inquilinos
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {/* Busca inline */}
@@ -251,16 +269,124 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                 placeholder="Buscar por nome ou email"
                 value={busca}
                 onChange={e => setBusca(e.target.value)}
-                className="pl-9 h-9 text-sm w-full"
+                className="pl-9 h-10 text-sm w-full"
               />
             </div>
           )}
-          <Button onClick={handleNovo} className="gap-2 bg-[#059669] hover:bg-[#047857] shrink-0">
+          <Button onClick={handleNovo} className="gap-2 bg-emerald-600 hover:bg-emerald-700 shrink-0 shadow-sm h-10">
             <Plus className="h-4 w-4" />
             Novo inquilino
           </Button>
         </div>
       </div>
+
+      {/* ── Stats hero ── */}
+      {inquilinos.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-7">
+          {/* Hero — Recebido este mês */}
+          <div
+            className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+            style={{
+              background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+              boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+            }}
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+            <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+            <div className="relative z-10">
+              <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+                Recebido dos inquilinos este mês
+              </p>
+              <p
+                className="font-extrabold leading-none mt-2"
+                style={{
+                  fontSize: 'clamp(36px, 4.5vw, 52px)',
+                  background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  letterSpacing: '-0.025em',
+                }}
+              >
+                {formatarMoeda(recebidoMes)}
+              </p>
+            </div>
+            <div className="relative z-10 mt-5">
+              <div className="flex justify-between text-[11px] text-emerald-200/80 mb-1.5">
+                <span>{pctRecebido}% do mês recebido</span>
+                <span>{qtdPagos}/{totalCobrancas} pagos</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${pctRecebido}%`,
+                    background: 'linear-gradient(90deg, #34D399, #6EE7B7)',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Stats secundários */}
+          <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Total</p>
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Users className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {inquilinos.length}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {inquilinos.length === 1 ? 'cadastrado' : 'cadastrados'}
+                </p>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Ativos</p>
+                <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {ativos.length}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {ativos.length === 1 ? 'inquilino vinculado' : 'inquilinos vinculados'}
+                </p>
+              </div>
+            </div>
+            <div className={cn(
+              'rounded-2xl border py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all',
+              qtdPendentes > 0 ? 'bg-amber-50/40 border-amber-200' : 'bg-white border-slate-100',
+            )}>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Pendentes</p>
+                <div className={cn(
+                  'h-9 w-9 rounded-xl flex items-center justify-center shrink-0',
+                  qtdPendentes > 0 ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-100 text-slate-400',
+                )}>
+                  <Clock className="h-[18px] w-[18px]" />
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(24px, 2.4vw, 30px)' }}>
+                  {qtdPendentes}
+                </p>
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  {qtdPendentes === 0 ? 'tudo em dia' : 'aguardando pagamento'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {inquilinos.length === 0 ? (
@@ -305,7 +431,7 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                 tabIndex={0}
                 onKeyDown={e => { if (e.key === 'Enter') router.push(`/inquilinos/${inquilino.id}`) }}
                 className={cn(
-                  'bg-white rounded-xl border border-[#E2E8F0] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex flex-col overflow-hidden cursor-pointer hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
+                  'bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col overflow-hidden cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                   !inquilino.ativo && 'opacity-60',
                 )}
               >

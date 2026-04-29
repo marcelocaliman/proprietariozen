@@ -51,7 +51,7 @@ export default async function InquilinosPage() {
     .map(im => ({ id: im.id, apelido: im.apelido }))
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
       <InquilinosClient
         inquilinos={(inquilinos ?? []) as (Inquilino & {
           imovel?: {
