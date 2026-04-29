@@ -159,19 +159,24 @@ export function InquilinoDetalheClient({ inquilino, alugueis }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4 min-w-0 flex-1">
-          <div className="h-14 w-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shrink-0">
+          <div className="h-16 w-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shrink-0 shadow-sm">
             {iniciaisNome(inquilino.nome)}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-slate-900 truncate">{inquilino.nome}</h1>
-            <p className="text-sm text-slate-500 truncate">
+            <p className="text-sm text-slate-500 font-medium truncate">
               Inquilino desde {formatarData(inquilino.criado_em)}
             </p>
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <h1
+              className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05] truncate"
+              style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+            >
+              {inquilino.nome}
+            </h1>
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
               <Badge className={cn(
                 'text-[11px]',
                 inquilino.ativo ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700',

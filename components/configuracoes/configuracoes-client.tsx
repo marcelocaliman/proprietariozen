@@ -105,7 +105,7 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
                 profileTelefone={profile.telefone}
               />
             ) : (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-8 flex flex-col items-center gap-4 text-center">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 flex flex-col items-center gap-4 text-center shadow-sm">
                 <div className="p-3 rounded-full bg-amber-100">
                   <Lock className="h-7 w-7 text-amber-500" />
                 </div>

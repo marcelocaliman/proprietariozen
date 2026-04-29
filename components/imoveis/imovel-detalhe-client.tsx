@@ -214,26 +214,30 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
       )}
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div className="flex items-start gap-4 min-w-0 flex-1">
           <div className={cn(
-            'h-14 w-14 rounded-xl flex items-center justify-center shrink-0',
+            'h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 shadow-sm',
             inquilinoAtivo ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
           )}>
-            <TipoIcon className="h-7 w-7" />
+            <TipoIcon className="h-8 w-8" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-bold text-slate-900 truncate">{imovel.apelido}</h1>
-            <p className="text-sm text-slate-500 truncate">{imovel.endereco}</p>
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            <p className="text-sm text-slate-500 font-medium truncate">
+              {tipoLabel[imovel.tipo]} · {imovel.endereco}
+            </p>
+            <h1
+              className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05] truncate"
+              style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+            >
+              {imovel.apelido}
+            </h1>
+            <div className="flex items-center gap-1.5 mt-3 flex-wrap">
               <Badge className={cn(
                 'text-[11px]',
                 inquilinoAtivo ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700',
               )}>
                 {inquilinoAtivo ? 'Ocupado' : 'Vago'}
-              </Badge>
-              <Badge variant="outline" className="text-[11px]">
-                {tipoLabel[imovel.tipo]}
               </Badge>
               <Badge variant="outline" className="text-[11px]">
                 {imovel.billing_mode === 'AUTOMATIC' ? 'Asaas' : 'Manual'}

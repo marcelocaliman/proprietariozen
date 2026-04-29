@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
   Calculator, Download, AlertTriangle, Info,
-  TrendingUp, ChevronDown, Loader2, FileText,
+  ChevronDown, Loader2, FileText,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -160,32 +160,64 @@ export function RelatorioIRClient({ anoAtual }: Props) {
 
       {!loading && dados && (
         <>
-          {/* Cards resumo */}
-          <div className="grid sm:grid-cols-4 gap-4">
-            <SummaryCard
-              label="Total recebido"
-              value={formatBRL(dados.total_bruto)}
-              icon={TrendingUp}
-              color="emerald"
-            />
-            <SummaryCard
-              label="IRPF estimado"
-              value={formatBRL(dados.total_imposto)}
-              icon={Calculator}
-              color="purple"
-            />
-            <SummaryCard
-              label="Média mensal"
-              value={formatBRL(dados.media_mensal)}
-              icon={FileText}
-              color="slate"
-            />
-            <SummaryCard
-              label="Meses c/ carnê-leão"
-              value={`${dados.meses_com_obrigacao} de 12`}
-              icon={AlertTriangle}
-              color="amber"
-            />
+          {/* Stats hero */}
+          <div className="grid gap-4 lg:grid-cols-7">
+            {/* Hero — Total recebido no ano */}
+            <div
+              className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+              style={{
+                background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+                boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+              }}
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+              <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+              <div className="relative z-10">
+                <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+                  Rendimentos brutos · {ano}
+                </p>
+                <p
+                  className="font-extrabold leading-none mt-2"
+                  style={{
+                    fontSize: 'clamp(36px, 4.5vw, 52px)',
+                    background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    letterSpacing: '-0.025em',
+                  }}
+                >
+                  {formatBRL(dados.total_bruto)}
+                </p>
+              </div>
+              <div className="relative z-10 mt-5">
+                <p className="text-sm text-emerald-100/80">
+                  Média de {formatBRL(dados.media_mensal)} por mês
+                </p>
+              </div>
+            </div>
+
+            {/* Stats secundários */}
+            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <SummaryCard
+                label="IRPF estimado"
+                value={formatBRL(dados.total_imposto)}
+                icon={Calculator}
+                color="purple"
+              />
+              <SummaryCard
+                label="Média mensal"
+                value={formatBRL(dados.media_mensal)}
+                icon={FileText}
+                color="slate"
+              />
+              <SummaryCard
+                label="Carnê-leão"
+                value={`${dados.meses_com_obrigacao} de 12`}
+                icon={AlertTriangle}
+                color="amber"
+              />
+            </div>
           </div>
 
           {/* Alerta carnê-leão */}
@@ -326,10 +358,10 @@ interface SummaryCardProps {
 
 function SummaryCard({ label, value, icon: Icon, color }: SummaryCardProps) {
   const iconBg = {
-    emerald: 'bg-emerald-50',
-    purple:  'bg-purple-50',
-    slate:   'bg-slate-50',
-    amber:   'bg-amber-50',
+    emerald: 'bg-emerald-500/15',
+    purple:  'bg-purple-500/15',
+    slate:   'bg-slate-100',
+    amber:   'bg-amber-500/15',
   }[color]
   const iconColor = {
     emerald: 'text-emerald-600',
@@ -339,13 +371,20 @@ function SummaryCard({ label, value, icon: Icon, color }: SummaryCardProps) {
   }[color]
 
   return (
-    <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5 flex items-center gap-4">
-      <div className={cn('h-10 w-10 rounded-xl flex items-center justify-center shrink-0', iconBg)}>
-        <Icon className={cn('h-5 w-5', iconColor)} />
+    <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
+        <div className={cn('h-9 w-9 rounded-xl flex items-center justify-center shrink-0', iconBg)}>
+          <Icon className={cn('h-[18px] w-[18px]', iconColor)} />
+        </div>
       </div>
-      <div>
-        <p className="text-xs text-[#64748B]">{label}</p>
-        <p className="text-lg font-bold text-[#0F172A]">{value}</p>
+      <div className="mt-3">
+        <p
+          className="font-extrabold text-slate-900 leading-none"
+          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(20px, 2vw, 26px)' }}
+        >
+          {value}
+        </p>
       </div>
     </div>
   )
