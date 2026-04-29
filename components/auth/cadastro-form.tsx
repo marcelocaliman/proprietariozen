@@ -88,15 +88,17 @@ export function CadastroForm() {
   return (
     <div className="space-y-6">
       {/* Badge + Heading */}
-      <div className="space-y-2">
+      <div className="space-y-2 mb-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D1FAE5] px-3 py-1 text-xs font-semibold text-[#065F46]">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
             <path d="M1 5L3.5 7.5L9 2" stroke="#059669" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          14 dias grátis — sem cartão
+          Plano gratuito · sem cartão
         </span>
-        <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">Crie sua conta grátis</h2>
-        <p className="text-sm text-[#94A3B8]">Comece a gerenciar seus imóveis hoje mesmo.</p>
+        <h2 className="font-extrabold text-slate-900 leading-[1.05]" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 36px)' }}>
+          Crie sua <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>conta grátis</span>
+        </h2>
+        <p className="text-[15px] text-slate-500">Comece a gerenciar seus imóveis em 2 minutos.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">

@@ -105,6 +105,11 @@
   50% { transform: translate(28px, -28px) scale(1.06); }
 }
 
+@keyframes auth-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 @layer base {
   :root {
     /* Base */

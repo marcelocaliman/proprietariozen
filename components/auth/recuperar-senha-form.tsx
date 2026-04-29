@@ -68,9 +68,11 @@ export function RecuperarSenhaForm() {
   return (
     <div className="space-y-6">
       {/* Heading */}
-      <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">Recuperar senha</h2>
-        <p className="text-sm text-[#94A3B8]">Enviaremos um link para redefinir sua senha.</p>
+      <div className="space-y-2 mb-2">
+        <h2 className="font-extrabold text-slate-900 leading-[1.05]" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 36px)' }}>
+          Recuperar <span style={{ background: 'linear-gradient(135deg, #059669 0%, #34D399 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>senha</span>
+        </h2>
+        <p className="text-[15px] text-slate-500">Enviaremos um link para redefinir sua senha.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
