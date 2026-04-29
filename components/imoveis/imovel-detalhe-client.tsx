@@ -269,50 +269,120 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
         </div>
       </div>
 
-      {/* ── Stats ── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Aluguel mensal</p>
-            <p className="text-xl font-bold text-slate-900 mt-1">{formatarMoeda(valorMensalTotal)}</p>
-            {valorMensalTotal !== imovel.valor_aluguel && (
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                base {formatarMoeda(imovel.valor_aluguel)} + encargos
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Recebido em {ano}</p>
-            <p className="text-xl font-bold text-emerald-700 mt-1">{formatarMoeda(totalRecebido)}</p>
-            {totalEsperado > 0 && (
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                de {formatarMoeda(totalEsperado)} esperado
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Adimplência (12m)</p>
-            <p className={cn(
-              'text-xl font-bold mt-1',
-              adimplencia == null ? 'text-slate-400' :
-              adimplencia >= 90 ? 'text-emerald-700' :
-              adimplencia >= 70 ? 'text-amber-700' : 'text-red-700',
-            )}>
-              {adimplencia == null ? '—' : `${adimplencia}%`}
+      {/* ── Stats hero ── */}
+      <div className="grid gap-4 lg:grid-cols-7">
+        {/* Hero — Recebido em {ano} */}
+        <div
+          className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+          style={{
+            background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+            boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+          }}
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
+          <div className="relative z-10">
+            <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
+              Recebido em {ano}
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">Próximo vencimento</p>
-            <p className="text-xl font-bold text-slate-900 mt-1">Dia {imovel.dia_vencimento}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">de cada mês</p>
-          </CardContent>
-        </Card>
+            <p
+              className="font-extrabold leading-none mt-2"
+              style={{
+                fontSize: 'clamp(36px, 4.5vw, 52px)',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {formatarMoeda(totalRecebido)}
+            </p>
+          </div>
+          <div className="relative z-10 mt-5">
+            {totalEsperado > 0 ? (
+              <>
+                <div className="flex justify-between text-[11px] text-emerald-200/80 mb-1.5">
+                  <span>{Math.round((totalRecebido / totalEsperado) * 100)}% do esperado</span>
+                  <span>de {formatarMoeda(totalEsperado)}</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, Math.round((totalRecebido / totalEsperado) * 100))}%`,
+                      background: 'linear-gradient(90deg, #34D399, #6EE7B7)',
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-emerald-100/80">Sem cobranças geradas ainda</p>
+            )}
+          </div>
+        </div>
+
+        {/* Stats secundários */}
+        <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Aluguel mensal</p>
+              <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                <Banknote className="h-[18px] w-[18px]" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(20px, 2vw, 26px)' }}>
+                {formatarMoeda(valorMensalTotal)}
+              </p>
+              {valorMensalTotal !== imovel.valor_aluguel ? (
+                <p className="text-[12px] text-slate-400 mt-1.5">
+                  base + encargos
+                </p>
+              ) : (
+                <p className="text-[12px] text-slate-400 mt-1.5">sem encargos extras</p>
+              )}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Adimplência</p>
+              <div className={cn(
+                'h-9 w-9 rounded-xl flex items-center justify-center shrink-0',
+                adimplencia == null ? 'bg-slate-100 text-slate-400' :
+                adimplencia >= 90 ? 'bg-emerald-500/15 text-emerald-600' :
+                adimplencia >= 70 ? 'bg-amber-500/15 text-amber-600' : 'bg-red-500/15 text-red-600',
+              )}>
+                <CheckCircle2 className="h-[18px] w-[18px]" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className={cn(
+                'font-extrabold leading-none',
+                adimplencia == null ? 'text-slate-400' :
+                adimplencia >= 90 ? 'text-emerald-700' :
+                adimplencia >= 70 ? 'text-amber-700' : 'text-red-700',
+              )} style={{ letterSpacing: '-0.025em', fontSize: 'clamp(20px, 2vw, 26px)' }}>
+                {adimplencia == null ? '—' : `${adimplencia}%`}
+              </p>
+              <p className="text-[12px] text-slate-400 mt-1.5">últimos 12 meses</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 py-5 px-6 shadow-sm flex flex-col justify-between min-h-[140px] hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Próximo venc.</p>
+              <div className="h-9 w-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                <CalendarPlus className="h-[18px] w-[18px]" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className="font-extrabold text-slate-900 leading-none" style={{ letterSpacing: '-0.025em', fontSize: 'clamp(20px, 2vw, 26px)' }}>
+                Dia {imovel.dia_vencimento}
+              </p>
+              <p className="text-[12px] text-slate-400 mt-1.5">de cada mês</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Tabs ── */}

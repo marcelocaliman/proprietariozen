@@ -162,9 +162,9 @@ export function RelatorioIRClient({ anoAtual }: Props) {
         <>
           {/* Stats hero */}
           <div className="grid gap-4 lg:grid-cols-7">
-            {/* Hero — Total recebido no ano */}
+            {/* Hero — Bruto + Liquido lado a lado */}
             <div
-              className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[180px]"
+              className="lg:col-span-4 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[200px]"
               style={{
                 background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
                 boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
@@ -173,32 +173,65 @@ export function RelatorioIRClient({ anoAtual }: Props) {
               <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
               <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(52, 211, 153, 0.10)', filter: 'blur(60px)' }} />
               <div className="relative z-10">
-                <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">
-                  Rendimentos brutos · {ano}
+                <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200 mb-4">
+                  Rendimentos · {ano}
                 </p>
-                <p
-                  className="font-extrabold leading-none mt-2"
-                  style={{
-                    fontSize: 'clamp(36px, 4.5vw, 52px)',
-                    background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                    letterSpacing: '-0.025em',
-                  }}
-                >
-                  {formatBRL(dados.total_bruto)}
-                </p>
+
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Bruto */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest font-semibold text-emerald-300/80 mb-1.5">
+                      Bruto
+                    </p>
+                    <p
+                      className="font-extrabold leading-none"
+                      style={{
+                        fontSize: 'clamp(28px, 3.5vw, 40px)',
+                        background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        letterSpacing: '-0.025em',
+                      }}
+                    >
+                      {formatBRL(dados.total_bruto)}
+                    </p>
+                  </div>
+
+                  {/* Líquido */}
+                  <div className="border-l border-emerald-300/15 pl-6">
+                    <p className="text-[10px] uppercase tracking-widest font-semibold text-emerald-300/80 mb-1.5">
+                      Líquido (após IR)
+                    </p>
+                    <p
+                      className="font-extrabold leading-none"
+                      style={{
+                        fontSize: 'clamp(28px, 3.5vw, 40px)',
+                        background: 'linear-gradient(135deg, #FFFFFF 0%, #34D399 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        letterSpacing: '-0.025em',
+                      }}
+                    >
+                      {formatBRL(Math.max(0, dados.total_bruto - dados.total_imposto))}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="relative z-10 mt-5">
-                <p className="text-sm text-emerald-100/80">
-                  Média de {formatBRL(dados.media_mensal)} por mês
+
+              <div className="relative z-10 mt-5 pt-5 border-t border-white/10 flex items-center justify-between gap-4 flex-wrap">
+                <p className="text-xs text-emerald-100/80">
+                  Média mensal: <span className="font-semibold text-white">{formatBRL(dados.media_mensal)}</span>
+                </p>
+                <p className="text-xs text-emerald-100/80">
+                  IRPF estimado: <span className="font-semibold text-white">{formatBRL(dados.total_imposto)}</span>
                 </p>
               </div>
             </div>
 
             {/* Stats secundários */}
-            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
               <SummaryCard
                 label="IRPF estimado"
                 value={formatBRL(dados.total_imposto)}
