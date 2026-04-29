@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LogoColor, LogoWhite } from '@/components/ui/logo'
+import {
+  MockupImovelDetalhe, MockupCobranca, MockupDocumentos, MockupTimeline,
+} from '@/components/landing/mockups'
 
 // ─── Browser + Dashboard Mockup ──────────────────────────────────────────────
 
@@ -79,34 +82,49 @@ function DashboardMockup() {
 
 const FEATURES = [
   {
-    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>,
-    title: 'Nunca mais esqueça um vencimento',
-    desc: 'O app avisa você 3 dias antes. Se não pagar, avisa de novo. Você só precisa confirmar o recebimento.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+    title: 'Cobrança Pix + boleto automática',
+    desc: 'Integração Asaas: dia 1 do mês o app gera a cobrança e envia pro inquilino com PIX QR Code, copia-e-cola e link do boleto.',
   },
   {
-    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
-    title: 'Seus inquilinos recebem o lembrete. Não você.',
-    desc: 'Email automático no dia certo, com o valor certo. Você para de ser o chato que fica cobrando.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="9 16 11 18 15 14"/></svg>,
+    title: 'Lembrete 3 dias antes do vencimento',
+    desc: 'Inquilino recebe email com o PIX em mãos. Você recebe um aviso de acompanhamento. Sem precisar cobrar pessoalmente.',
+  },
+  {
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    title: 'Garantia, fiador e seguro fiança',
+    desc: 'Cadastre o tipo de garantia de cada contrato — caução, fiador, seguro fiança ou título de capitalização. Tudo organizado.',
+  },
+  {
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+    title: 'IPTU, condomínio e encargos extras',
+    desc: 'Some IPTU, condomínio e outros encargos ao aluguel base — tudo numa única cobrança mensal, com snapshot histórico para o IR.',
+  },
+  {
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>,
+    title: 'Documentos do imóvel e do inquilino',
+    desc: 'Contrato, escritura, plantas, IPTU, fotos, RG, comprovante de renda. Upload por arrastar e soltar, organizado por categoria.',
+  },
+  {
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    title: 'Linha do tempo de cada imóvel',
+    desc: 'Veja todo o histórico em uma timeline visual: pagamentos, atrasos, reajustes, renovações. Exporta em PDF para arquivo.',
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-    title: 'Quanto entrou esse mês? Resposta em 2 segundos',
-    desc: 'Total recebido, pendente e atrasado numa tela só. Sem planilha, sem conta de cabeça.',
+    title: 'Adimplência e pontualidade calculadas',
+    desc: 'Veja em % quanto cada inquilino é pontual. Identifique padrões antes que viram problema.',
   },
   {
-    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
-    title: 'Pix ou boleto gerado automático todo mês',
-    desc: 'O app gera a cobrança e envia pro inquilino no dia certo. O dinheiro cai direto na sua conta.',
-  },
-  {
-    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-    title: 'Dados de todos os inquilinos num lugar só',
-    desc: 'Contato, contrato, histórico de pagamento. Na hora que precisar, está lá.',
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 11H1l8-8 8 8h-8v10"/><path d="M21 14l-8 8-8-8h8V4"/></svg>,
+    title: 'Trocar inquilino sem perder histórico',
+    desc: 'Saiu um, entra outro: encerra o contrato, mantém todos os pagamentos antigos e vincula o novo num fluxo guiado.',
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
-    title: 'Recibo profissional em 1 clique',
-    desc: 'PDF com todos os dados legais gerado na hora. Envie por WhatsApp direto do app.',
+    title: 'Recibo PDF em 1 clique',
+    desc: 'PDF profissional com todos os dados legais. Envie por email ou WhatsApp direto do app.',
   },
 ]
 
@@ -266,13 +284,13 @@ export function LandingPage() {
 
                 {/* Headline */}
                 <h1 id="hero-title" className="font-extrabold leading-[1.1] mb-6" style={{ letterSpacing: '-0.02em' }}>
-                  <span className="block text-slate-900" style={{ fontSize: 'clamp(36px, 4.5vw, 52px)' }}>Chega de cobrar aluguel</span>
-                  <span className="block text-emerald-600" style={{ fontSize: 'clamp(36px, 4.5vw, 52px)' }}>pelo WhatsApp.</span>
+                  <span className="block text-slate-900" style={{ fontSize: 'clamp(36px, 4.5vw, 56px)' }}>O app completo para</span>
+                  <span className="block text-emerald-600" style={{ fontSize: 'clamp(36px, 4.5vw, 56px)' }}>quem aluga imóveis.</span>
                 </h1>
 
                 {/* Subheadline */}
                 <p className="text-slate-500 font-normal leading-relaxed mb-10 max-w-[480px]" style={{ fontSize: 20 }}>
-                  O ProprietárioZen organiza seus imóveis, avisa os inquilinos, controla os pagamentos e gera recibos. Tudo automático. Tudo no celular.
+                  Cobrança automática Pix + boleto, controle de garantia, encargos, documentos, timeline — tudo num lugar. O que era planilha agora é gestão profissional.
                 </p>
 
                 {/* CTA */}
@@ -385,6 +403,237 @@ export function LandingPage() {
                   <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-5 shrink-0">{icon}</div>
                   <h3 className="font-semibold text-[#1F2937] text-[16px] mb-2 leading-snug">{title}</h3>
                   <p className="text-sm text-[#6B7280] leading-[1.75]">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SPOTLIGHTS — Telas reais do app ── */}
+        <section aria-labelledby="spotlights-title" className="py-24 bg-gradient-to-b from-white to-emerald-50/40">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-16 lp-fade">
+              <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Por dentro do app</span>
+              <h2 id="spotlights-title" className="text-[36px] lg:text-[44px] font-bold text-[#1F2937] leading-[1.15] mt-3 max-w-2xl mx-auto">
+                Cada imóvel ganha uma página completa
+              </h2>
+              <p className="text-[17px] text-[#6B7280] mt-4 max-w-xl mx-auto leading-relaxed">
+                Veja tudo o que importa de cada propriedade num lugar só — financeiro, contrato, inquilino, garantia, documentos e histórico.
+              </p>
+            </div>
+
+            <div className="space-y-24">
+              {/* Spotlight 1 — Detalhe do imóvel */}
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div className="lp-fade order-2 lg:order-1">
+                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Página de detalhe do imóvel</span>
+                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                    Tudo do imóvel <br/>numa única tela
+                  </h3>
+                  <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
+                    Stats financeiros, contrato vigente, dados do inquilino, garantia, encargos, histórico e configurações organizados em abas.
+                  </p>
+                  <ul className="space-y-2 text-slate-700">
+                    {[
+                      'Adimplência calculada nos últimos 12 meses',
+                      'Banner de alerta quando contrato está vencendo',
+                      'Composição do aluguel: base + IPTU + condomínio',
+                      'Botão "Cobrar agora" sempre acessível',
+                    ].map(item => (
+                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                        <svg className="shrink-0 mt-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="lp-fade lp-delay-1 order-1 lg:order-2">
+                  <MockupImovelDetalhe />
+                </div>
+              </div>
+
+              {/* Spotlight 2 — Cobrança automática */}
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div className="lp-fade">
+                  <MockupCobranca />
+                </div>
+                <div className="lp-fade lp-delay-1">
+                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Cobrança automática Pix + boleto</span>
+                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                    O app cobra. <br/>Você só recebe.
+                  </h3>
+                  <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
+                    Integração nativa com Asaas. Dia 1 do mês a cobrança é gerada e o inquilino recebe email com PIX QR Code, copia-e-cola e link do boleto. Tudo sem você tocar.
+                  </p>
+                  <ul className="space-y-2 text-slate-700">
+                    {[
+                      'PIX QR Code + boleto bancário em uma cobrança',
+                      'Webhook atualiza status quando inquilino paga',
+                      'Lembrete automático 3 dias antes do vencimento',
+                      'Botão "Cobrar todos" pra disparar em massa',
+                    ].map(item => (
+                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                        <svg className="shrink-0 mt-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Spotlight 3 — Documentos */}
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div className="lp-fade order-2 lg:order-1">
+                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Documentos digitais</span>
+                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                    Adeus pasta <br/>de papel
+                  </h3>
+                  <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
+                    Contrato, escritura, plantas, IPTU, fotos, RG do inquilino, comprovante de renda. Tudo em PDF ou imagem, organizado por categoria, com upload por arrastar e soltar.
+                  </p>
+                  <ul className="space-y-2 text-slate-700">
+                    {[
+                      'Documentos por imóvel e por inquilino',
+                      'Visualização in-line + download em 1 clique',
+                      'Categorização automática por tipo',
+                      'Armazenamento seguro com criptografia',
+                    ].map(item => (
+                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                        <svg className="shrink-0 mt-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="lp-fade lp-delay-1 order-1 lg:order-2">
+                  <MockupDocumentos />
+                </div>
+              </div>
+
+              {/* Spotlight 4 — Timeline */}
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+                <div className="lp-fade">
+                  <MockupTimeline />
+                </div>
+                <div className="lp-fade lp-delay-1">
+                  <span className="inline-block text-[11px] font-semibold uppercase tracking-widest text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded mb-4">Histórico cronológico</span>
+                  <h3 className="text-[28px] lg:text-[34px] font-bold text-slate-900 leading-tight mb-4">
+                    Toda a história <br/>do imóvel, visual
+                  </h3>
+                  <p className="text-slate-600 text-[17px] leading-relaxed mb-6">
+                    Linha do tempo completa: pagamentos com pontualidade, atrasos, renovações, reajustes previstos, fim de contrato. Exporta em PDF para arquivar ou enviar pro contador.
+                  </p>
+                  <ul className="space-y-2 text-slate-700">
+                    {[
+                      'Eventos passados e futuros no mesmo lugar',
+                      'Indica pontualidade ("pago 2d antes", "no prazo")',
+                      'Exportação em PDF com 1 clique',
+                      'Audit trail completo de cada imóvel',
+                    ].map(item => (
+                      <li key={item} className="flex items-start gap-2 text-[15px]">
+                        <svg className="shrink-0 mt-1" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── APP COMPLETO — Checklist ── */}
+        <section aria-labelledby="completo-title" className="py-24 bg-white">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="text-center mb-14 lp-fade">
+              <span className="text-xs font-semibold text-[#059669] uppercase tracking-widest">Solução completa</span>
+              <h2 id="completo-title" className="text-[36px] lg:text-[44px] font-bold text-[#1F2937] leading-[1.15] mt-3">
+                Tudo que um gestor profissional precisa
+              </h2>
+              <p className="text-[17px] text-[#6B7280] mt-4 max-w-xl mx-auto">
+                Não é uma planilha turbinada. É uma plataforma de gestão imobiliária pensada de ponta a ponta.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 lp-fade">
+              {[
+                {
+                  titulo: 'Cobrança',
+                  items: [
+                    'Cobrança Pix + boleto via Asaas',
+                    'Geração automática dia 1 do mês',
+                    'Email automático ao inquilino',
+                    'Lembrete 3 dias antes do vencimento',
+                    'Multa, juros e desconto configuráveis',
+                    'Webhook atualiza status do pagamento',
+                  ],
+                },
+                {
+                  titulo: 'Contratos',
+                  items: [
+                    'Vigência com prazos pré-definidos',
+                    'Renovação em 1 clique (+6/+12/+24 meses)',
+                    'Reajuste IGP-M, IPCA ou percentual fixo',
+                    'Encerramento de contrato guiado',
+                    'Alerta de fim configurável por imóvel',
+                    'Trocar inquilino sem perder histórico',
+                  ],
+                },
+                {
+                  titulo: 'Garantia',
+                  items: [
+                    'Caução com valor cadastrado',
+                    'Fiador com dados completos',
+                    'Seguro fiança com apólice',
+                    'Título de capitalização',
+                    'Aviso de validade do seguro',
+                    'Sem garantia (registrado)',
+                  ],
+                },
+                {
+                  titulo: 'Financeiro',
+                  items: [
+                    'IPTU mensalizado',
+                    'Condomínio repassado',
+                    'Outros encargos extras',
+                    'Snapshot histórico para IR',
+                    'Relatório de IR pronto',
+                    'Adimplência calculada por imóvel',
+                  ],
+                },
+                {
+                  titulo: 'Documentos',
+                  items: [
+                    'Contrato em PDF',
+                    'Escritura / matrícula',
+                    'Plantas e fotos',
+                    'IPTU do imóvel',
+                    'RG, CPF e comprovantes do inquilino',
+                    'Drag-and-drop por categoria',
+                  ],
+                },
+                {
+                  titulo: 'Visibilidade',
+                  items: [
+                    'Dashboard com pendências críticas',
+                    'Card por imóvel com status do mês',
+                    'Card por inquilino com adimplência',
+                    'Linha do tempo cronológica',
+                    'Exportação de histórico em PDF',
+                    'Recibo profissional em 1 clique',
+                  ],
+                },
+              ].map(({ titulo, items }) => (
+                <div key={titulo} className="bg-emerald-50/30 rounded-2xl border border-emerald-100 p-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-4">{titulo}</p>
+                  <ul className="space-y-2.5">
+                    {items.map(it => (
+                      <li key={it} className="flex items-start gap-2 text-[14px] text-slate-700">
+                        <svg className="shrink-0 mt-1" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {it}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>
