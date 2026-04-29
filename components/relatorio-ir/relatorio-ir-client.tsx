@@ -94,15 +94,20 @@ export function RelatorioIRClient({ anoAtual }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-[1400px] mx-auto space-y-7">
 
       {/* Cabeçalho */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
+      <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Relatório de IR</h1>
-          <p className="text-sm text-[#475569] mt-0.5">
+          <p className="text-sm text-slate-500 font-medium">
             Rendimentos de aluguel · cálculo IRPF {ano}
           </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            Relatório de IR
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           {/* Seletor de ano */}

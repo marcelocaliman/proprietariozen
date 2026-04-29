@@ -163,7 +163,7 @@ export function ImovelDetalheClient({ imovel, alugueis, timeline }: Props) {
       {/* ── Banner de alerta sobre contrato (vencido ou vencendo) ── */}
       {(contratoVencido || contratoVencendo) && imovel.data_fim_contrato && (
         <div className={cn(
-          'rounded-xl border p-4 flex items-start gap-3',
+          'rounded-2xl border p-4 flex items-start gap-3 shadow-sm',
           contratoVencido ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50',
         )}>
           <AlertTriangle className={cn(

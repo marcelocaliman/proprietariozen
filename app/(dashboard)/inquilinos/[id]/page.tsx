@@ -47,7 +47,7 @@ export default async function InquilinoDetalhePage({ params }: { params: { id: s
     .order('mes_referencia', { ascending: false })
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
       <Link
         href="/inquilinos"
         className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors"

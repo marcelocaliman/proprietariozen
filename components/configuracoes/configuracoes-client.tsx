@@ -57,10 +57,15 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-7 max-w-[1400px] mx-auto">
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Configurações</h1>
-        <p className="text-sm text-[#475569] mt-0.5">Gerencie sua conta e preferências</p>
+        <p className="text-sm text-slate-500 font-medium">Sua conta e preferências</p>
+        <h1
+          className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+        >
+          Configurações
+        </h1>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">

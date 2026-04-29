@@ -198,14 +198,19 @@ export function PlanosClient({ planoAtual }: Props) {
     )
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-[1400px] mx-auto space-y-7">
 
-      {/* Cabeçalho da página — estilo dashboard */}
+      {/* Cabeçalho da página */}
       <div>
-        <h1 className="text-[28px] font-bold tracking-tight text-[#0F172A]">Planos</h1>
-        <p className="text-sm text-[#475569] mt-0.5">
+        <p className="text-sm text-slate-500 font-medium">
           Escolha o plano ideal para você. Cancele quando quiser.
         </p>
+        <h1
+          className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+        >
+          Planos
+        </h1>
       </div>
 
       {/* Cards */}
