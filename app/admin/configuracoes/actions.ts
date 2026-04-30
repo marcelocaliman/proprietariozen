@@ -5,6 +5,7 @@ import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-se
 import { isAdmin } from '@/lib/admin'
 import { setSystemSetting, type SystemSettingKey, type SystemSettings } from '@/lib/system-settings'
 import { registrarLog } from '@/lib/log'
+import { EMAIL_SLUGS, clearEmailOverridesCache, type EmailSlug } from '@/lib/email-overrides'
 
 async function requireAdmin(): Promise<{ userId: string } | { error: string }> {
   const supabase = await createServerSupabaseClient()
@@ -59,6 +60,36 @@ export async function executarCronAlertas(): Promise<{ error?: string; result?: 
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Falha na requisição' }
   }
+}
+
+export async function salvarEmailOverride(
+  slug: string,
+  payload: { enabled: boolean; subject_override: string | null; html_override: string | null },
+): Promise<{ error?: string }> {
+  const auth = await requireAdmin()
+  if ('error' in auth) return auth
+
+  if (!EMAIL_SLUGS.includes(slug as EmailSlug)) {
+    return { error: 'Slug de template inválido' }
+  }
+
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (admin.from('email_template_overrides') as any).upsert({
+    slug,
+    enabled: payload.enabled,
+    subject_override: payload.subject_override,
+    html_override: payload.html_override,
+    updated_at: new Date().toISOString(),
+    updated_by: auth.userId,
+  })
+
+  if (error) return { error: error.message }
+
+  clearEmailOverridesCache()
+  await registrarLog(auth.userId, 'ADMIN_EMAIL_TEMPLATE_UPDATED', 'email_template', slug, payload)
+  revalidatePath('/admin/configuracoes')
+  return {}
 }
 
 export async function executarCronGerarAlugueis(): Promise<{ error?: string; result?: unknown }> {

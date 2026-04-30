@@ -21,6 +21,9 @@ export type Database = {
           banned_at: string | null
           banned_reason: string | null
           banned_by: string | null
+          plano_override_motivo: string | null
+          plano_override_at: string | null
+          plano_override_by: string | null
         }
         Insert: {
           id: string
@@ -39,6 +42,9 @@ export type Database = {
           banned_at?: string | null
           banned_reason?: string | null
           banned_by?: string | null
+          plano_override_motivo?: string | null
+          plano_override_at?: string | null
+          plano_override_by?: string | null
         }
         Update: {
           nome?: string
@@ -56,6 +62,35 @@ export type Database = {
           banned_at?: string | null
           banned_reason?: string | null
           banned_by?: string | null
+          plano_override_motivo?: string | null
+          plano_override_at?: string | null
+          plano_override_by?: string | null
+        }
+        Relationships: []
+      }
+      email_template_overrides: {
+        Row: {
+          slug: string
+          enabled: boolean
+          subject_override: string | null
+          html_override: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          slug: string
+          enabled?: boolean
+          subject_override?: string | null
+          html_override?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          subject_override?: string | null
+          html_override?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }

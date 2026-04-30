@@ -14,8 +14,18 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { SystemSettings, GlobalBanner, MaintenanceMode, Announcement } from '@/lib/system-settings'
-import { atualizarSetting, executarCronAlertas, executarCronGerarAlugueis } from '@/app/admin/configuracoes/actions'
+import { atualizarSetting, executarCronAlertas, executarCronGerarAlugueis, salvarEmailOverride } from '@/app/admin/configuracoes/actions'
+import { EMAIL_SLUGS, TEMPLATE_LABELS, TEMPLATE_VARS, type EmailSlug } from '@/lib/email-overrides'
 import { cn } from '@/lib/utils'
+
+type EmailOverrideRow = {
+  slug: string
+  enabled: boolean
+  subject_override: string | null
+  html_override: string | null
+  updated_at: string | null
+  updated_by: string | null
+}
 
 interface Stats {
   usuarios: { total: number; novos30d: number; banidos: number; comAsaas: number }
@@ -24,6 +34,7 @@ interface Stats {
   alugueis: { total: number; pagos: number }
   planos: { gratis: number; pago: number; elite: number }
   mrr: number
+  mrrAssinaturasAtivas: number
   documentos: { imovel: number; aluguel: number; inquilino: number }
   tokensAtivos: number
   logsHoje: number
@@ -56,6 +67,7 @@ interface Props {
   cronAlertasLogs: { action: string; details: Record<string, unknown> | null; created_at: string }[]
   ultimaAtividadeAsaas: string | null
   ultimaAtividadeStripe: string | null
+  emailOverrides: EmailOverrideRow[]
 }
 
 function formatBRL(centavos: number): string {
@@ -81,6 +93,7 @@ export function ConfiguracoesAdminClient({
   stats, settings, envStatus, logsRecentes,
   cronGerarLogs, cronAlertasLogs,
   ultimaAtividadeAsaas, ultimaAtividadeStripe,
+  emailOverrides,
 }: Props) {
   return (
     <div className="space-y-7 max-w-[1400px] mx-auto">
@@ -139,7 +152,7 @@ export function ConfiguracoesAdminClient({
 
         {/* ── 4. E-MAILS ── */}
         <TabsContent value="emails" className="space-y-5 mt-5">
-          <EmailsTemplates />
+          <EmailsTemplates overrides={emailOverrides} />
         </TabsContent>
 
         {/* ── 5. AUTOMAÇÃO ── */}
@@ -194,7 +207,7 @@ function StatsHero({ stats }: { stats: Stats }) {
         </div>
         <div className="relative z-10 mt-5">
           <p className="text-sm text-emerald-100/80">
-            {stats.planos.pago + stats.planos.elite} assinaturas ativas
+            {stats.mrrAssinaturasAtivas} assinatura{stats.mrrAssinaturasAtivas !== 1 ? 's' : ''} pagante{stats.mrrAssinaturasAtivas !== 1 ? 's' : ''} no Stripe
           </p>
         </div>
       </div>
@@ -304,7 +317,11 @@ function PlatformStats({ stats }: { stats: Stats }) {
           <DistribuicaoItem label="Elite" value={stats.planos.elite} max={stats.usuarios.total} color="purple" />
         </div>
         <div className="grid sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
-          <KeyVal label="Receita esperada/mês" value={formatBRL(stats.imoveis.receitaTotal)} />
+          <KeyVal
+            label="GMV aluguéis/mês"
+            value={formatBRL(stats.imoveis.receitaTotal)}
+            sub="volume processado pela plataforma"
+          />
           <KeyVal label="Documentos imóvel" value={stats.documentos.imovel.toString()} />
           <KeyVal label="Documentos aluguel" value={stats.documentos.aluguel.toString()} />
           <KeyVal label="Tokens inquilino ativos" value={stats.tokensAtivos.toString()} />
@@ -334,11 +351,12 @@ function DistribuicaoItem({ label, value, max, color }: { label: string; value: 
   )
 }
 
-function KeyVal({ label, value }: { label: string; value: string }) {
+function KeyVal({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
       <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">{label}</p>
       <p className="text-sm font-bold text-slate-900 mt-0.5">{value}</p>
+      {sub && <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{sub}</p>}
     </div>
   )
 }
@@ -580,42 +598,240 @@ function IntegracoesGrid({ envStatus, ultimaAtividadeAsaas, ultimaAtividadeStrip
 // 4. E-MAILS
 // ═══════════════════════════════════════════════════════════════
 
-function EmailsTemplates() {
-  const templates = [
-    { id: 'lembrete_vencimento_proprietario', label: 'Lembrete vencimento (proprietário)', desc: 'Disparado 3 dias antes do vencimento', cor: 'amber' },
-    { id: 'lembrete_inquilino', label: 'Lembrete vencimento (inquilino)', desc: 'Disparado 3 dias antes — com PIX/boleto', cor: 'amber' },
-    { id: 'cobranca_inquilino', label: 'Cobrança inicial ao inquilino', desc: 'Dia 1 do mês quando aluguel é gerado', cor: 'emerald' },
-    { id: 'alerta_atraso', label: 'Alerta de atraso (proprietário)', desc: 'Disparado 1 dia após vencimento', cor: 'red' },
-    { id: 'alerta_reajuste', label: 'Alerta de reajuste (proprietário)', desc: 'Disparado 30 dias antes do reajuste', cor: 'blue' },
-    { id: 'alerta_vencimento_contrato', label: 'Alerta fim de contrato', desc: 'Disparado dias antes (configurável por imóvel)', cor: 'amber' },
-    { id: 'recibo', label: 'Recibo de pagamento', desc: 'Enviado pelo gestor manualmente', cor: 'emerald' },
-    { id: 'convite_inquilino', label: 'Convite ao inquilino', desc: 'Acesso à área do inquilino', cor: 'blue' },
-    { id: 'bem_vindo', label: 'Boas-vindas', desc: 'Após cadastro novo', cor: 'emerald' },
-  ]
+function EmailsTemplates({ overrides }: { overrides: EmailOverrideRow[] }) {
+  const [selected, setSelected] = useState<EmailSlug | null>(null)
+  const overridesBySlug = new Map(overrides.map(o => [o.slug as EmailSlug, o]))
+  const overrideAtivos = overrides.filter(o =>
+    o.enabled === false || o.subject_override || o.html_override
+  ).length
 
   return (
     <Card className="rounded-2xl border-slate-100 shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
+      <CardContent className="p-6 space-y-5">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Send className="h-4 w-4 text-emerald-600" />
             <h3 className="text-sm font-bold text-slate-900">Templates de e-mail</h3>
           </div>
-          <p className="text-xs text-slate-400">{templates.length} templates ativos</p>
+          <p className="text-xs text-slate-400">
+            {EMAIL_SLUGS.length} templates · {overrideAtivos} customizado{overrideAtivos !== 1 ? 's' : ''}
+          </p>
         </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {templates.map(t => (
-            <div key={t.id} className="rounded-xl border border-slate-100 p-3 hover:bg-slate-50/40 transition-colors">
-              <p className="text-sm font-semibold text-slate-900 mb-1">{t.label}</p>
-              <p className="text-[11px] text-slate-500 leading-relaxed">{t.desc}</p>
-            </div>
-          ))}
+          {EMAIL_SLUGS.map(slug => {
+            const ov = overridesBySlug.get(slug)
+            const customizado = !!(ov && (ov.subject_override || ov.html_override))
+            const desativado = !!(ov && ov.enabled === false)
+            const meta = TEMPLATE_LABELS[slug]
+            return (
+              <button
+                key={slug}
+                onClick={() => setSelected(slug)}
+                className={cn(
+                  'text-left rounded-xl border p-3 transition-colors',
+                  desativado ? 'border-red-200 bg-red-50/40 hover:bg-red-50' :
+                  customizado ? 'border-amber-200 bg-amber-50/40 hover:bg-amber-50' :
+                  'border-slate-100 hover:bg-slate-50/40',
+                )}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <p className="text-sm font-semibold text-slate-900">{meta.label}</p>
+                  {desativado ? (
+                    <span className="text-[9px] font-bold uppercase tracking-wide bg-red-100 text-red-700 px-1.5 py-0.5 rounded shrink-0">off</span>
+                  ) : customizado ? (
+                    <span className="text-[9px] font-bold uppercase tracking-wide bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded shrink-0">custom</span>
+                  ) : null}
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">{meta.desc}</p>
+              </button>
+            )
+          })}
         </div>
-        <p className="text-[11px] text-slate-400 mt-4">
-          Templates definidos em <code className="font-mono">lib/email.ts</code>. Edição via UI estará disponível em breve.
+
+        <p className="text-[11px] text-slate-400">
+          Use <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">{'{{nomeVariavel}}'}</code> dentro do
+          subject ou HTML para inserir dados dinâmicos. Sem override, o template padrão de
+          <code className="font-mono ml-1">lib/email.ts</code> é usado.
         </p>
+
+        {selected && (
+          <EmailTemplateEditor
+            slug={selected}
+            current={overridesBySlug.get(selected) ?? null}
+            onClose={() => setSelected(null)}
+          />
+        )}
       </CardContent>
     </Card>
+  )
+}
+
+function EmailTemplateEditor({
+  slug,
+  current,
+  onClose,
+}: {
+  slug: EmailSlug
+  current: EmailOverrideRow | null
+  onClose: () => void
+}) {
+  const meta = TEMPLATE_LABELS[slug]
+  const vars = TEMPLATE_VARS[slug]
+
+  const [enabled, setEnabled] = useState(current?.enabled !== false)
+  const [subject, setSubject] = useState(current?.subject_override ?? '')
+  const [html, setHtml] = useState(current?.html_override ?? '')
+  const [pending, startTransition] = useTransition()
+
+  function handleSave() {
+    startTransition(async () => {
+      const result = await salvarEmailOverride(slug, {
+        enabled,
+        subject_override: subject.trim() || null,
+        html_override: html.trim() || null,
+      })
+      if (result.error) toast.error(result.error)
+      else {
+        toast.success('Template atualizado')
+        onClose()
+      }
+    })
+  }
+
+  function handleReset() {
+    if (!confirm('Voltar para o template padrão? O override atual será apagado.')) return
+    startTransition(async () => {
+      const result = await salvarEmailOverride(slug, {
+        enabled: true,
+        subject_override: null,
+        html_override: null,
+      })
+      if (result.error) toast.error(result.error)
+      else {
+        toast.success('Template resetado')
+        onClose()
+      }
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-6 py-4 border-b border-slate-100 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">{meta.label}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{meta.desc}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1.5 hover:bg-slate-100 text-slate-500"
+            aria-label="Fechar"
+          >
+            <XCircle className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+          {/* Toggle enabled */}
+          <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Disparar este e-mail</p>
+              <p className="text-[11px] text-slate-500">Desabilitar pula o envio para todos os usuários.</p>
+            </div>
+            <button
+              onClick={() => setEnabled(v => !v)}
+              className={cn(
+                'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                enabled ? 'bg-emerald-600' : 'bg-slate-300',
+              )}
+            >
+              <span
+                className={cn(
+                  'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                  enabled ? 'translate-x-6' : 'translate-x-1',
+                )}
+              />
+            </button>
+          </div>
+
+          {/* Variáveis disponíveis */}
+          <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+            <p className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide mb-2">
+              Variáveis disponíveis
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {vars.map(v => (
+                <code
+                  key={v}
+                  className="text-[11px] font-mono bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-700"
+                >
+                  {`{{${v}}}`}
+                </code>
+              ))}
+            </div>
+          </div>
+
+          {/* Subject */}
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">Subject (assunto)</Label>
+            <Input
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              placeholder="Deixe vazio para usar o padrão"
+              className="mt-1.5 text-sm"
+            />
+          </div>
+
+          {/* HTML */}
+          <div>
+            <Label className="text-xs font-semibold text-slate-700">HTML (corpo)</Label>
+            <textarea
+              value={html}
+              onChange={e => setHtml(e.target.value)}
+              placeholder="Deixe vazio para usar o template padrão"
+              rows={14}
+              className="mt-1.5 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 leading-relaxed"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              HTML completo é renderizado direto no e-mail. Sem override, usa o layout padrão (header colorido + cards).
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0">
+          {current && (current.subject_override || current.html_override || current.enabled === false) ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleReset}
+              disabled={pending}
+              className="text-xs gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Resetar para padrão
+            </Button>
+          ) : <span />}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={onClose} disabled={pending} className="text-xs">
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={pending}
+              className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+            >
+              {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+              Salvar
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 

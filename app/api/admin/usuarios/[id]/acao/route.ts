@@ -5,7 +5,7 @@ import { createClient as createSupabaseAdminAuthClient } from '@supabase/supabas
 
 export const dynamic = 'force-dynamic'
 
-type Acao = 'mudar_plano' | 'banir' | 'reativar' | 'resetar_senha'
+type Acao = 'mudar_plano' | 'banir' | 'reativar' | 'resetar_senha' | 'override_plano' | 'remover_override_plano' | 'refund_stripe'
 
 // POST /api/admin/usuarios/[id]/acao
 export async function POST(
@@ -18,7 +18,7 @@ export async function POST(
 
   const { id: targetId } = await params
 
-  let body: { acao: Acao; motivo?: string }
+  let body: { acao: Acao; motivo?: string; plano?: 'gratis' | 'pago' | 'elite'; charge_id?: string; valor_centavos?: number }
   try {
     body = await req.json()
   } catch {
@@ -26,7 +26,7 @@ export async function POST(
   }
 
   const { acao, motivo } = body
-  if (!['mudar_plano', 'banir', 'reativar', 'resetar_senha'].includes(acao)) {
+  if (!['mudar_plano', 'banir', 'reativar', 'resetar_senha', 'override_plano', 'remover_override_plano', 'refund_stripe'].includes(acao)) {
     return NextResponse.json({ error: 'Ação inválida.' }, { status: 400 })
   }
 
@@ -135,6 +135,92 @@ export async function POST(
         ok: true,
         reset_link: data.properties?.action_link ?? null,
       })
+    }
+
+    case 'override_plano': {
+      const novoPlano = body.plano
+      if (!novoPlano || !['gratis', 'pago', 'elite'].includes(novoPlano)) {
+        return NextResponse.json({ error: 'Plano inválido.' }, { status: 400 })
+      }
+      if (!motivo || motivo.trim().length < 3) {
+        return NextResponse.json({ error: 'Motivo obrigatório (mínimo 3 caracteres).' }, { status: 400 })
+      }
+
+      const { error } = await admin
+        .from('profiles')
+        .update({
+          plano: novoPlano,
+          plano_override_motivo: motivo,
+          plano_override_at: agora,
+          plano_override_by: adminId,
+        })
+        .eq('id', targetId)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+      await logActivity(admin, adminId, targetId, target.email,
+        'admin_override_plano',
+        { de: target.plano, para: novoPlano, motivo, admin_id: adminId },
+      )
+
+      return NextResponse.json({ ok: true, plano: novoPlano })
+    }
+
+    case 'remover_override_plano': {
+      const { error } = await admin
+        .from('profiles')
+        .update({
+          plano_override_motivo: null,
+          plano_override_at: null,
+          plano_override_by: null,
+        })
+        .eq('id', targetId)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+      await logActivity(admin, adminId, targetId, target.email,
+        'admin_remover_override_plano',
+        { admin_id: adminId },
+      )
+
+      return NextResponse.json({ ok: true })
+    }
+
+    case 'refund_stripe': {
+      const chargeId = body.charge_id
+      const valorCentavos = body.valor_centavos
+      if (!chargeId) {
+        return NextResponse.json({ error: 'charge_id obrigatório.' }, { status: 400 })
+      }
+      if (!motivo || motivo.trim().length < 3) {
+        return NextResponse.json({ error: 'Motivo obrigatório (mínimo 3 caracteres).' }, { status: 400 })
+      }
+
+      try {
+        const { getStripe } = await import('@/lib/stripe')
+        const stripe = getStripe()
+        const refundParams: { charge: string; reason: 'requested_by_customer'; metadata: Record<string, string>; amount?: number } = {
+          charge: chargeId,
+          reason: 'requested_by_customer',
+          metadata: {
+            admin_id: adminId,
+            user_id: targetId,
+            motivo: motivo.slice(0, 200),
+          },
+        }
+        if (valorCentavos && valorCentavos > 0) {
+          refundParams.amount = valorCentavos
+        }
+        const refund = await stripe.refunds.create(refundParams)
+
+        await logActivity(admin, adminId, targetId, target.email,
+          'admin_refund_stripe',
+          { charge_id: chargeId, refund_id: refund.id, valor_centavos: refund.amount, motivo, admin_id: adminId },
+        )
+
+        return NextResponse.json({ ok: true, refund: { id: refund.id, amount: refund.amount, status: refund.status } })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Erro ao processar refund'
+        return NextResponse.json({ error: msg }, { status: 500 })
+      }
     }
   }
 }

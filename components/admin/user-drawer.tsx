@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Building2, Ban, RefreshCw, KeyRound, Activity,
   TrendingUp, Copy, CheckCircle2, AlertTriangle, ShieldOff,
+  Crown, Undo2, DollarSign, X,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip,
@@ -40,7 +41,12 @@ export type UserRow = {
 }
 
 type UserDetail = {
-  profile: UserRow & { stripe_customer_id: string | null }
+  profile: UserRow & {
+    stripe_customer_id: string | null
+    plano_override_motivo: string | null
+    plano_override_at: string | null
+    plano_override_by: string | null
+  }
   imoveis: { id: string; apelido: string; tipo: string; valor_aluguel: number; ativo: boolean }[]
   inquilinos: { id: string; nome: string; email: string; cpf: string | null; ativo: boolean }[]
   aluguel_history: { mes: string; label: string; total_valor: number; total_pago: number; count: number }[]
@@ -121,6 +127,16 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
   const [copiedLink, setCopiedLink] = useState(false)
   const [resetLink, setResetLink]   = useState<string | null>(null)
 
+  // Forms inline
+  const [overrideOpen, setOverrideOpen] = useState(false)
+  const [overridePlano, setOverridePlano] = useState<'gratis' | 'pago' | 'elite'>('pago')
+  const [overrideMotivo, setOverrideMotivo] = useState('')
+
+  const [refundOpen, setRefundOpen] = useState(false)
+  const [refundChargeId, setRefundChargeId] = useState('')
+  const [refundValor, setRefundValor] = useState('')
+  const [refundMotivo, setRefundMotivo] = useState('')
+
   // Buscar detalhe quando abre
   useEffect(() => {
     if (!open || !user) { setDetail(null); return }
@@ -138,13 +154,16 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
   const isBanned = user.banned
 
   // ── Executar ação ──────────────────────────────────────────────────────────
-  async function executarAcao(acao: string, motivo?: string) {
+  async function executarAcao(
+    acao: string,
+    extras?: { motivo?: string; plano?: string; charge_id?: string; valor_centavos?: number },
+  ) {
     setActionLoading(acao)
     try {
       const res = await fetch(`/api/admin/usuarios/${user!.id}/acao`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao, motivo }),
+        body: JSON.stringify({ acao, ...extras }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? 'Erro desconhecido')
@@ -153,9 +172,12 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
         setResetLink(json.reset_link)
       } else {
         const msgs: Record<string, string> = {
-          mudar_plano:   `Plano alterado para ${LIMITES_PLANO[json.plano as PlanoTipo]?.nome ?? json.plano}`,
-          banir:         'Usuário banido',
-          reativar:      'Usuário reativado',
+          mudar_plano:            `Plano alterado para ${LIMITES_PLANO[json.plano as PlanoTipo]?.nome ?? json.plano}`,
+          banir:                  'Usuário banido',
+          reativar:               'Usuário reativado',
+          override_plano:         `Override aplicado: ${LIMITES_PLANO[json.plano as PlanoTipo]?.nome ?? json.plano}`,
+          remover_override_plano: 'Override removido',
+          refund_stripe:          `Refund processado (${json.refund?.status ?? 'ok'})`,
         }
         toast.success(msgs[acao] ?? 'Ação executada')
         onActionDone()
@@ -168,10 +190,36 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
     }
   }
 
+  function aplicarOverride() {
+    if (overrideMotivo.trim().length < 3) {
+      toast.error('Motivo obrigatório (mínimo 3 caracteres).')
+      return
+    }
+    executarAcao('override_plano', { plano: overridePlano, motivo: overrideMotivo.trim() })
+  }
+
+  function aplicarRefund() {
+    if (!refundChargeId.trim()) {
+      toast.error('charge_id obrigatório.')
+      return
+    }
+    if (refundMotivo.trim().length < 3) {
+      toast.error('Motivo obrigatório (mínimo 3 caracteres).')
+      return
+    }
+    const valorNum = parseFloat(refundValor.replace(',', '.'))
+    const valor_centavos = !isNaN(valorNum) && valorNum > 0 ? Math.round(valorNum * 100) : undefined
+    executarAcao('refund_stripe', {
+      charge_id: refundChargeId.trim(),
+      motivo: refundMotivo.trim(),
+      valor_centavos,
+    })
+  }
+
   function handleBanir() {
     const motivo = window.prompt('Motivo do banimento (opcional):') ?? undefined
     if (motivo === null) return // clicou cancelar
-    executarAcao('banir', motivo || undefined)
+    executarAcao('banir', { motivo: motivo || undefined })
   }
 
   async function copiarLink(link: string) {
@@ -370,6 +418,171 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                       </Button>
                     )}
                   </div>
+
+                  {/* ── Avançado: override de plano + refund ───────────── */}
+                  {user.role !== 'admin' && (
+                    <div className="space-y-2 pt-2 border-t border-[#E2E8F0]">
+                      <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide pt-2">
+                        Avançado
+                      </p>
+
+                      {/* Override ativo */}
+                      {detail?.profile.plano_override_motivo && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 space-y-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                              <Crown className="h-3.5 w-3.5" />
+                              Plano com override manual
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-amber-700/80 break-words">
+                            {detail.profile.plano_override_motivo}
+                          </p>
+                          {detail.profile.plano_override_at && (
+                            <p className="text-[10px] text-amber-600">
+                              Aplicado em {fmtDt(detail.profile.plano_override_at)}
+                            </p>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!!actionLoading}
+                            onClick={() => executarAcao('remover_override_plano')}
+                            className="w-full mt-1 text-xs gap-1.5 h-7 border-amber-300 text-amber-700 hover:bg-amber-100"
+                          >
+                            {actionLoading === 'remover_override_plano'
+                              ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              : <Undo2 className="h-3.5 w-3.5" />}
+                            Remover override
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Botão override de plano */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!!actionLoading}
+                        onClick={() => { setOverrideOpen(o => !o); setRefundOpen(false) }}
+                        className="w-full text-xs gap-1.5"
+                      >
+                        {overrideOpen
+                          ? <X className="h-3.5 w-3.5" />
+                          : <Crown className="h-3.5 w-3.5" />}
+                        {overrideOpen ? 'Cancelar' : 'Override de plano'}
+                      </Button>
+
+                      {overrideOpen && (
+                        <div className="rounded-lg border border-[#E2E8F0] bg-slate-50 p-3 space-y-2.5">
+                          <div>
+                            <label className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wide">
+                              Novo plano
+                            </label>
+                            <select
+                              value={overridePlano}
+                              onChange={e => setOverridePlano(e.target.value as 'gratis' | 'pago' | 'elite')}
+                              className="mt-1 w-full h-8 rounded-md border border-[#E2E8F0] bg-white px-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                            >
+                              <option value="gratis">Grátis</option>
+                              <option value="pago">Master</option>
+                              <option value="elite">Elite</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wide">
+                              Motivo (auditoria)
+                            </label>
+                            <textarea
+                              value={overrideMotivo}
+                              onChange={e => setOverrideMotivo(e.target.value)}
+                              placeholder="Ex.: cortesia 60 dias por suporte (ticket #1234)"
+                              rows={2}
+                              className="mt-1 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-1.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                            />
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={!!actionLoading}
+                            onClick={aplicarOverride}
+                            className="w-full text-xs h-8 bg-emerald-600 hover:bg-emerald-700"
+                          >
+                            {actionLoading === 'override_plano'
+                              ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              : <CheckCircle2 className="h-3.5 w-3.5" />}
+                            <span className="ml-1.5">Aplicar override</span>
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Botão refund Stripe */}
+                      {detail?.profile.stripe_customer_id && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!!actionLoading}
+                            onClick={() => { setRefundOpen(o => !o); setOverrideOpen(false) }}
+                            className="w-full text-xs gap-1.5"
+                          >
+                            {refundOpen
+                              ? <X className="h-3.5 w-3.5" />
+                              : <DollarSign className="h-3.5 w-3.5" />}
+                            {refundOpen ? 'Cancelar' : 'Refund Stripe'}
+                          </Button>
+
+                          {refundOpen && (
+                            <div className="rounded-lg border border-[#E2E8F0] bg-slate-50 p-3 space-y-2.5">
+                              <div>
+                                <label className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wide">
+                                  Charge ID (ch_...)
+                                </label>
+                                <input
+                                  value={refundChargeId}
+                                  onChange={e => setRefundChargeId(e.target.value)}
+                                  placeholder="ch_3Ab..."
+                                  className="mt-1 w-full h-8 rounded-md border border-[#E2E8F0] bg-white px-2 text-xs font-mono text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wide">
+                                  Valor (R$) — vazio = total
+                                </label>
+                                <input
+                                  value={refundValor}
+                                  onChange={e => setRefundValor(e.target.value)}
+                                  placeholder="49,90"
+                                  className="mt-1 w-full h-8 rounded-md border border-[#E2E8F0] bg-white px-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wide">
+                                  Motivo (auditoria)
+                                </label>
+                                <textarea
+                                  value={refundMotivo}
+                                  onChange={e => setRefundMotivo(e.target.value)}
+                                  placeholder="Ex.: cliente solicitou cancelamento"
+                                  rows={2}
+                                  className="mt-1 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-1.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                disabled={!!actionLoading}
+                                onClick={aplicarRefund}
+                                className="w-full text-xs h-8 bg-rose-600 hover:bg-rose-700"
+                              >
+                                {actionLoading === 'refund_stripe'
+                                  ? <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                                  : <DollarSign className="h-3.5 w-3.5" />}
+                                <span className="ml-1.5">Processar refund</span>
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </TabsContent>

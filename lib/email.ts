@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { formatarMoeda, formatarMesReferencia, formatarData } from './helpers'
 import { gerarPayloadPix } from './pix'
+import { resolveTemplate, type EmailSlug } from './email-overrides'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -27,6 +28,21 @@ async function enviarEmail(
   }
   console.log(`[Resend] OK enviado para ${payload.to} — ID: ${data?.id}`)
   return data?.id
+}
+
+// Aplica override (subject/html/disabled) antes de despachar para o Resend.
+async function despachar(
+  slug: EmailSlug,
+  to: string,
+  defaults: { subject: string; html: string },
+  vars: Record<string, string | number | null | undefined>,
+): Promise<string | null | undefined> {
+  const tpl = await resolveTemplate(slug, defaults, vars)
+  if (!tpl) {
+    console.log(`[Resend] Template ${slug} desabilitado — pulando envio para ${to}`)
+    return null
+  }
+  return enviarEmail({ from: FROM, to: [to], subject: tpl.subject, html: tpl.html })
 }
 
 // ─── Base layout ─────────────────────────────────────────────────────────────
@@ -122,11 +138,16 @@ export async function enviarLembreteVencimento(p: VencimentoParams) {
       Após receber, registre o pagamento no sistema para manter seu controle atualizado.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('lembrete_vencimento_proprietario', p.para, {
     subject: `Aluguel vence em 3 dias — ${p.nomeImovel}`,
     html: wrapEmail('#d97706', 'Vencimento em 3 dias', body),
+  }, {
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    nomeInquilino: p.nomeInquilino,
+    valor: formatarMoeda(p.valor),
+    dataVencimento: formatarData(p.dataVencimento),
+    mesReferencia: formatarMesReferencia(p.mesReferencia),
   })
 }
 
@@ -171,11 +192,17 @@ export async function enviarAlertaAtraso(p: AtrasoParams) {
       Após receber, registre o pagamento no sistema para baixar o alerta.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('alerta_atraso', p.para, {
     subject: `Aluguel em atraso — ${p.nomeImovel}`,
     html: wrapEmail('#dc2626', 'Aluguel em Atraso', body),
+  }, {
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    nomeInquilino: p.nomeInquilino,
+    valor: formatarMoeda(p.valor),
+    dataVencimento: formatarData(p.dataVencimento),
+    diasAtraso: p.diasAtraso,
+    mesReferencia: formatarMesReferencia(p.mesReferencia),
   })
 }
 
@@ -224,11 +251,16 @@ export async function enviarAlertaReajuste(p: ReajusteParams) {
     </div>
     ${ctaButton('Aplicar reajuste no painel', `${APP_URL}/dashboard`, '#1e40af')}`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('alerta_reajuste', p.para, {
     subject: `Reajuste de aluguel em 30 dias — ${p.nomeImovel}`,
     html: wrapEmail('#1e40af', 'Reajuste em 30 dias', body),
+  }, {
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    valorAtual: formatarMoeda(p.valorAtual),
+    indiceReajuste: indiceLabel,
+    percentualFixo: p.percentualFixo,
+    dataReajuste: formatarData(p.dataReajuste),
   })
 }
 
@@ -270,11 +302,15 @@ export async function enviarConviteInquilino(p: ConviteInquilinoParams) {
       Caso precise de ajuda, entre em contato com ${p.nomeProprietario}.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('convite_inquilino', p.para, {
     subject: `Seu acesso ao ProprietarioZen — ${p.nomeImovel}`,
     html: wrapEmail('#059669', 'Área do Inquilino', body),
+  }, {
+    nomeInquilino: p.nomeInquilino,
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    enderecoImovel: p.enderecoImovel,
+    linkAcesso: link,
   })
 }
 
@@ -436,11 +472,16 @@ export async function enviarCobrancaParaInquilino(p: CobrancaInquilinoParams) {
       Em caso de dúvidas, entre em contato diretamente com <strong>${p.nomeProprietario}</strong>.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('cobranca_inquilino', p.para, {
     subject: `Cobrança de aluguel — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
     html: wrapEmail('#059669', 'Cobrança de Aluguel', body),
+  }, {
+    nomeInquilino: p.nomeInquilino,
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    valor: formatarMoeda(p.valor),
+    mesReferencia: formatarMesReferencia(p.mesReferencia),
+    dataVencimento: formatarData(p.dataVencimento),
   })
 }
 
@@ -513,11 +554,16 @@ export async function enviarLembreteInquilino(p: LembreteInquilinoParams) {
       Em caso de dúvidas, entre em contato com <strong>${p.nomeProprietario}</strong>.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('lembrete_inquilino', p.para, {
     subject: `Lembrete de aluguel em aberto — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
     html: wrapEmail('#dc2626', 'Lembrete de Aluguel', body),
+  }, {
+    nomeInquilino: p.nomeInquilino,
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    valor: formatarMoeda(p.valor),
+    mesReferencia: formatarMesReferencia(p.mesReferencia),
+    dataVencimento: formatarData(p.dataVencimento),
   })
 }
 
@@ -571,11 +617,21 @@ export async function enviarReciboInquilino(p: ReciboInquilinoParams) {
       Recibo gerado por <strong>${p.nomeProprietario}</strong> via ProprietárioZen.
     </p>`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('recibo', p.para, {
     subject: `Recibo de aluguel — ${formatarMesReferencia(p.mesReferencia)} · ${p.nomeImovel}`,
     html: wrapEmail('#059669', 'Recibo de Pagamento', body),
+  }, {
+    nomeInquilino: p.nomeInquilino,
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    enderecoImovel: p.enderecoImovel,
+    valor: formatarMoeda(p.valor),
+    valorPago: formatarMoeda(p.valorPago),
+    mesReferencia: formatarMesReferencia(p.mesReferencia),
+    dataVencimento: formatarData(p.dataVencimento),
+    dataPagamento: p.dataPagamento ? formatarData(p.dataPagamento) : '',
+    metodoPagamento: p.metodoPagamento,
+    observacao: p.observacao,
   })
 }
 
@@ -587,26 +643,25 @@ interface EmailBemVindoParams {
 }
 
 export async function enviarEmailBemVindo({ para, nome }: EmailBemVindoParams) {
-  return enviarEmail({
-    from: FROM,
-    to: [para],
+  const html = wrapEmail(
+    '#1e40af',
+    `Bem-vindo, ${nome}!`,
+    `<p style="font-size:15px;color:#374151;">
+      Estamos muito felizes em ter você no ProprietárioZen. A partir de agora você pode:
+    </p>
+    <ul style="color:#374151;font-size:14px;line-height:2;">
+      <li>Cadastrar e gerenciar seus imóveis</li>
+      <li>Controlar inquilinos e contratos</li>
+      <li>Acompanhar pagamentos e aluguéis</li>
+      <li>Gerar recibos em PDF automaticamente</li>
+      <li>Receber alertas de vencimento e atraso por e-mail</li>
+    </ul>
+    ${ctaButton('Acessar minha conta', `${APP_URL}/dashboard`)}`,
+  )
+  return despachar('bem_vindo', para, {
     subject: 'Bem-vindo ao ProprietarioZen!',
-    html: wrapEmail(
-      '#1e40af',
-      `Bem-vindo, ${nome}!`,
-      `<p style="font-size:15px;color:#374151;">
-        Estamos muito felizes em ter você no ProprietárioZen. A partir de agora você pode:
-      </p>
-      <ul style="color:#374151;font-size:14px;line-height:2;">
-        <li>Cadastrar e gerenciar seus imóveis</li>
-        <li>Controlar inquilinos e contratos</li>
-        <li>Acompanhar pagamentos e aluguéis</li>
-        <li>Gerar recibos em PDF automaticamente</li>
-        <li>Receber alertas de vencimento e atraso por e-mail</li>
-      </ul>
-      ${ctaButton('Acessar minha conta', `${APP_URL}/dashboard`)}`,
-    ),
-  })
+    html,
+  }, { nome })
 }
 
 // ─── Template N: Alerta de vencimento de contrato ────────────────────────────
@@ -636,10 +691,14 @@ export async function enviarAlertaVencimentoContrato(p: VencimentoContratoParams
     ])}
     ${ctaButton('Gerenciar contrato →', `${APP_URL}/imoveis`, '#d97706')}`
 
-  return enviarEmail({
-    from: FROM,
-    to: [p.para],
+  return despachar('alerta_vencimento_contrato', p.para, {
     subject: `Contrato vencendo em ${p.diasRestantes} dias — ${p.nomeImovel}`,
     html: wrapEmail('#d97706', `Contrato vence em ${p.diasRestantes} dias`, body),
+  }, {
+    nomeProprietario: p.nomeProprietario,
+    nomeImovel: p.nomeImovel,
+    nomeInquilino: p.nomeInquilino,
+    dataFim: formatarData(p.dataFim),
+    diasRestantes: p.diasRestantes,
   })
 }

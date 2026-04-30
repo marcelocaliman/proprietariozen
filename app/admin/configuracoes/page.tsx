@@ -40,7 +40,7 @@ export default async function ConfiguracoesAdminPage() {
     admin.from('inquilinos').select('id', { count: 'exact', head: true }).eq('ativo', true),
     admin.from('alugueis').select('id', { count: 'exact', head: true }),
     admin.from('alugueis').select('id', { count: 'exact', head: true }).eq('status', 'pago'),
-    admin.from('profiles').select('plano'),
+    admin.from('profiles').select('plano, stripe_customer_id, plano_override_motivo'),
     admin.from('profiles').select('id', { count: 'exact', head: true }).not('banned_at', 'is', null),
     admin.from('profiles').select('id', { count: 'exact', head: true }).not('asaas_api_key_enc', 'is', null),
     admin.from('alugueis').select('asaas_charge_id, criado_em').not('asaas_charge_id', 'is', null).order('criado_em', { ascending: false }).limit(1),
@@ -86,19 +86,38 @@ export default async function ConfiguracoesAdminPage() {
     .order('created_at', { ascending: false })
     .limit(3)
 
-  // Por plano
+  // Por plano (todos os usuários, inclusive overrides)
   const planoBuckets = { gratis: 0, pago: 0, elite: 0 }
-  for (const p of profilesPlano ?? []) {
+  // MRR real: só conta quem tem stripe_customer_id E não está com override manual.
+  // Overrides são cortesias do admin, não geram receita Stripe.
+  const mrrBuckets = { pago: 0, elite: 0 }
+  type ProfileRow = { plano: string | null; stripe_customer_id: string | null; plano_override_motivo: string | null }
+  for (const p of (profilesPlano ?? []) as ProfileRow[]) {
     const k = (p.plano ?? 'gratis') as keyof typeof planoBuckets
     if (k in planoBuckets) planoBuckets[k]++
+    if ((k === 'pago' || k === 'elite') && p.stripe_customer_id && !p.plano_override_motivo) {
+      mrrBuckets[k]++
+    }
   }
 
-  // MRR estimado (planos pagos)
-  const mrr = planoBuckets.pago * (LIMITES_PLANO.pago.preco / 100)
-            + planoBuckets.elite * (LIMITES_PLANO.elite.preco / 100)
+  const mrr = mrrBuckets.pago * (LIMITES_PLANO.pago.preco / 100)
+            + mrrBuckets.elite * (LIMITES_PLANO.elite.preco / 100)
+  const mrrAssinaturasAtivas = mrrBuckets.pago + mrrBuckets.elite
 
   // Settings
   const settings = await getSystemSettings(admin)
+
+  // Email overrides
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: emailOverridesRaw } = await (admin.from('email_template_overrides') as any).select('*')
+  const emailOverrides = (emailOverridesRaw ?? []) as {
+    slug: string
+    enabled: boolean
+    subject_override: string | null
+    html_override: string | null
+    updated_at: string | null
+    updated_by: string | null
+  }[]
 
   // Env check (só verifica se setadas, nunca expõe valor)
   const envStatus = {
@@ -131,6 +150,7 @@ export default async function ConfiguracoesAdminPage() {
         alugueis: { total: totalAlugueis ?? 0, pagos: alugueisPagos ?? 0 },
         planos: planoBuckets,
         mrr,
+        mrrAssinaturasAtivas,
         documentos: {
           imovel: documentosImovel ?? 0,
           aluguel: documentosAluguel ?? 0,
@@ -146,6 +166,7 @@ export default async function ConfiguracoesAdminPage() {
       cronAlertasLogs={(cronAlertasLogs ?? []) as { action: string; details: Record<string, unknown> | null; created_at: string }[]}
       ultimaAtividadeAsaas={(ultimaAtividadeAsaas ?? [])[0]?.criado_em ?? null}
       ultimaAtividadeStripe={(ultimaAtividadeStripe ?? [])[0]?.criado_em ?? null}
+      emailOverrides={emailOverrides}
     />
   )
 }
