@@ -150,7 +150,10 @@ export async function backfillStripeSubscriptions(): Promise<{
           ? 'elite'
           : 'pago'
 
-      const periodEndUnix = (sub as unknown as { current_period_end?: number }).current_period_end
+      // Em api_version 2026-03-25+, current_period_end foi movido pra items.data[].
+      const periodEndUnix =
+        (sub as unknown as { current_period_end?: number }).current_period_end
+        ?? (sub.items.data[0] as unknown as { current_period_end?: number })?.current_period_end
       const updatePayload = {
         stripe_subscription_id: sub.id,
         stripe_subscription_status: sub.status,

@@ -103,7 +103,10 @@ export async function POST(req: NextRequest) {
       const planoEfetivo = (sub.status === 'active' || sub.status === 'trialing')
         ? planoParaPriceId(priceId)
         : 'gratis'
-      const periodEndUnix = (sub as unknown as { current_period_end?: number }).current_period_end
+      // Em api_version 2026-03-25+, current_period_end foi movido pra items.data[].
+      const periodEndUnix =
+        (sub as unknown as { current_period_end?: number }).current_period_end
+        ?? (sub.items.data[0] as unknown as { current_period_end?: number })?.current_period_end
       const uid = await sincronizarSubscription(customerId, {
         plano: planoEfetivo,
         stripe_subscription_id: sub.id,
@@ -125,7 +128,10 @@ export async function POST(req: NextRequest) {
     // Assinatura deletada → marca canceled e volta para gratis
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription
-      const periodEndUnix = (sub as unknown as { current_period_end?: number }).current_period_end
+      // Em api_version 2026-03-25+, current_period_end foi movido pra items.data[].
+      const periodEndUnix =
+        (sub as unknown as { current_period_end?: number }).current_period_end
+        ?? (sub.items.data[0] as unknown as { current_period_end?: number })?.current_period_end
       const uid = await sincronizarSubscription(customerId, {
         plano: 'gratis',
         stripe_subscription_id: sub.id,
