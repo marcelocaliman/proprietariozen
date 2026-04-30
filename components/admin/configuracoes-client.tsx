@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { SystemSettings, GlobalBanner, MaintenanceMode, Announcement } from '@/lib/system-settings'
 import { atualizarSetting, executarCronAlertas, executarCronGerarAlugueis, salvarEmailOverride, backfillStripeSubscriptions } from '@/app/admin/configuracoes/actions'
-import { EMAIL_SLUGS, TEMPLATE_LABELS, TEMPLATE_VARS, type EmailSlug } from '@/lib/email-overrides'
+import { EMAIL_SLUGS, TEMPLATE_LABELS, TEMPLATE_VARS, type EmailSlug } from '@/lib/email-templates-meta'
 import { cn } from '@/lib/utils'
 
 type EmailOverrideRow = {
