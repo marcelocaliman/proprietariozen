@@ -64,36 +64,56 @@ export function AbaAssinatura({ plano }: Props) {
   if (plano === 'gratis') {
     return (
       <div className="space-y-6">
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="pt-5">
-            <div className="flex gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Você está no plano Grátis</p>
-                <p className="text-sm text-[#475569] mt-1">
-                  Limitado a 1 imóvel. Sem recibos PDF, sem alertas automáticos e sem reajuste.
-                </p>
-              </div>
+        {/* Banner do plano atual — gradiente âmbar com hierarquia clara */}
+        <div
+          className="rounded-2xl p-6 sm:p-7 relative overflow-hidden border shadow-sm flex flex-col sm:flex-row sm:items-center gap-4"
+          style={{
+            background: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+            borderColor: '#FCD34D',
+          }}
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none" style={{ background: 'rgba(251, 191, 36, 0.20)', filter: 'blur(60px)', transform: 'translate(30%, -30%)' }} />
+          <div className="relative z-10 flex items-start gap-4 min-w-0 flex-1">
+            <div className="shrink-0 h-12 w-12 rounded-xl bg-amber-200 border border-amber-300 flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-amber-700" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700/80">Plano atual</p>
+              <h3 className="text-lg font-extrabold text-amber-900 mt-0.5 tracking-tight">Você está no plano Grátis</h3>
+              <p className="text-sm text-amber-800/90 mt-1 leading-relaxed">
+                Limitado a <strong>1 imóvel</strong>. Sem recibos PDF, alertas automáticos ou reajuste por índice.
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-2">
           {/* Card Master */}
-          <Card className="border-2 border-emerald-500 bg-emerald-50/50">
-            <CardHeader className="pb-3 pt-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-emerald-700">Master</CardTitle>
-                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white">
+          <div className="relative rounded-2xl border-2 border-emerald-300 bg-white shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all">
+            {/* Header gradiente */}
+            <div
+              className="px-6 py-5 relative overflow-hidden text-white"
+              style={{
+                background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+              }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.2)', filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">Master</p>
+                  <p className="font-extrabold leading-none mt-2" style={{ fontSize: 'clamp(28px, 3vw, 36px)', letterSpacing: '-0.02em' }}>
+                    R$ 49,90
+                    <span className="text-sm font-medium text-emerald-200/80 ml-1">/mês</span>
+                  </p>
+                </div>
+                <Badge className="bg-white/15 hover:bg-white/15 text-white border-white/30 backdrop-blur-sm shrink-0">
                   <Zap className="h-3 w-3 mr-1" />Recomendado
                 </Badge>
               </div>
-              <p className="text-2xl font-bold text-emerald-700">
-                R$ 49,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-1.5">
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col gap-5">
+              <ul className="space-y-2.5">
                 <RecursoItem ok={true}>3 imóveis · 3 inquilinos</RecursoItem>
                 <RecursoItem ok={true}>500 MB de armazenamento</RecursoItem>
                 <RecursoItem ok={true}>Recibos PDF</RecursoItem>
@@ -103,31 +123,41 @@ export function AbaAssinatura({ plano }: Props) {
                 <RecursoItem ok={false}>Suporte prioritário</RecursoItem>
               </ul>
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 gap-2 h-11 text-sm font-semibold mt-auto"
                 onClick={() => handleAssinar('pago')}
                 disabled={loadingMaster}
               >
                 {loadingMaster ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                Assinar Master — R$ 49,90/mês
+                Assinar Master
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Card Elite */}
-          <Card className="border-2 border-purple-500 bg-purple-50/30">
-            <CardHeader className="pb-3 pt-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base text-purple-700">Elite</CardTitle>
-                <Badge className="bg-purple-600 hover:bg-purple-600 text-white">
+          <div className="relative rounded-2xl border-2 border-purple-300 bg-white shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div
+              className="px-6 py-5 relative overflow-hidden text-white"
+              style={{
+                background: 'linear-gradient(135deg, #2E1065 0%, #5B21B6 50%, #7C3AED 100%)',
+              }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(196, 181, 253, 0.25)', filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-purple-200/80">Elite</p>
+                  <p className="font-extrabold leading-none mt-2" style={{ fontSize: 'clamp(28px, 3vw, 36px)', letterSpacing: '-0.02em' }}>
+                    R$ 99,90
+                    <span className="text-sm font-medium text-purple-200/80 ml-1">/mês</span>
+                  </p>
+                </div>
+                <Badge className="bg-white/15 hover:bg-white/15 text-white border-white/30 backdrop-blur-sm shrink-0">
                   <Star className="h-3 w-3 mr-1" />Premium
                 </Badge>
               </div>
-              <p className="text-2xl font-bold text-purple-700">
-                R$ 99,90<span className="text-sm font-normal text-[#94A3B8]">/mês</span>
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-1.5">
+            </div>
+
+            <div className="p-6 flex-1 flex flex-col gap-5">
+              <ul className="space-y-2.5">
                 <RecursoItem ok={true}>10 imóveis · ilimitado inquilinos</RecursoItem>
                 <RecursoItem ok={true}>5 GB de armazenamento</RecursoItem>
                 <RecursoItem ok={true}>Recibos PDF</RecursoItem>
@@ -137,15 +167,15 @@ export function AbaAssinatura({ plano }: Props) {
                 <RecursoItem ok={true}>Suporte prioritário</RecursoItem>
               </ul>
               <Button
-                className="w-full bg-purple-600 hover:bg-purple-700 gap-2"
+                className="w-full bg-purple-600 hover:bg-purple-700 gap-2 h-11 text-sm font-semibold mt-auto"
                 onClick={() => handleAssinar('elite')}
                 disabled={loadingElite}
               >
                 {loadingElite ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
-                Assinar Elite — R$ 99,90/mês
+                Assinar Elite
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     )

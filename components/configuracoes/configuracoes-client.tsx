@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { User, CreditCard, Bell, ShieldCheck, Zap, Lock } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { AbaPerfil } from './aba-perfil'
 import { AbaAssinatura } from './aba-assinatura'
 import { AbaNotificacoes } from './aba-notificacoes'
@@ -68,68 +68,67 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
         </h1>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Tabs laterais */}
-        <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible lg:w-52 shrink-0 pb-1 lg:pb-0">
+      <Tabs value={abaAtiva} onValueChange={v => trocarAba(v as AbaId)}>
+        <TabsList className="bg-slate-100 border border-slate-200 rounded-lg p-1 h-auto w-full sm:w-auto overflow-x-auto flex-nowrap">
           {ABAS.map(({ id, label, icon: Icon }) => (
-            <button
+            <TabsTrigger
               key={id}
-              onClick={() => trocarAba(id)}
-              className={cn(
-                'relative flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-medium transition-all text-left',
-                abaAtiva === id
-                  ? 'bg-[#D1FAE5] text-[#065F46]'
-                  : 'text-[#475569] hover:bg-[#F1F5F9] hover:text-[#0F172A]',
-              )}
+              value={id}
+              className="text-slate-600 data-[selected]:text-slate-900 gap-1.5"
             >
-              {abaAtiva === id && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[#059669]" />
-              )}
-              <Icon className={cn('h-4 w-4 shrink-0', abaAtiva === id ? 'text-[#059669]' : 'text-[#94A3B8]')} />
-              {label}
-            </button>
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </TabsTrigger>
           ))}
-        </nav>
+        </TabsList>
 
-        {/* Conteúdo */}
-        <div className="flex-1 min-w-0">
-          {abaAtiva === 'perfil' && <AbaPerfil profile={profile} avatarUrl={avatarUrl} qtdImoveis={qtdImoveis} />}
-          {abaAtiva === 'assinatura' && <AbaAssinatura plano={profile.plano} />}
-          {abaAtiva === 'cobrancas' && (
-            isPlanoPago(profile.plano) ? (
-              <AbaAsaas
-                asaasAccountId={profile.asaas_account_id}
-                asaasAccountStatus={profile.asaas_account_status}
-                profileNome={profile.nome}
-                profileEmail={profile.email}
-                profileTelefone={profile.telefone}
-              />
-            ) : (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 flex flex-col items-center gap-4 text-center shadow-sm">
-                <div className="p-3 rounded-full bg-amber-100">
-                  <Lock className="h-7 w-7 text-amber-500" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-slate-800">Cobrança automática via Asaas</p>
-                  <p className="text-sm text-slate-500 max-w-sm">
-                    Gere cobranças de aluguel com PIX e boleto automáticos direto pelo app.
-                    Disponível no <strong>plano Master</strong>.
-                  </p>
-                </div>
-                <a
-                  href="/planos"
-                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 transition-colors"
-                >
-                  <Zap className="h-4 w-4" />
-                  Fazer upgrade para o Master
-                </a>
+        <TabsContent value="perfil" className="mt-5 outline-none">
+          <AbaPerfil profile={profile} avatarUrl={avatarUrl} qtdImoveis={qtdImoveis} />
+        </TabsContent>
+
+        <TabsContent value="assinatura" className="mt-5 outline-none">
+          <AbaAssinatura plano={profile.plano} />
+        </TabsContent>
+
+        <TabsContent value="cobrancas" className="mt-5 outline-none">
+          {isPlanoPago(profile.plano) ? (
+            <AbaAsaas
+              asaasAccountId={profile.asaas_account_id}
+              asaasAccountStatus={profile.asaas_account_status}
+              profileNome={profile.nome}
+              profileEmail={profile.email}
+              profileTelefone={profile.telefone}
+            />
+          ) : (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 flex flex-col items-center gap-4 text-center shadow-sm">
+              <div className="p-3 rounded-full bg-amber-100">
+                <Lock className="h-7 w-7 text-amber-500" />
               </div>
-            )
+              <div className="space-y-1">
+                <p className="font-semibold text-slate-800">Cobrança automática via Asaas</p>
+                <p className="text-sm text-slate-500 max-w-sm">
+                  Gere cobranças de aluguel com PIX e boleto automáticos direto pelo app.
+                  Disponível no <strong>plano Master</strong>.
+                </p>
+              </div>
+              <a
+                href="/planos"
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 transition-colors"
+              >
+                <Zap className="h-4 w-4" />
+                Fazer upgrade para o Master
+              </a>
+            </div>
           )}
-          {abaAtiva === 'notificacoes' && <AbaNotificacoes config={notificacoesConfig} />}
-          {abaAtiva === 'seguranca' && <AbaSeguranca email={profile.email} />}
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="notificacoes" className="mt-5 outline-none">
+          <AbaNotificacoes config={notificacoesConfig} />
+        </TabsContent>
+
+        <TabsContent value="seguranca" className="mt-5 outline-none">
+          <AbaSeguranca email={profile.email} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
