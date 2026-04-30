@@ -17,6 +17,18 @@ const rotasPublicas = [
 ]
 
 export async function middleware(request: NextRequest) {
+  // Endpoints que recebem callbacks externos têm auth própria (signing
+  // secret / bearer token). Pular o middleware evita o redirect 307 pra
+  // /login que estava bloqueando webhook do Stripe e cron do Vercel.
+  const path = request.nextUrl.pathname
+  if (
+    path.startsWith('/api/webhooks/') ||
+    path.startsWith('/api/cron/') ||
+    path.startsWith('/api/asaas/webhook')
+  ) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
