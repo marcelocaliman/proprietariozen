@@ -16,17 +16,52 @@ function planoParaPriceId(priceId: string): 'pago' | 'elite' {
   return 'pago'
 }
 
-async function atualizarPlanoUsuario(customerId: string, plano: PlanoTipo) {
+// Atualiza plano + dados de subscription no profile.
+// Importante: respeita override manual (plano_override_motivo), nunca
+// sobrescreve plano de usuário com cortesia ativa.
+async function sincronizarSubscription(
+  customerId: string,
+  patch: {
+    plano: PlanoTipo
+    stripe_subscription_id: string | null
+    stripe_subscription_status: string | null
+    stripe_subscription_current_period_end: string | null
+    stripe_subscription_cancel_at_period_end: boolean
+    stripe_price_id: string | null
+  },
+) {
   const admin = createAdminClient()
-  const { data: profile, error } = await admin
+
+  // Busca o profile primeiro pra checar override
+  const { data: profile } = await admin
     .from('profiles')
-    .update({ plano })
+    .select('id, plano_override_motivo')
     .eq('stripe_customer_id', customerId)
-    .select('id')
     .single()
 
-  if (error) console.error('[webhook] Erro ao atualizar plano:', error.message)
-  return profile?.id ?? null
+  if (!profile) {
+    console.warn('[webhook] customer sem profile correspondente:', customerId)
+    return null
+  }
+
+  // Se tem override manual, mantém o plano atual (cortesia) e só atualiza
+  // os metadados de subscription
+  const updatePayload = {
+    stripe_subscription_id: patch.stripe_subscription_id,
+    stripe_subscription_status: patch.stripe_subscription_status,
+    stripe_subscription_current_period_end: patch.stripe_subscription_current_period_end,
+    stripe_subscription_cancel_at_period_end: patch.stripe_subscription_cancel_at_period_end,
+    stripe_price_id: patch.stripe_price_id,
+    ...(profile.plano_override_motivo ? {} : { plano: patch.plano }),
+  }
+
+  const { error } = await admin
+    .from('profiles')
+    .update(updatePayload)
+    .eq('id', profile.id)
+
+  if (error) console.error('[webhook] Erro ao sincronizar subscription:', error.message)
+  return profile.id
 }
 
 export async function POST(req: NextRequest) {
@@ -59,45 +94,68 @@ export async function POST(req: NextRequest) {
   }
 
   switch (event.type) {
-    // Assinatura criada ou atualizada → determina plano pelo price ID
+    // Assinatura criada ou atualizada → sincroniza tudo
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription
-      if (sub.status === 'active' || sub.status === 'trialing') {
-        const priceId = sub.items.data[0]?.price.id ?? ''
-        const plano = planoParaPriceId(priceId)
-        const uid = await atualizarPlanoUsuario(customerId, plano)
-        const logAction = plano === 'elite' ? 'UPGRADE_ELITE' : 'UPGRADE_PRO'
-        if (uid) await registrarLog(uid, logAction, 'subscription', sub.id)
-      } else if (sub.status === 'canceled' || sub.status === 'unpaid') {
-        const uid = await atualizarPlanoUsuario(customerId, 'gratis')
-        if (uid) await registrarLog(uid, 'CANCELAMENTO', 'subscription', sub.id)
-      }
+      const priceId = sub.items.data[0]?.price.id ?? ''
+      // Plano efetivo: 'gratis' se assinatura não estiver ativa/trialing
+      const planoEfetivo = (sub.status === 'active' || sub.status === 'trialing')
+        ? planoParaPriceId(priceId)
+        : 'gratis'
+      const periodEndUnix = (sub as unknown as { current_period_end?: number }).current_period_end
+      const uid = await sincronizarSubscription(customerId, {
+        plano: planoEfetivo,
+        stripe_subscription_id: sub.id,
+        stripe_subscription_status: sub.status,
+        stripe_subscription_current_period_end: periodEndUnix
+          ? new Date(periodEndUnix * 1000).toISOString()
+          : null,
+        stripe_subscription_cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        stripe_price_id: priceId || null,
+      })
+      const logAction =
+        sub.status === 'canceled' || sub.status === 'unpaid' ? 'CANCELAMENTO'
+        : planoEfetivo === 'elite' ? 'UPGRADE_ELITE'
+        : 'UPGRADE_PRO'
+      if (uid) await registrarLog(uid, logAction, 'subscription', sub.id)
       break
     }
 
-    // Assinatura cancelada / expirada → plano Grátis
+    // Assinatura deletada → marca canceled e volta para gratis
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription
-      const uid = await atualizarPlanoUsuario(customerId, 'gratis')
+      const periodEndUnix = (sub as unknown as { current_period_end?: number }).current_period_end
+      const uid = await sincronizarSubscription(customerId, {
+        plano: 'gratis',
+        stripe_subscription_id: sub.id,
+        stripe_subscription_status: 'canceled',
+        stripe_subscription_current_period_end: periodEndUnix
+          ? new Date(periodEndUnix * 1000).toISOString()
+          : null,
+        stripe_subscription_cancel_at_period_end: false,
+        stripe_price_id: sub.items.data[0]?.price.id ?? null,
+      })
       if (uid) await registrarLog(uid, 'CANCELAMENTO', 'subscription', sub.id)
       break
     }
 
-    // Checkout concluído com sucesso — o plano definitivo será definido via
-    // customer.subscription.created/updated, mas registramos o log aqui
+    // Checkout concluído — só loga, sub.created/updated cuida do resto
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
       if (session.mode === 'subscription' && session.payment_status === 'paid') {
-        // Apenas loga — o plano real é tratado via subscription.created/updated
-        const uid = await atualizarPlanoUsuario(customerId, 'pago')
-        if (uid) await registrarLog(uid, 'UPGRADE_PRO', 'checkout', session.id)
+        const admin = createAdminClient()
+        const { data: profile } = await admin
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single()
+        if (profile) await registrarLog(profile.id, 'UPGRADE_PRO', 'checkout', session.id)
       }
       break
     }
 
     default:
-      // Evento ignorado — responde 200 para o Stripe não reenviar
       break
   }
 

@@ -40,7 +40,7 @@ export default async function ConfiguracoesAdminPage() {
     admin.from('inquilinos').select('id', { count: 'exact', head: true }).eq('ativo', true),
     admin.from('alugueis').select('id', { count: 'exact', head: true }),
     admin.from('alugueis').select('id', { count: 'exact', head: true }).eq('status', 'pago'),
-    admin.from('profiles').select('plano, stripe_customer_id, plano_override_motivo'),
+    admin.from('profiles').select('plano, stripe_customer_id, plano_override_motivo, stripe_subscription_status'),
     admin.from('profiles').select('id', { count: 'exact', head: true }).not('banned_at', 'is', null),
     admin.from('profiles').select('id', { count: 'exact', head: true }).not('asaas_api_key_enc', 'is', null),
     admin.from('alugueis').select('asaas_charge_id, criado_em').not('asaas_charge_id', 'is', null).order('criado_em', { ascending: false }).limit(1),
@@ -88,14 +88,20 @@ export default async function ConfiguracoesAdminPage() {
 
   // Por plano (todos os usuários, inclusive overrides)
   const planoBuckets = { gratis: 0, pago: 0, elite: 0 }
-  // MRR real: só conta quem tem stripe_customer_id E não está com override manual.
-  // Overrides são cortesias do admin, não geram receita Stripe.
+  // MRR real: só conta assinaturas Stripe com status active|trialing E sem
+  // override manual. Override é cortesia do admin, não gera receita Stripe.
   const mrrBuckets = { pago: 0, elite: 0 }
-  type ProfileRow = { plano: string | null; stripe_customer_id: string | null; plano_override_motivo: string | null }
+  type ProfileRow = {
+    plano: string | null
+    stripe_customer_id: string | null
+    plano_override_motivo: string | null
+    stripe_subscription_status: string | null
+  }
   for (const p of (profilesPlano ?? []) as ProfileRow[]) {
     const k = (p.plano ?? 'gratis') as keyof typeof planoBuckets
     if (k in planoBuckets) planoBuckets[k]++
-    if ((k === 'pago' || k === 'elite') && p.stripe_customer_id && !p.plano_override_motivo) {
+    const subAtiva = p.stripe_subscription_status === 'active' || p.stripe_subscription_status === 'trialing'
+    if ((k === 'pago' || k === 'elite') && subAtiva && !p.plano_override_motivo) {
       mrrBuckets[k]++
     }
   }
