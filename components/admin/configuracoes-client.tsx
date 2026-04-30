@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { SystemSettings, GlobalBanner, MaintenanceMode, Announcement } from '@/lib/system-settings'
-import { atualizarSetting, executarCronAlertas, executarCronGerarAlugueis, salvarEmailOverride } from '@/app/admin/configuracoes/actions'
+import { atualizarSetting, executarCronAlertas, executarCronGerarAlugueis, salvarEmailOverride, backfillStripeSubscriptions } from '@/app/admin/configuracoes/actions'
 import { EMAIL_SLUGS, TEMPLATE_LABELS, TEMPLATE_VARS, type EmailSlug } from '@/lib/email-overrides'
 import { cn } from '@/lib/utils'
 
@@ -143,6 +143,7 @@ export function ConfiguracoesAdminClient({
         <TabsContent value="planos" className="space-y-5 mt-5">
           <PlanosTable stats={stats} />
           <StripePriceIds envStatus={envStatus} />
+          <StripeBackfillCard />
         </TabsContent>
 
         {/* ── 3. INTEGRAÇÕES ── */}
@@ -478,6 +479,66 @@ function PriceRow({ label, set, envName }: { label: string; set: boolean; envNam
         </span>
       )}
     </div>
+  )
+}
+
+function StripeBackfillCard() {
+  const [pending, startTransition] = useTransition()
+  const [resultado, setResultado] = useState<{ total: number; atualizados: number; semSub: number; erros: number } | null>(null)
+
+  function disparar() {
+    if (!confirm('Sincronizar status Stripe de TODOS os usuários com customer_id? Pode levar alguns minutos.')) return
+    startTransition(async () => {
+      const r = await backfillStripeSubscriptions()
+      if (r.error) {
+        toast.error(r.error)
+        return
+      }
+      setResultado({
+        total: r.total ?? 0,
+        atualizados: r.atualizados ?? 0,
+        semSub: r.semSub ?? 0,
+        erros: r.erros ?? 0,
+      })
+      toast.success(`Backfill concluído: ${r.atualizados ?? 0} de ${r.total ?? 0} usuários sincronizados`)
+    })
+  }
+
+  return (
+    <Card className="rounded-2xl border-slate-100 shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <RefreshCw className="h-4 w-4 text-emerald-600" />
+          <h3 className="text-sm font-bold text-slate-900">Sincronização Stripe</h3>
+        </div>
+        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+          Lê todas as subscriptions ativas/canceladas do Stripe e atualiza
+          <code className="font-mono mx-1 bg-slate-100 px-1 py-0.5 rounded">stripe_subscription_status</code>
+          em <code className="font-mono bg-slate-100 px-1 py-0.5 rounded">profiles</code>.
+          Use após reaplicar a migration ou se suspeitar de drift entre Stripe e o app.
+          Idempotente — pode rodar quantas vezes precisar.
+        </p>
+
+        <Button
+          size="sm"
+          onClick={disparar}
+          disabled={pending}
+          className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+          {pending ? 'Sincronizando…' : 'Rodar backfill agora'}
+        </Button>
+
+        {resultado && (
+          <div className="mt-4 grid sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+            <KeyVal label="Total" value={resultado.total.toString()} />
+            <KeyVal label="Sincronizados" value={resultado.atualizados.toString()} />
+            <KeyVal label="Sem subscription" value={resultado.semSub.toString()} />
+            <KeyVal label="Erros" value={resultado.erros.toString()} />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
