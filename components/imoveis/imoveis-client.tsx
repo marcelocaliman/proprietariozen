@@ -28,6 +28,7 @@ import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { PlanoTipo } from '@/lib/stripe'
+import { EmptyState } from '@/components/ui/empty-state'
 import type { Imovel } from '@/types'
 import { cn } from '@/lib/utils'
 import type { LucideIcon } from 'lucide-react'
@@ -435,21 +436,30 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {imoveis.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <Building2 className="h-7 w-7 text-slate-300" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-[#0F172A]">Nenhum imóvel cadastrado ainda</p>
-            <p className="text-sm text-[#64748B] mt-1 max-w-xs">
-              Comece adicionando seu primeiro imóvel para gerenciar aluguéis e inquilinos.
-            </p>
-          </div>
-          <Button onClick={handleNovo} className="gap-2 bg-[#059669] hover:bg-[#047857] mt-1">
-            <Plus className="h-4 w-4" />
-            Adicionar primeiro imóvel
-          </Button>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="Cadastre seu primeiro imóvel"
+          description="É a porta de entrada do app. Depois disso você vincula um inquilino e o app começa a gerar e cobrar os aluguéis automaticamente."
+          primaryCta={{
+            label: 'Cadastrar imóvel',
+            onClick: handleNovo,
+            icon: Plus,
+          }}
+          steps={[
+            {
+              title: 'Cadastre o imóvel',
+              desc: 'Endereço, valor do aluguel, dia de vencimento e índice de reajuste.',
+            },
+            {
+              title: 'Vincule um inquilino',
+              desc: 'Nome, contato e CPF — opcionalmente envie um convite para a área dele.',
+            },
+            {
+              title: 'Comece a cobrar',
+              desc: 'Modo manual (PIX/boleto seu) ou automático via Asaas — o app dispara cobrança e lembrete.',
+            },
+          ]}
+        />
 
       ) : view === 'grid' ? (
         /* ── Grid de cards ─────────────────────────────────────────────── */

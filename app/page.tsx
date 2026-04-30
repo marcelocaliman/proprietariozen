@@ -24,23 +24,16 @@ export const metadata: Metadata = {
     url: 'https://proprietariozen.com.br',
     title: 'ProprietárioZen — Gestão de Imóveis sem Complicação',
     description: 'Controle aluguéis, contratos e cobranças em um único app. Cobrança automática Pix + boleto, encargos, documentos e timeline. Comece grátis hoje.',
-    images: [
-      {
-        url: 'https://proprietariozen.com.br/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'ProprietárioZen — Dashboard de gestão de imóveis',
-      },
-    ],
     siteName: 'ProprietárioZen',
     locale: 'pt_BR',
+    // Imagem é gerada dinamicamente por app/opengraph-image.tsx
   },
   twitter: {
     card: 'summary_large_image',
     site: '@proprietariozenbr',
     title: 'ProprietárioZen — Gestão de Imóveis Simplificada',
     description: 'Gerencie seus imóveis, contratos e cobranças sem planilhas e sem stress. Experimente grátis.',
-    images: ['https://proprietariozen.com.br/og-image.png'],
+    // Imagem é gerada dinamicamente por app/opengraph-image.tsx
   },
   other: {
     language: 'pt-BR',

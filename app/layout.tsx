@@ -52,9 +52,9 @@ export default function RootLayout({
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon.svg" />
-        <link rel="manifest" href="/site.webmanifest" />
-        {/* Preload hero visual — replace /hero-mockup.webp with your actual LCP image path */}
-        <link rel="preload" as="image" href="/og-image.png" fetchPriority="high" />
+        {/* Manifest é injetado automaticamente via metadata.manifest */}
+        {/* Standard moderno (substitui apple-mobile-web-app-capable, mantido pelo Next via appleWebApp) */}
+        <meta name="mobile-web-app-capable" content="yes" />
         {/* Google Tag Manager — replace GTM-P56LPWJR with your actual GTM container ID */}
         <script
           dangerouslySetInnerHTML={{

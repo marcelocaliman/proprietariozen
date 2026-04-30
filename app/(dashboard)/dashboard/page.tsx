@@ -16,6 +16,9 @@ import {
   Calendar, Banknote, Activity, ArrowRight, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
+import { UpgradePrompt } from '@/components/dashboard/upgrade-prompt'
+import { LIMITES_PLANO } from '@/lib/stripe'
 
 const STATUS_CONFIG = {
   pago:     { label: 'Pago',     badgeCls: 'bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5]' },
@@ -188,7 +191,7 @@ export default async function DashboardPage({
     { data: imoveisParaPreview },
     { data: contratosVencendo },
   ] = await Promise.all([
-    supabase.from('profiles').select('nome').eq('id', user.id).single(),
+    supabase.from('profiles').select('nome, plano, role').eq('id', user.id).single(),
 
     // Totais do mês selecionado
     supabase.from('alugueis')
@@ -319,7 +322,18 @@ export default async function DashboardPage({
   // Saudação
   const horaLocal = (hoje.getUTCHours() - 3 + 24) % 24
   const saudacao = horaLocal < 12 ? 'Bom dia' : horaLocal < 18 ? 'Boa tarde' : 'Boa noite'
-  const primeiroNome = (profile as { nome?: string } | null)?.nome?.split(' ')[0] ?? ''
+  const profileTyped = profile as { nome?: string; plano?: 'gratis' | 'pago' | 'elite'; role?: string } | null
+  const primeiroNome = profileTyped?.nome?.split(' ')[0] ?? ''
+
+  // Upgrade prompt: só para grátis e não-admin que tem 2+ imóveis
+  const isGratisNaoAdmin = profileTyped?.plano === 'gratis' && profileTyped?.role !== 'admin'
+  const limiteGratis = LIMITES_PLANO.gratis.imoveis
+  const upgradeVariant: 'near_limit' | 'at_limit' | null =
+    !isGratisNaoAdmin || qtdImoveisAtivos < 2
+      ? null
+      : qtdImoveisAtivos >= limiteGratis
+        ? 'at_limit'
+        : 'near_limit'
 
   // Label do mês selecionado
   const labelMes = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' })
@@ -353,6 +367,44 @@ export default async function DashboardPage({
     ? Math.round((totalRecebido / (totalReceber + totalRecebido + totalAtrasado)) * 100)
     : 0
 
+  // Onboarding state: nenhum imóvel cadastrado → focar 100% na ativação
+  if (qtdImoveisAtivos === 0) {
+    return (
+      <div className="space-y-7 max-w-[1400px] mx-auto">
+        <div>
+          <p className="text-sm text-slate-500 font-medium">
+            {saudacao}{primeiroNome ? `, ${primeiroNome}` : ''}!
+          </p>
+          <h1
+            className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
+            style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+          >
+            Bem-vindo ao ProprietárioZen
+          </h1>
+        </div>
+        <EmptyState
+          icon={Building2}
+          title="Vamos cadastrar seu primeiro imóvel"
+          description="Em menos de 2 minutos seu app está pronto: cadastra o imóvel, vincula o inquilino e o ProprietárioZen passa a gerar e cobrar os aluguéis automaticamente."
+          primaryCta={{
+            label: 'Cadastrar primeiro imóvel',
+            href: '/imoveis',
+            icon: Building2,
+          }}
+          secondaryCta={{
+            label: 'Ver planos',
+            href: '/planos',
+          }}
+          steps={[
+            { title: 'Cadastre o imóvel', desc: 'Endereço, valor, dia de vencimento e índice de reajuste.' },
+            { title: 'Vincule o inquilino', desc: 'Dados básicos e, se quiser, convide para a área dele.' },
+            { title: 'Cobre automaticamente', desc: 'PIX/boleto manual ou automático via Asaas — o app dispara.' },
+          ]}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-7 max-w-[1400px] mx-auto">
       {/* ── HEADER ── */}
@@ -370,6 +422,15 @@ export default async function DashboardPage({
         </div>
         <MonthSelector value={selectedMesKey} />
       </div>
+
+      {/* ── UPGRADE PROMPT (grátis, não-admin, 2+ imóveis) ── */}
+      {upgradeVariant && (
+        <UpgradePrompt
+          variant={upgradeVariant}
+          imoveis={qtdImoveisAtivos}
+          limite={limiteGratis}
+        />
+      )}
 
       {/* ── HEALTH ── */}
       <CobrancaHealthCard issues={pendenciasCobranca} />

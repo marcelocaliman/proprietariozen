@@ -24,6 +24,7 @@ import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-i
 import { formatarTelefone, formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui/empty-state'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -390,21 +391,43 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
 
       {/* ── Empty state ───────────────────────────────────────────────────── */}
       {inquilinos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center">
-            <Users className="h-7 w-7 text-slate-300" />
-          </div>
-          <div>
-            <p className="text-base font-semibold text-[#0F172A]">Nenhum inquilino cadastrado ainda</p>
-            <p className="text-sm text-[#64748B] mt-1 max-w-xs">
-              Adicione inquilinos e vincule-os aos seus imóveis para controlar os pagamentos.
-            </p>
-          </div>
-          <Button onClick={handleNovo} className="gap-2 bg-[#059669] hover:bg-[#047857] mt-1">
-            <Plus className="h-4 w-4" />
-            Adicionar primeiro inquilino
-          </Button>
-        </div>
+        imoveis.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title="Cadastre um imóvel primeiro"
+            description="Inquilinos são vinculados a imóveis. Cadastre um imóvel e depois você associa o inquilino a ele."
+            primaryCta={{
+              label: 'Ir para imóveis',
+              href: '/imoveis',
+              icon: Building2,
+            }}
+            steps={[
+              { title: 'Cadastre o imóvel', desc: 'Endereço, valor do aluguel e dia de vencimento.' },
+              { title: 'Volte aqui', desc: 'Adicione o inquilino vinculando ao imóvel.' },
+              { title: 'Cobre automaticamente', desc: 'O app gera e dispara cobrança todo mês.' },
+            ]}
+          />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="Vincule seu primeiro inquilino"
+            description={
+              imoveisVagos.length > 0
+                ? `Você tem ${imoveisVagos.length === 1 ? '1 imóvel vago' : `${imoveisVagos.length} imóveis vagos`}. Adicione o inquilino e o app começa a gerar os aluguéis automaticamente.`
+                : 'Adicione o inquilino e vincule a um imóvel para começar a cobrar.'
+            }
+            primaryCta={{
+              label: 'Adicionar inquilino',
+              onClick: handleNovo,
+              icon: Plus,
+            }}
+            steps={[
+              { title: 'Dados básicos', desc: 'Nome, telefone, email e CPF (opcional para emitir recibo).' },
+              { title: 'Vincule ao imóvel', desc: 'Escolha qual dos seus imóveis ele vai ocupar.' },
+              { title: 'Convide para o portal', desc: 'Email opcional dá acesso ao histórico de pagamentos e documentos.' },
+            ]}
+          />
+        )
 
       ) : filtrados.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
