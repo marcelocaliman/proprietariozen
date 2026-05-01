@@ -32,7 +32,7 @@ type FinanceiroData = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmt(v: number, decimais = 0) {
+function fmt(v: number, decimais = 2) {
   return v.toLocaleString('pt-BR', {
     style: 'currency', currency: 'BRL',
     minimumFractionDigits: decimais, maximumFractionDigits: decimais,
@@ -178,7 +178,7 @@ export default function AdminFinanceiroPage() {
                 value={fmt(data.totals.ltv_medio)}
                 sub="Estimado (12 meses)"
               />
-              <MetricCard title="Ticket Médio" value={fmt(49.90, 2)} sub="Plano Master / mês" />
+              <MetricCard title="Ticket Médio" value={fmt(49.90)} sub="Plano Master / mês" />
             </>)}
           </div>
 
