@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, Zap, X, ExternalLink, AlertTriangle, Loader2, Star } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Check, Zap, X, ExternalLink, AlertTriangle, Loader2, Star, Calendar, CreditCard, ShieldCheck } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -25,9 +24,50 @@ function RecursoItem({ ok, children }: RecursoItemProps) {
   )
 }
 
-interface Props { plano: PlanoTipo }
+interface Props {
+  plano: PlanoTipo
+  subscriptionStatus?: string | null
+  currentPeriodEnd?: string | null
+  cancelAtPeriodEnd?: boolean
+}
 
-export function AbaAssinatura({ plano }: Props) {
+const PLANO_THEME = {
+  pago: {
+    label: 'Master',
+    valor: 'R$ 49,90',
+    valorCentavos: 4990,
+    gradient: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+    glow: 'rgba(110, 231, 183, 0.20)',
+    glowSecondary: 'rgba(52, 211, 153, 0.10)',
+    boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+    primaryColor: '#059669',
+    accentText: '#A7F3D0',
+    accentLight: '#D1FAE5',
+    portalLinkColor: 'text-emerald-600',
+  },
+  elite: {
+    label: 'Elite',
+    valor: 'R$ 99,90',
+    valorCentavos: 9990,
+    gradient: 'linear-gradient(135deg, #2E1065 0%, #5B21B6 50%, #7C3AED 100%)',
+    glow: 'rgba(196, 181, 253, 0.25)',
+    glowSecondary: 'rgba(167, 139, 250, 0.12)',
+    boxShadow: '0 8px 32px rgba(124, 58, 237, 0.22)',
+    primaryColor: '#7C3AED',
+    accentText: '#DDD6FE',
+    accentLight: '#EDE9FE',
+    portalLinkColor: 'text-purple-600',
+  },
+} as const
+
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
+}
+
+export function AbaAssinatura({ plano, subscriptionStatus, currentPeriodEnd, cancelAtPeriodEnd }: Props) {
   const [loadingMaster,  setLoadingMaster]  = useState(false)
   const [loadingElite,   setLoadingElite]   = useState(false)
   const [loadingPortal,  setLoadingPortal]  = useState(false)
@@ -90,14 +130,11 @@ export function AbaAssinatura({ plano }: Props) {
         <div className="grid gap-5 lg:grid-cols-2">
           {/* Card Master */}
           <div className="relative rounded-2xl border-2 border-emerald-300 bg-white shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all">
-            {/* Header gradiente */}
             <div
               className="px-6 py-5 relative overflow-hidden text-white"
-              style={{
-                background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
-              }}
+              style={{ background: PLANO_THEME.pago.gradient }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.2)', filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: PLANO_THEME.pago.glow, filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">Master</p>
@@ -137,11 +174,9 @@ export function AbaAssinatura({ plano }: Props) {
           <div className="relative rounded-2xl border-2 border-purple-300 bg-white shadow-sm overflow-hidden flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all">
             <div
               className="px-6 py-5 relative overflow-hidden text-white"
-              style={{
-                background: 'linear-gradient(135deg, #2E1065 0%, #5B21B6 50%, #7C3AED 100%)',
-              }}
+              style={{ background: PLANO_THEME.elite.gradient }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: 'rgba(196, 181, 253, 0.25)', filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none" style={{ background: PLANO_THEME.elite.glow, filter: 'blur(40px)', transform: 'translate(40%, -40%)' }} />
               <div className="relative z-10 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-purple-200/80">Elite</p>
@@ -181,165 +216,149 @@ export function AbaAssinatura({ plano }: Props) {
     )
   }
 
-  // ── Plano Master ativo ───────────────────────────────────────────────────────
-  if (plano === 'pago') {
-    return (
-      <div className="space-y-6">
-        <Card className="border-emerald-200 bg-emerald-50">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-3">
-                <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm">Plano Master ativo</p>
-                  <p className="text-sm text-[#475569] mt-0.5">Todos os recursos Master estão disponíveis.</p>
-                </div>
-              </div>
-              <Badge className="bg-[#D1FAE5] text-[#065F46] hover:bg-[#D1FAE5] font-semibold">Master</Badge>
-            </div>
-          </CardContent>
-        </Card>
+  // ── Plano Master ou Elite ativo ─────────────────────────────────────────────
+  const theme = PLANO_THEME[plano]
+  const isElite = plano === 'elite'
+  const willCancel = cancelAtPeriodEnd === true
 
-        {/* Upgrade para Elite */}
-        <Card className="border-purple-200 bg-purple-50/40">
-          <CardContent className="pt-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex gap-3">
-                <Star className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm text-purple-900">Faça upgrade para o Elite</p>
-                  <p className="text-sm text-[#475569] mt-0.5">
-                    10 imóveis, inquilinos ilimitados, cobrança automática e suporte prioritário.
-                  </p>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                className="shrink-0 bg-purple-600 hover:bg-purple-700 gap-1.5"
-                onClick={() => handleAssinar('elite')}
-                disabled={loadingElite}
-              >
-                {loadingElite ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Star className="h-3.5 w-3.5" />}
-                Upgrade Elite
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Detalhes da assinatura</CardTitle>
-            <CardDescription>Gerencie seu plano e método de pagamento</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-sm text-[#475569]">Valor mensal</span>
-              <span className="text-sm font-medium">R$ 49,90/mês</span>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-sm text-[#475569]">Próxima cobrança e faturas</span>
-              <Button variant="link" size="sm" className="h-auto p-0 text-sm text-emerald-600" onClick={handlePortal} disabled={loadingPortal}>
-                Ver no Stripe
-              </Button>
-            </div>
-            <Separator />
-            <div className="flex gap-3 pt-1">
-              <Button variant="outline" className="gap-2" onClick={handlePortal} disabled={loadingPortal}>
-                {loadingPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                Gerenciar assinatura
-              </Button>
-              <Button
-                variant="outline"
-                className="gap-2 text-destructive hover:text-destructive"
-                onClick={() => setCancelarOpen(true)}
-                disabled={loadingPortal}
-              >
-                Cancelar assinatura
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Dialog open={cancelarOpen} onOpenChange={setCancelarOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-destructive">Cancelar assinatura?</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-                <p className="text-sm text-destructive font-medium">Atenção</p>
-                <p className="text-sm text-[#475569] mt-1">
-                  Você perderá acesso ao plano Master <strong>no final do período pago</strong>.
-                  Seus dados ficam preservados mas recursos exclusivos serão desativados.
-                </p>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter Master</Button>
-                <Button
-                  variant="destructive"
-                  disabled={loadingPortal}
-                  onClick={async () => { setCancelarOpen(false); await handlePortal() }}
-                >
-                  Ir para cancelamento
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-    )
-  }
-
-  // ── Plano Elite ativo ────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <Card className="border-purple-200 bg-purple-50">
-        <CardContent className="pt-5">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-3">
-              <Star className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Plano Elite ativo</p>
-                <p className="text-sm text-[#475569] mt-0.5">Todos os recursos, sem limites.</p>
-              </div>
-            </div>
-            <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 font-semibold">Elite</Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ── Hero do plano ativo ── */}
+      <div
+        className="rounded-2xl p-7 sm:p-8 relative overflow-hidden text-white flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+        style={{ background: theme.gradient, boxShadow: theme.boxShadow }}
+      >
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none" style={{ background: theme.glow, filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+        <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full pointer-events-none" style={{ background: theme.glowSecondary, filter: 'blur(60px)' }} />
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Detalhes da assinatura</CardTitle>
-          <CardDescription>Gerencie seu plano e método de pagamento</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-[#475569]">Valor mensal</span>
-            <span className="text-sm font-medium">R$ 99,90/mês</span>
+        <div className="relative z-10 min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: theme.accentText }}>Plano ativo</p>
+            {willCancel && (
+              <Badge className="bg-amber-500/90 hover:bg-amber-500/90 text-white border-0 text-[10px] font-bold">
+                Cancela ao fim do período
+              </Badge>
+            )}
           </div>
-          <Separator />
-          <div className="flex items-center justify-between py-1.5">
-            <span className="text-sm text-[#475569]">Próxima cobrança e faturas</span>
-            <Button variant="link" size="sm" className="h-auto p-0 text-sm text-purple-600" onClick={handlePortal} disabled={loadingPortal}>
-              Ver no Stripe
-            </Button>
+          <h2
+            className="font-extrabold leading-none mt-2"
+            style={{
+              fontSize: 'clamp(40px, 5vw, 56px)',
+              background: 'linear-gradient(135deg, #FFFFFF 0%, ' + theme.accentText + ' 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.025em',
+            }}
+          >
+            {theme.label}
+          </h2>
+          <p className="font-bold mt-3 leading-none" style={{ fontSize: 'clamp(20px, 2vw, 26px)' }}>
+            {theme.valor}
+            <span className="text-sm font-medium opacity-70 ml-1">/mês</span>
+          </p>
+        </div>
+
+        {currentPeriodEnd && (
+          <div className="relative z-10 rounded-xl border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-3 sm:max-w-xs">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="h-3.5 w-3.5 opacity-70" />
+              <p className="text-[10px] uppercase tracking-widest font-semibold opacity-70">
+                {willCancel ? 'Acesso até' : 'Próxima cobrança'}
+              </p>
+            </div>
+            <p className="text-sm font-bold leading-tight">{formatDate(currentPeriodEnd)}</p>
+            {subscriptionStatus && subscriptionStatus !== 'active' && (
+              <p className="text-[11px] mt-1 capitalize" style={{ color: theme.accentText }}>
+                Status: {subscriptionStatus}
+              </p>
+            )}
           </div>
-          <Separator />
-          <div className="flex gap-3 pt-1">
+        )}
+      </div>
+
+      {/* ── Upgrade para Elite (só aparece se Master) ── */}
+      {!isElite && (
+        <div className="rounded-2xl border border-purple-200 overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-br from-purple-50 to-white p-5 sm:p-6">
+          <div className="flex items-start gap-4 min-w-0">
+            <div className="shrink-0 h-11 w-11 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center">
+              <Star className="h-5 w-5 text-purple-700" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-purple-700/80">Próximo passo</p>
+              <h3 className="text-base font-bold text-purple-900 mt-0.5 tracking-tight">Faça upgrade para o Elite</h3>
+              <p className="text-xs text-purple-800/80 mt-1 leading-relaxed">
+                10 imóveis, inquilinos ilimitados, cobrança automática Pix + boleto e suporte prioritário.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="shrink-0 bg-purple-600 hover:bg-purple-700 gap-1.5 h-10 px-5 text-sm font-semibold"
+            onClick={() => handleAssinar('elite')}
+            disabled={loadingElite}
+          >
+            {loadingElite ? <Loader2 className="h-4 w-4 animate-spin" /> : <Star className="h-4 w-4" />}
+            Upgrade Elite — R$ 99,90/mês
+          </Button>
+        </div>
+      )}
+
+      {/* ── Detalhes da assinatura ── */}
+      <Card className="rounded-2xl border-slate-100 shadow-sm overflow-hidden">
+        <CardContent className="p-0">
+          <div className="px-6 py-5 border-b border-slate-100">
+            <h3 className="text-base font-bold text-slate-900 tracking-tight">Detalhes da assinatura</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Gerencie seu plano e método de pagamento via Stripe.</p>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            <DetalheRow
+              icon={CreditCard}
+              label="Valor mensal"
+              value={`${theme.valor}/mês`}
+            />
+            <DetalheRow
+              icon={Calendar}
+              label={willCancel ? 'Acesso até' : 'Próxima cobrança'}
+              value={formatDate(currentPeriodEnd)}
+            />
+            <DetalheRow
+              icon={ShieldCheck}
+              label="Status da assinatura"
+              value={
+                <Badge
+                  className={
+                    subscriptionStatus === 'active'
+                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                      : subscriptionStatus === 'trialing'
+                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-100'
+                        : 'bg-amber-100 text-amber-700 hover:bg-amber-100'
+                  }
+                >
+                  {subscriptionStatus === 'active' ? 'Ativa'
+                    : subscriptionStatus === 'trialing' ? 'Trial'
+                    : subscriptionStatus ?? 'desconhecido'}
+                </Badge>
+              }
+            />
+          </div>
+
+          <div className="px-6 py-5 bg-slate-50/40 border-t border-slate-100 flex flex-wrap items-center gap-3">
             <Button variant="outline" className="gap-2" onClick={handlePortal} disabled={loadingPortal}>
               {loadingPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-              Gerenciar assinatura
+              Gerenciar no Stripe
             </Button>
             <Button
               variant="outline"
-              className="gap-2 text-destructive hover:text-destructive"
+              className="gap-2 text-destructive hover:text-destructive border-red-200 hover:bg-red-50"
               onClick={() => setCancelarOpen(true)}
               disabled={loadingPortal}
             >
               Cancelar assinatura
             </Button>
+            <span className="text-xs text-slate-400 ml-auto">
+              Faturas, histórico e método de pagamento ficam no portal do Stripe.
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -353,12 +372,12 @@ export function AbaAssinatura({ plano }: Props) {
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
               <p className="text-sm text-destructive font-medium">Atenção</p>
               <p className="text-sm text-[#475569] mt-1">
-                Você perderá acesso ao plano Elite <strong>no final do período pago</strong>.
-                Seus dados ficam preservados mas recursos exclusivos serão desativados.
+                Você perderá acesso ao plano <strong>{theme.label}</strong> no final do período pago
+                ({formatDate(currentPeriodEnd)}). Seus dados ficam preservados, mas recursos exclusivos serão desativados.
               </p>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter Elite</Button>
+              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter {theme.label}</Button>
               <Button
                 variant="destructive"
                 disabled={loadingPortal}
@@ -370,6 +389,28 @@ export function AbaAssinatura({ plano }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function DetalheRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: React.ReactNode
+}) {
+  return (
+    <div className="px-6 py-4 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2.5">
+        <Icon className="h-4 w-4 text-slate-400" />
+        <span className="text-sm text-slate-600 font-medium">{label}</span>
+      </div>
+      <div className="text-sm font-semibold text-slate-900 text-right">
+        {value}
+      </div>
     </div>
   )
 }

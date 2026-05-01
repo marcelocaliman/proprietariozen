@@ -32,6 +32,9 @@ interface Props {
     asaas_account_status: string | null
     pix_key?: string | null
     pix_key_tipo?: string | null
+    stripe_subscription_status?: string | null
+    stripe_subscription_current_period_end?: string | null
+    stripe_subscription_cancel_at_period_end?: boolean
   }
   avatarUrl: string | null
   qtdImoveis: number
@@ -86,7 +89,12 @@ export function ConfiguracoesClient({ profile, avatarUrl, qtdImoveis, notificaco
         </TabsContent>
 
         <TabsContent value="assinatura" className="mt-5 outline-none">
-          <AbaAssinatura plano={profile.plano} />
+          <AbaAssinatura
+            plano={profile.plano}
+            subscriptionStatus={profile.stripe_subscription_status ?? null}
+            currentPeriodEnd={profile.stripe_subscription_current_period_end ?? null}
+            cancelAtPeriodEnd={profile.stripe_subscription_cancel_at_period_end ?? false}
+          />
         </TabsContent>
 
         <TabsContent value="cobrancas" className="mt-5 outline-none">
