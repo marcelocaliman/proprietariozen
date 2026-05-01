@@ -160,7 +160,9 @@ export async function backfillStripeSubscriptions(): Promise<{
         stripe_subscription_current_period_end: periodEndUnix
           ? new Date(periodEndUnix * 1000).toISOString()
           : null,
-        stripe_subscription_cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        stripe_subscription_cancel_at_period_end:
+          sub.cancel_at_period_end === true
+          || (sub.cancel_at != null && sub.canceled_at == null),
         stripe_price_id: priceId,
         // Só sobrescreve plano se não tem override manual
         ...(p.plano_override_motivo ? {} : { plano: planoEfetivo as 'gratis' | 'pago' | 'elite' }),

@@ -40,7 +40,9 @@ const payload = {
   stripe_subscription_id: sub.id,
   stripe_subscription_status: sub.status,
   stripe_subscription_current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-  stripe_subscription_cancel_at_period_end: sub.cancel_at_period_end ?? false,
+  stripe_subscription_cancel_at_period_end:
+    sub.cancel_at_period_end === true
+    || (sub.cancel_at != null && sub.canceled_at == null),
   stripe_price_id: priceId,
 }
 

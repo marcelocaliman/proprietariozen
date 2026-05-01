@@ -258,8 +258,11 @@ export async function reativarAssinaturaStripe(): Promise<{ error?: string }> {
 
   try {
     const stripe = getStripe()
+    // Em api_version 2026-03-25+, o Customer Portal pode ter cancelado via
+    // cancel_at (timestamp) em vez de cancel_at_period_end. Limpamos ambos.
     await stripe.subscriptions.update(profile.stripe_subscription_id, {
       cancel_at_period_end: false,
+      cancel_at: null,
     })
 
     const admin = createAdminClient()

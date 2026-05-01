@@ -114,7 +114,11 @@ export async function POST(req: NextRequest) {
         stripe_subscription_current_period_end: periodEndUnix
           ? new Date(periodEndUnix * 1000).toISOString()
           : null,
-        stripe_subscription_cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        // Em api_version 2026-03-25+, o Customer Portal seta cancel_at (timestamp)
+        // em vez de cancel_at_period_end (boolean). Detectamos os dois.
+        stripe_subscription_cancel_at_period_end:
+          sub.cancel_at_period_end === true
+          || (sub.cancel_at != null && sub.canceled_at == null),
         stripe_price_id: priceId || null,
       })
       const logAction =

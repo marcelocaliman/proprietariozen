@@ -19,7 +19,7 @@ const supabase = createClient(
 
 const { data, error } = await supabase
   .from('profiles')
-  .select('id, email, plano, stripe_customer_id, stripe_subscription_id, stripe_subscription_status, stripe_subscription_current_period_end, stripe_price_id, atualizado_em')
+  .select('id, email, plano, stripe_customer_id, stripe_subscription_id, stripe_subscription_status, stripe_subscription_current_period_end, stripe_subscription_cancel_at_period_end, stripe_price_id, atualizado_em')
   .eq('email', email)
   .single()
 
@@ -35,6 +35,7 @@ console.log(`  stripe_customer_id:                       ${data.stripe_customer_
 console.log(`  stripe_subscription_id:                   ${data.stripe_subscription_id ?? '—'}`)
 console.log(`  stripe_subscription_status:               ${data.stripe_subscription_status ?? '—'}`)
 console.log(`  stripe_subscription_current_period_end:   ${data.stripe_subscription_current_period_end ?? '—'}`)
+console.log(`  stripe_subscription_cancel_at_period_end: ${data.stripe_subscription_cancel_at_period_end}`)
 console.log(`  stripe_price_id:                          ${data.stripe_price_id ?? '—'}`)
 console.log(`  atualizado_em:                            ${data.atualizado_em}`)
 console.log()

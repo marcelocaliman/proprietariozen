@@ -93,7 +93,8 @@ export async function GET() {
   const monthlyGrowthFactor = 1 + avgGrowthPct / 100
 
   function project(months: number) {
-    return Math.round(mrrAtual * Math.pow(monthlyGrowthFactor, months))
+    // Arredonda apenas para 2 casas decimais (centavos), preservando R$ 49,90
+    return Math.round(mrrAtual * Math.pow(monthlyGrowthFactor, months) * 100) / 100
   }
 
   // ── Totais ────────────────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ export async function GET() {
       arr_atual:        mrrAtual * 12,
       total_acumulado:  totalMrrAcumulado,
       ltv_medio:        monthsWithVariation[monthsWithVariation.length - 1]?.usuarios_pro > 0
-        ? Math.round(mrrAtual / monthsWithVariation[monthsWithVariation.length - 1].usuarios_pro * 12)
+        ? Math.round(mrrAtual / monthsWithVariation[monthsWithVariation.length - 1].usuarios_pro * 12 * 100) / 100
         : 0,
     },
   })
