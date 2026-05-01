@@ -11,17 +11,18 @@ export async function registrarLog(
   entityId?: string,
   metadata?: object,
 ): Promise<void> {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const table = supabaseAdmin.from('activity_logs' as never) as any
-    await table.insert({
-      user_id:     userId,
-      action,
-      entity_type: entityType ?? null,
-      entity_id:   entityId   ?? null,
-      details:     metadata   ?? null,
-    })
-  } catch {
-    // tabela pode ainda não existir em ambientes antigos
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const table = supabaseAdmin.from('activity_logs' as never) as any
+  const { error } = await table.insert({
+    user_id:     userId,
+    action,
+    entity_type: entityType ?? null,
+    entity_id:   entityId   ?? null,
+    details:     metadata   ?? null,
+  })
+  // Fire-and-forget: nao joga throw para nao quebrar a operacao
+  // principal, mas loga no console pra erros aparecerem no Vercel.
+  if (error) {
+    console.error('[registrarLog] falhou:', action, error.message)
   }
 }
