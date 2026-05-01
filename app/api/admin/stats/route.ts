@@ -8,7 +8,7 @@ const PRECO_MASTER = 49.90
 const PRECO_ELITE  = 99.90
 
 type ProfileRow = { id: string; plano: string; criado_em: string; atualizado_em: string }
-type ActivityRow = { id: string; user_email: string | null; action: string; details: unknown; created_at: string }
+type ActivityRow = { id: string; user_id: string | null; user_email: string | null; user_nome: string | null; action: string; details: unknown; ip_address: string | null; created_at: string }
 
 // ── Helpers de data ───────────────────────────────────────────────────────────
 
@@ -43,17 +43,34 @@ export async function GET() {
   // String YYYY-MM-01 construída sem Date.toISOString() para evitar bug de timezone
   const mesAtualStr = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-01`
 
-  // ── activity_logs — graceful fallback se a tabela ainda não existir ──────────
-  let activityData: ActivityRow[] = []
-  try {
-    const res = await admin.from('activity_logs' as never)
-      .select('id, user_email, action, details, created_at')
-      .order('created_at', { ascending: false })
-      .limit(20) as { data: ActivityRow[] | null }
-    activityData = res.data ?? []
-  } catch {
-    // tabela não existe ainda — retorna vazio
+  // ── activity_logs com JOIN em profiles para mostrar email/nome ───────────────
+  type RawActivity = {
+    id: string
+    user_id: string | null
+    action: string
+    details: unknown
+    ip_address: string | null
+    created_at: string
+    profiles: { nome: string | null; email: string | null } | null
   }
+  let activityData: ActivityRow[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const logsTable = admin.from('activity_logs' as never) as any
+  const { data: rawActivity, error: actErr } = await logsTable
+    .select('id, user_id, action, details, ip_address, created_at, profiles!activity_logs_user_id_fkey(nome, email)')
+    .order('created_at', { ascending: false })
+    .limit(20) as { data: RawActivity[] | null; error: { message: string } | null }
+  if (actErr) console.error('[stats] activity_logs:', actErr.message)
+  activityData = (rawActivity ?? []).map(r => ({
+    id:         r.id,
+    user_id:    r.user_id,
+    user_email: r.profiles?.email ?? null,
+    user_nome:  r.profiles?.nome ?? null,
+    action:     r.action,
+    details:    r.details,
+    ip_address: r.ip_address,
+    created_at: r.created_at,
+  }))
 
   // ── Queries paralelas ────────────────────────────────────────────────────────
   const [

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { UserGrowthChart } from '@/components/admin/user-growth-chart'
 import { PlanPieChart } from '@/components/admin/plan-pie-chart'
 import { cn } from '@/lib/utils'
+import { formatLogDetails } from '@/lib/log-format'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,16 @@ type StatsData = {
     crescimento_mrr: number; arr: number; ltv_medio: number
   }
   growth_series: { date: string; label: string; total: number; pro: number }[]
-  recent_activity: { id: string; user_email: string | null; action: string; details: unknown; created_at: string }[]
+  recent_activity: {
+    id: string
+    user_id: string | null
+    user_email: string | null
+    user_nome: string | null
+    action: string
+    details: unknown
+    ip_address: string | null
+    created_at: string
+  }[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -326,18 +336,31 @@ export default function AdminVisaoGeralPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2E8F0]">
-                  {data.recent_activity.map(ev => (
-                    <tr key={ev.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3 text-[#475569] truncate max-w-[160px]">{ev.user_email ?? '—'}</td>
-                      <td className="py-2.5 px-3 text-[#0F172A] font-medium">{ev.action}</td>
-                      <td className="py-2.5 px-3 text-[#64748B] truncate max-w-[240px]">
-                        {typeof ev.details === 'object' && ev.details !== null
-                          ? JSON.stringify(ev.details)
-                          : String(ev.details ?? '—')}
-                      </td>
-                      <td className="py-2.5 px-3 text-[#94A3B8] whitespace-nowrap">{fmtDt(ev.created_at)}</td>
-                    </tr>
-                  ))}
+                  {data.recent_activity.map(ev => {
+                    const items = formatLogDetails(ev.details)
+                    return (
+                      <tr key={ev.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-2.5 px-3 max-w-[180px]">
+                          <p className="text-[#0F172A] font-medium truncate">{ev.user_nome ?? '—'}</p>
+                          <p className="text-[10px] text-[#94A3B8] truncate">{ev.user_email ?? ev.user_id?.slice(0, 8) ?? '—'}</p>
+                        </td>
+                        <td className="py-2.5 px-3 text-[#0F172A] font-medium">{ev.action}</td>
+                        <td className="py-2.5 px-3 text-[#64748B] max-w-[280px]">
+                          {items.length === 0 ? '—' : (
+                            <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+                              {items.map(({ label, value }) => (
+                                <span key={label} className="inline-flex items-baseline gap-1 whitespace-nowrap">
+                                  <span className="text-[#94A3B8]">{label}:</span>
+                                  <span className="text-[#475569] font-medium truncate max-w-[160px]">{value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-[#94A3B8] whitespace-nowrap">{fmtDt(ev.created_at)}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
