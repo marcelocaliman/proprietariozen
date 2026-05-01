@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Termos de Uso | ProprietárioZen',
   description: 'Leia os Termos de Uso do ProprietárioZen antes de utilizar a plataforma de gestão de imóveis.',
   robots: { index: true, follow: true },
-  alternates: { canonical: 'https://www.proprietariezen.com.br/termos-de-uso' },
+  alternates: { canonical: 'https://www.proprietariozen.com.br/termos-de-uso' },
 }
 
 export default function TermosDeUsoPage() {
@@ -30,7 +30,7 @@ export default function TermosDeUsoPage() {
 
         <Section title="1. Definições">
           <ul className="space-y-2 list-none">
-            <Item label="Plataforma">O software ProprietárioZen, acessível via web no domínio proprietariezen.com.br e eventuais aplicativos móveis associados.</Item>
+            <Item label="Plataforma">O software ProprietárioZen, acessível via web no domínio proprietariozen.com.br e eventuais aplicativos móveis associados.</Item>
             <Item label="Usuário ou Proprietário">Pessoa física ou jurídica que cria uma conta e utiliza a plataforma para gerenciar imóveis e contratos de locação.</Item>
             <Item label="Inquilino">Terceiro cujos dados são cadastrados pelo Proprietário na plataforma para fins de gestão do contrato de locação.</Item>
             <Item label="Plano Grátis">Modalidade de uso sem custo, sujeita a limites de funcionalidades.</Item>
@@ -195,7 +195,7 @@ export default function TermosDeUsoPage() {
         <Section title="14. Contato">
           <p>
             Para dúvidas, solicitações ou notificações relacionadas a estes Termos, entre em contato pelo e-mail:{' '}
-            <a href="mailto:contato@proprietariezen.com.br" className="text-emerald-700 underline underline-offset-2">contato@proprietariezen.com.br</a>.
+            <a href="mailto:contato@proprietariozen.com.br" className="text-emerald-700 underline underline-offset-2">contato@proprietariozen.com.br</a>.
           </p>
         </Section>
 

@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Política de Privacidade | ProprietárioZen',
   description: 'Saiba como o ProprietárioZen coleta, usa e protege seus dados pessoais, em conformidade com a LGPD.',
   robots: { index: true, follow: true },
-  alternates: { canonical: 'https://www.proprietariezen.com.br/politica-de-privacidade' },
+  alternates: { canonical: 'https://www.proprietariozen.com.br/politica-de-privacidade' },
 }
 
 export default function PoliticaPrivacidadePage() {
@@ -32,11 +32,11 @@ export default function PoliticaPrivacidadePage() {
         <Section title="1. Identificação do Controlador">
           <p>
             O controlador dos seus dados pessoais é o <strong>ProprietárioZen</strong>, plataforma de gestão de imóveis para proprietários brasileiros, acessível pelo domínio{' '}
-            <strong>proprietariezen.com.br</strong>.
+            <strong>proprietariozen.com.br</strong>.
           </p>
           <p className="mt-3">
             Para dúvidas, solicitações ou exercício de direitos, entre em contato com nosso encarregado de proteção de dados (DPO) pelo e-mail:{' '}
-            <a href="mailto:privacidade@proprietariezen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariezen.com.br</a>.
+            <a href="mailto:privacidade@proprietariozen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariozen.com.br</a>.
           </p>
         </Section>
 
@@ -142,7 +142,7 @@ export default function PoliticaPrivacidadePage() {
           </ul>
           <p className="mt-4">
             Para exercer seus direitos, envie solicitação para{' '}
-            <a href="mailto:privacidade@proprietariezen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariezen.com.br</a>.
+            <a href="mailto:privacidade@proprietariozen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariozen.com.br</a>.
             Responderemos em até <strong>15 dias úteis</strong>.
           </p>
         </Section>
@@ -184,7 +184,7 @@ export default function PoliticaPrivacidadePage() {
         <Section title="11. Contato e Canal de Comunicação com a ANPD">
           <p>
             Dúvidas, solicitações ou reclamações relacionadas à privacidade podem ser dirigidas ao nosso DPO:{' '}
-            <a href="mailto:privacidade@proprietariezen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariezen.com.br</a>.
+            <a href="mailto:privacidade@proprietariozen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariozen.com.br</a>.
           </p>
           <p className="mt-3">
             Você também pode contatar a <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong> pelo portal{' '}
