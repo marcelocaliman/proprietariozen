@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Check, Zap, X, ExternalLink, AlertTriangle, Loader2, Star, Calendar, CreditCard, ShieldCheck } from 'lucide-react'
+import { Check, Zap, X, ExternalLink, AlertTriangle, Loader2, Star, Calendar, CreditCard, ShieldCheck, Undo2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import type { PlanoTipo } from '@/lib/stripe'
+import {
+  cancelarAssinaturaStripe,
+  reativarAssinaturaStripe,
+} from '@/app/(dashboard)/configuracoes/actions'
 
 interface RecursoItemProps { ok: boolean; children: React.ReactNode }
 
@@ -72,6 +76,8 @@ export function AbaAssinatura({ plano, subscriptionStatus, currentPeriodEnd, can
   const [loadingElite,   setLoadingElite]   = useState(false)
   const [loadingPortal,  setLoadingPortal]  = useState(false)
   const [cancelarOpen,   setCancelarOpen]   = useState(false)
+  const [pendingCancel,    startCancel]    = useTransition()
+  const [pendingReativar,  startReativar]  = useTransition()
 
   async function handleAssinar(planoPretendido: 'pago' | 'elite') {
     const setLoading = planoPretendido === 'elite' ? setLoadingElite : setLoadingMaster
@@ -98,6 +104,33 @@ export function AbaAssinatura({ plano, subscriptionStatus, currentPeriodEnd, can
       window.location.href = json.url
     } catch { toast.error('Erro ao conectar com o servidor') }
     finally { setLoadingPortal(false) }
+  }
+
+  function handleCancelar() {
+    startCancel(async () => {
+      const result = await cancelarAssinaturaStripe()
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      setCancelarOpen(false)
+      toast.success(
+        result.current_period_end
+          ? `Cancelamento agendado. Acesso mantido até ${formatDate(result.current_period_end)}.`
+          : 'Cancelamento agendado.',
+      )
+    })
+  }
+
+  function handleReativar() {
+    startReativar(async () => {
+      const result = await reativarAssinaturaStripe()
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success('Assinatura reativada — você continua com acesso completo.')
+    })
   }
 
   // ── Plano Grátis ────────────────────────────────────────────────────────────
@@ -346,44 +379,68 @@ export function AbaAssinatura({ plano, subscriptionStatus, currentPeriodEnd, can
           <div className="px-6 py-5 bg-slate-50/40 border-t border-slate-100 flex flex-wrap items-center gap-3">
             <Button variant="outline" className="gap-2" onClick={handlePortal} disabled={loadingPortal}>
               {loadingPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-              Gerenciar no Stripe
+              Faturas e método de pagamento
             </Button>
-            <Button
-              variant="outline"
-              className="gap-2 text-destructive hover:text-destructive border-red-200 hover:bg-red-50"
-              onClick={() => setCancelarOpen(true)}
-              disabled={loadingPortal}
-            >
-              Cancelar assinatura
-            </Button>
+            {willCancel ? (
+              <Button
+                variant="outline"
+                className="gap-2 text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
+                onClick={handleReativar}
+                disabled={pendingReativar}
+              >
+                {pendingReativar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+                Reativar assinatura
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="gap-2 text-destructive hover:text-destructive border-red-200 hover:bg-red-50"
+                onClick={() => setCancelarOpen(true)}
+                disabled={pendingCancel}
+              >
+                Cancelar assinatura
+              </Button>
+            )}
             <span className="text-xs text-slate-400 ml-auto">
-              Faturas, histórico e método de pagamento ficam no portal do Stripe.
+              {willCancel
+                ? 'Você pode reativar a qualquer momento antes do fim do período.'
+                : 'Cancelamento mantém acesso até o fim do período pago.'}
             </span>
           </div>
         </CardContent>
       </Card>
 
-      <Dialog open={cancelarOpen} onOpenChange={setCancelarOpen}>
+      <Dialog open={cancelarOpen} onOpenChange={v => { if (!pendingCancel) setCancelarOpen(v) }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-destructive">Cancelar assinatura?</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-              <p className="text-sm text-destructive font-medium">Atenção</p>
-              <p className="text-sm text-[#475569] mt-1">
-                Você perderá acesso ao plano <strong>{theme.label}</strong> no final do período pago
-                ({formatDate(currentPeriodEnd)}). Seus dados ficam preservados, mas recursos exclusivos serão desativados.
-              </p>
+              <p className="text-sm text-destructive font-medium">O que vai acontecer</p>
+              <ul className="text-sm text-[#475569] mt-2 space-y-1 list-disc pl-5">
+                <li>Você mantém o plano <strong>{theme.label}</strong> até <strong>{formatDate(currentPeriodEnd)}</strong>.</li>
+                <li>Não haverá nova cobrança nessa data.</li>
+                <li>Seus dados ficam preservados — apenas recursos exclusivos serão desativados.</li>
+                <li>Você pode reativar a qualquer momento antes do vencimento.</li>
+              </ul>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setCancelarOpen(false)}>Manter {theme.label}</Button>
+              <Button
+                variant="outline"
+                onClick={() => setCancelarOpen(false)}
+                disabled={pendingCancel}
+              >
+                Manter {theme.label}
+              </Button>
               <Button
                 variant="destructive"
-                disabled={loadingPortal}
-                onClick={async () => { setCancelarOpen(false); await handlePortal() }}
+                onClick={handleCancelar}
+                disabled={pendingCancel}
+                className="gap-2"
               >
-                Ir para cancelamento
+                {pendingCancel && <Loader2 className="h-4 w-4 animate-spin" />}
+                Confirmar cancelamento
               </Button>
             </div>
           </div>

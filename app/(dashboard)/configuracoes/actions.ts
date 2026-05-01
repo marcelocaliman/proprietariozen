@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
+import { getStripe } from '@/lib/stripe'
 import type { NotificacoesConfig } from './types'
 
 // ── Perfil ────────────────────────────────────────────────────────────────────
@@ -185,4 +186,91 @@ export async function excluirConta(): Promise<{ error?: string }> {
   // }
 
   return {}
+}
+
+// ── Cancelamento de assinatura inline ────────────────────────────────────────
+// Marca cancel_at_period_end=true no Stripe (usuário mantém acesso até o fim
+// do período pago). Usado pra evitar redirect pro Customer Portal.
+export async function cancelarAssinaturaStripe(): Promise<{
+  error?: string
+  current_period_end?: string | null
+}> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stripe_subscription_id, stripe_subscription_status')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.stripe_subscription_id) {
+    return { error: 'Nenhuma assinatura ativa encontrada.' }
+  }
+  if (profile.stripe_subscription_status === 'canceled') {
+    return { error: 'Assinatura já foi cancelada.' }
+  }
+
+  try {
+    const stripe = getStripe()
+    const updated = await stripe.subscriptions.update(profile.stripe_subscription_id, {
+      cancel_at_period_end: true,
+    })
+
+    // Atualiza o DB localmente — webhook vai chegar e confirmar.
+    const periodEndUnix =
+      (updated as unknown as { current_period_end?: number }).current_period_end
+      ?? (updated.items.data[0] as unknown as { current_period_end?: number })?.current_period_end
+    const periodEndIso = periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null
+
+    const admin = createAdminClient()
+    await admin
+      .from('profiles')
+      .update({
+        stripe_subscription_cancel_at_period_end: true,
+        stripe_subscription_current_period_end: periodEndIso,
+      })
+      .eq('id', user.id)
+
+    revalidatePath('/configuracoes')
+    return { current_period_end: periodEndIso }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Erro ao cancelar assinatura.' }
+  }
+}
+
+// Reativa uma assinatura que foi marcada para cancelar ao fim do período.
+export async function reativarAssinaturaStripe(): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('stripe_subscription_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.stripe_subscription_id) {
+    return { error: 'Nenhuma assinatura encontrada.' }
+  }
+
+  try {
+    const stripe = getStripe()
+    await stripe.subscriptions.update(profile.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    })
+
+    const admin = createAdminClient()
+    await admin
+      .from('profiles')
+      .update({ stripe_subscription_cancel_at_period_end: false })
+      .eq('id', user.id)
+
+    revalidatePath('/configuracoes')
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Erro ao reativar assinatura.' }
+  }
 }
