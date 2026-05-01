@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { formatLogDetails, extractIp } from '@/lib/log-format'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type LogRow = {
@@ -277,15 +278,23 @@ export default function AdminLogsPage() {
                     ) : '—'}
                   </td>
                   <td className="px-4 py-3 text-xs text-[#94A3B8] font-mono">
-                    {row.ip_address ?? '—'}
+                    {extractIp(row.details, row.ip_address) ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-xs text-[#64748B] max-w-48">
-                    {row.details != null ? (
-                      <span className="font-mono text-[10px] truncate block max-w-full" title={JSON.stringify(row.details)}>
-                        {JSON.stringify(row.details as object).slice(0, 60)}
-                        {JSON.stringify(row.details as object).length > 60 ? '…' : ''}
-                      </span>
-                    ) : '—'}
+                  <td className="px-4 py-3 text-xs text-[#64748B] max-w-72">
+                    {(() => {
+                      const items = formatLogDetails(row.details)
+                      if (items.length === 0) return '—'
+                      return (
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                          {items.map(({ label, value }) => (
+                            <span key={label} className="inline-flex items-baseline gap-1 whitespace-nowrap">
+                              <span className="text-[#94A3B8]">{label}:</span>
+                              <span className="text-[#0F172A] font-medium truncate max-w-[200px]">{value}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    })()}
                   </td>
                 </tr>
               ))}

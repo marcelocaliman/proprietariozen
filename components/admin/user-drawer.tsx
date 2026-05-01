@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { LIMITES_PLANO, isPlanoPago } from '@/lib/stripe'
 import type { PlanoTipo } from '@/lib/stripe'
+import { formatLogDetails, extractIp } from '@/lib/log-format'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -723,16 +724,26 @@ export function UserDrawer({ user, open, onClose, onActionDone }: DrawerProps) {
                           {tempoRelativo(log.created_at)}
                         </span>
                       </div>
-                      {log.details != null && (
-                        <p className="text-[11px] text-[#64748B] mt-1 font-mono break-all">
-                          {typeof log.details === 'string'
-                            ? log.details
-                            : JSON.stringify(log.details as object).slice(0, 120)}
-                        </p>
-                      )}
-                      {log.ip_address && (
-                        <p className="text-[10px] text-[#CBD5E1] mt-1">IP: {log.ip_address}</p>
-                      )}
+                      {(() => {
+                        const items = formatLogDetails(log.details)
+                        if (items.length === 0) return null
+                        return (
+                          <dl className="mt-2 space-y-0.5">
+                            {items.map(({ label, value }) => (
+                              <div key={label} className="flex items-baseline gap-1.5 text-[11px]">
+                                <dt className="text-[#94A3B8] shrink-0">{label}:</dt>
+                                <dd className="text-[#475569] font-medium break-all">{value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )
+                      })()}
+                      {(() => {
+                        const ip = extractIp(log.details, log.ip_address)
+                        return ip
+                          ? <p className="text-[10px] text-[#CBD5E1] mt-1.5">IP: {ip}</p>
+                          : null
+                      })()}
                     </div>
                   ))}
                 </div>
