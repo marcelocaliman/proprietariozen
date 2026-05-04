@@ -13,6 +13,7 @@ export const EMAIL_SLUGS = [
   'recibo',
   'bem_vindo',
   'alerta_vencimento_contrato',
+  'suporte_resposta',
 ] as const
 
 export type EmailSlug = typeof EMAIL_SLUGS[number]
@@ -52,6 +53,9 @@ export const TEMPLATE_VARS: Record<EmailSlug, string[]> = {
     'nomeProprietario', 'nomeImovel', 'nomeInquilino',
     'dataFim', 'diasRestantes',
   ],
+  suporte_resposta: [
+    'nomeUsuario', 'assunto', 'mensagem', 'linkTicket',
+  ],
 }
 
 export const TEMPLATE_LABELS: Record<EmailSlug, { label: string; desc: string }> = {
@@ -90,5 +94,9 @@ export const TEMPLATE_LABELS: Record<EmailSlug, { label: string; desc: string }>
   alerta_vencimento_contrato: {
     label: 'Alerta fim de contrato',
     desc: 'Disparado dias antes do fim do contrato.',
+  },
+  suporte_resposta: {
+    label: 'Resposta de suporte',
+    desc: 'Enviado ao usuário quando o admin responde um ticket.',
   },
 }

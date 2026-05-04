@@ -592,6 +592,99 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          id: string
+          user_id: string
+          assunto: string
+          status: 'open' | 'em_andamento' | 'aguardando_usuario' | 'resolvido' | 'fechado'
+          prioridade: 'baixa' | 'normal' | 'alta' | 'urgente'
+          categoria: 'bug' | 'financeiro' | 'conta' | 'sugestao' | 'duvida' | 'outro'
+          assigned_to: string | null
+          notas_internas: string | null
+          first_response_at: string | null
+          resolved_at: string | null
+          closed_at: string | null
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          assunto: string
+          status?: 'open' | 'em_andamento' | 'aguardando_usuario' | 'resolvido' | 'fechado'
+          prioridade?: 'baixa' | 'normal' | 'alta' | 'urgente'
+          categoria?: 'bug' | 'financeiro' | 'conta' | 'sugestao' | 'duvida' | 'outro'
+          assigned_to?: string | null
+          notas_internas?: string | null
+          first_response_at?: string | null
+          resolved_at?: string | null
+          closed_at?: string | null
+        }
+        Update: {
+          assunto?: string
+          status?: 'open' | 'em_andamento' | 'aguardando_usuario' | 'resolvido' | 'fechado'
+          prioridade?: 'baixa' | 'normal' | 'alta' | 'urgente'
+          categoria?: 'bug' | 'financeiro' | 'conta' | 'sugestao' | 'duvida' | 'outro'
+          assigned_to?: string | null
+          notas_internas?: string | null
+          first_response_at?: string | null
+          resolved_at?: string | null
+          closed_at?: string | null
+          atualizado_em?: string
+        }
+        Relationships: []
+      }
+      ticket_mensagens: {
+        Row: {
+          id: string
+          ticket_id: string
+          autor_id: string | null
+          autor_role: 'user' | 'admin'
+          conteudo: string
+          is_nota_interna: boolean
+          anexos: { nome: string; path: string; tamanho: number; tipo: string }[] | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          autor_id?: string | null
+          autor_role: 'user' | 'admin'
+          conteudo: string
+          is_nota_interna?: boolean
+          anexos?: { nome: string; path: string; tamanho: number; tipo: string }[] | null
+        }
+        Update: {
+          conteudo?: string
+        }
+        Relationships: []
+      }
+      notificacoes: {
+        Row: {
+          id: string
+          user_id: string
+          tipo: string
+          titulo: string
+          mensagem: string | null
+          link: string | null
+          lida: boolean
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tipo: string
+          titulo: string
+          mensagem?: string | null
+          link?: string | null
+          lida?: boolean
+        }
+        Update: {
+          lida?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }

@@ -702,3 +702,44 @@ export async function enviarAlertaVencimentoContrato(p: VencimentoContratoParams
     diasRestantes: p.diasRestantes,
   })
 }
+
+// ─── Template: Resposta de ticket de suporte ─────────────────────────────────
+
+interface RespostaSuporteParams {
+  para: string
+  nomeUsuario: string
+  assunto: string
+  mensagem: string
+  ticketId: string
+}
+
+export async function enviarRespostaSuporte(p: RespostaSuporteParams) {
+  const linkTicket = `${APP_URL}/suporte/${p.ticketId}`
+  // Sanitiza nova linha em texto simples para HTML
+  const mensagemHtml = p.mensagem
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br />')
+
+  const body = `
+    <p style="margin:0 0 8px;font-size:15px;color:#374151;">Olá, <strong>${p.nomeUsuario}</strong>!</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+      O time de suporte respondeu seu ticket <strong>${p.assunto}</strong>:
+    </p>
+    <div style="background:#f9fafb;border-left:3px solid #059669;padding:14px 18px;margin:16px 0;border-radius:4px;">
+      <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">${mensagemHtml}</p>
+    </div>
+    ${ctaButton('Abrir ticket no app', linkTicket, '#059669')}
+    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;text-align:center;">
+      Você também pode responder por aqui acessando o app.
+    </p>`
+
+  return despachar('suporte_resposta', p.para, {
+    subject: `Resposta do suporte — ${p.assunto}`,
+    html: wrapEmail('#059669', 'Suporte ProprietárioZen', body),
+  }, {
+    nomeUsuario: p.nomeUsuario,
+    assunto: p.assunto,
+    mensagem: p.mensagem,
+    linkTicket,
+  })
+}

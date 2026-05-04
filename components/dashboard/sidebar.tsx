@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Building2, Users, Receipt,
-  Settings, LogOut, Star, ChevronRight, Shield, Zap, Calculator,
+  Settings, LogOut, Star, ChevronRight, Shield, Zap, Calculator, LifeBuoy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -23,6 +23,7 @@ const navItems = [
   { href: '/inquilinos',    label: 'Inquilinos',    icon: Users,           elite: false },
   { href: '/alugueis',      label: 'Aluguéis',      icon: Receipt,         elite: false },
   { href: '/relatorio-ir',  label: 'Relatório IR',  icon: Calculator,      elite: true  },
+  { href: '/suporte',       label: 'Suporte',       icon: LifeBuoy,        elite: false },
   { href: '/configuracoes', label: 'Configurações', icon: Settings,        elite: false },
 ]
 

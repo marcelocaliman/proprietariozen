@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Users, TrendingUp, Building2,
-  Activity, Settings, LogOut, ShieldAlert,
+  Activity, Settings, LogOut, ShieldAlert, LifeBuoy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/admin/usuarios',      label: 'Usuários',            icon: Users },
   { href: '/admin/financeiro',    label: 'Financeiro',          icon: TrendingUp },
   { href: '/admin/imoveis',       label: 'Imóveis & Aluguéis',  icon: Building2 },
+  { href: '/admin/suporte',       label: 'Suporte',             icon: LifeBuoy },
   { href: '/admin/logs',          label: 'Logs & Atividade',    icon: Activity },
   { href: '/admin/configuracoes', label: 'Configurações',       icon: Settings },
 ]
