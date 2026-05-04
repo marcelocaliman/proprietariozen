@@ -1,9 +1,7 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { TicketThread } from '@/components/suporte/ticket-thread'
-import { TicketHero } from '@/components/suporte/ticket-hero'
+import { TicketHeader } from '@/components/suporte/ticket-header'
 import { TicketAdminPanel } from '@/components/admin/ticket-admin-panel'
 import { getSystemSettings } from '@/lib/system-settings'
 import type { TicketStatus, TicketPrioridade, TicketCategoria } from '@/lib/suporte'
@@ -78,26 +76,19 @@ export default async function AdminTicketDetailPage({
     .like('link', `%/admin/suporte/${id}%`)
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto">
-      <Link
-        href="/admin/suporte"
-        className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        Todos os tickets
-      </Link>
-
-      <TicketHero
+    <div className="max-w-[1400px] mx-auto">
+      <TicketHeader
         assunto={ticket.assunto}
         status={ticket.status}
         prioridade={ticket.prioridade}
         categoria={ticket.categoria}
         criadoEm={ticket.criado_em}
+        voltarHref="/admin/suporte"
         usuario={ticket.profiles}
       />
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2">
+      <div className="pt-6 grid lg:grid-cols-[1fr_320px] gap-6">
+        <div className="min-w-0">
           <TicketThread
             ticketId={ticket.id}
             ticketStatus={ticket.status}
@@ -108,7 +99,7 @@ export default async function AdminTicketDetailPage({
             userNome={ticket.profiles?.nome ?? null}
           />
         </div>
-        <div className="lg:col-span-1">
+        <div>
           <TicketAdminPanel
             ticket={{
               id: ticket.id,

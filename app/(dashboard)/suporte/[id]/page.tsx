@@ -1,9 +1,7 @@
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { TicketThread } from '@/components/suporte/ticket-thread'
-import { TicketHero } from '@/components/suporte/ticket-hero'
+import { TicketHeader } from '@/components/suporte/ticket-header'
 import type { TicketStatus, TicketPrioridade, TicketCategoria } from '@/lib/suporte'
 
 export const metadata = { title: 'Ticket — ProprietárioZen' }
@@ -55,7 +53,6 @@ export default async function TicketDetailPage({
 
   if (!ticket) notFound()
 
-  // Marca notificações desse ticket como lidas (silencioso)
   await supabase
     .from('notificacoes')
     .update({ lida: true })
@@ -64,31 +61,26 @@ export default async function TicketDetailPage({
     .like('link', `%/suporte/${id}%`)
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      <Link
-        href="/suporte"
-        className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        Todos os tickets
-      </Link>
-
-      <TicketHero
+    <div className="max-w-3xl mx-auto">
+      <TicketHeader
         assunto={ticket.assunto}
         status={ticket.status}
         prioridade={ticket.prioridade}
         categoria={ticket.categoria}
         criadoEm={ticket.criado_em}
+        voltarHref="/suporte"
       />
 
-      <TicketThread
-        ticketId={ticket.id}
-        ticketStatus={ticket.status}
-        mensagens={mensagens ?? []}
-        currentUserId={user.id}
-        isAdminView={false}
-        userNome={(profile as { nome?: string } | null)?.nome ?? null}
-      />
+      <div className="pt-6">
+        <TicketThread
+          ticketId={ticket.id}
+          ticketStatus={ticket.status}
+          mensagens={mensagens ?? []}
+          currentUserId={user.id}
+          isAdminView={false}
+          userNome={(profile as { nome?: string } | null)?.nome ?? null}
+        />
+      </div>
     </div>
   )
 }
