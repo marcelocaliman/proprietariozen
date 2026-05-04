@@ -3,8 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { TicketThread } from '@/components/suporte/ticket-thread'
-import { TicketStatusBadge, TicketPrioridadeBadge, TicketCategoriaLabel } from '@/components/suporte/ticket-badges'
-import { formatDataHora } from '@/components/suporte/format'
+import { TicketHero } from '@/components/suporte/ticket-hero'
 import type { TicketStatus, TicketPrioridade, TicketCategoria } from '@/lib/suporte'
 
 export const metadata = { title: 'Ticket — ProprietárioZen' }
@@ -38,7 +37,7 @@ export default async function TicketDetailPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: ticket }, { data: mensagens }] = await Promise.all([
+  const [{ data: ticket }, { data: mensagens }, { data: profile }] = await Promise.all([
     supabase
       .from('tickets')
       .select('id, user_id, assunto, status, prioridade, categoria, criado_em')
@@ -50,6 +49,8 @@ export default async function TicketDetailPage({
       .select('id, autor_id, autor_role, conteudo, is_nota_interna, criado_em')
       .eq('ticket_id', id)
       .order('criado_em', { ascending: true }) as unknown as Promise<{ data: Mensagem[] | null }>,
+
+    supabase.from('profiles').select('nome').eq('id', user.id).single(),
   ])
 
   if (!ticket) notFound()
@@ -63,32 +64,22 @@ export default async function TicketDetailPage({
     .like('link', `%/suporte/${id}%`)
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto">
-      <div>
-        <Link
-          href="/suporte"
-          className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 mb-3"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Voltar
-        </Link>
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <TicketStatusBadge status={ticket.status} />
-          <TicketPrioridadeBadge prioridade={ticket.prioridade} />
-          <span className="text-[11px] text-slate-400">
-            <TicketCategoriaLabel categoria={ticket.categoria} />
-          </span>
-        </div>
-        <h1
-          className="font-extrabold tracking-tight text-slate-900 leading-tight"
-          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(22px, 2.4vw, 30px)' }}
-        >
-          {ticket.assunto}
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Aberto em {formatDataHora(ticket.criado_em)}
-        </p>
-      </div>
+    <div className="space-y-6 max-w-3xl mx-auto">
+      <Link
+        href="/suporte"
+        className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Todos os tickets
+      </Link>
+
+      <TicketHero
+        assunto={ticket.assunto}
+        status={ticket.status}
+        prioridade={ticket.prioridade}
+        categoria={ticket.categoria}
+        criadoEm={ticket.criado_em}
+      />
 
       <TicketThread
         ticketId={ticket.id}
@@ -96,6 +87,7 @@ export default async function TicketDetailPage({
         mensagens={mensagens ?? []}
         currentUserId={user.id}
         isAdminView={false}
+        userNome={(profile as { nome?: string } | null)?.nome ?? null}
       />
     </div>
   )

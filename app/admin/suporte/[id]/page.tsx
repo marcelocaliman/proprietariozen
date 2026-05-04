@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { TicketThread } from '@/components/suporte/ticket-thread'
-import { TicketStatusBadge, TicketPrioridadeBadge, TicketCategoriaLabel } from '@/components/suporte/ticket-badges'
-import { formatDataHora } from '@/components/suporte/format'
+import { TicketHero } from '@/components/suporte/ticket-hero'
 import { TicketAdminPanel } from '@/components/admin/ticket-admin-panel'
 import { getSystemSettings } from '@/lib/system-settings'
 import type { TicketStatus, TicketPrioridade, TicketCategoria } from '@/lib/suporte'
@@ -71,7 +70,6 @@ export default async function AdminTicketDetailPage({
 
   if (!ticket) notFound()
 
-  // Marca notificações desse ticket como lidas pro admin atual
   await admin
     .from('notificacoes')
     .update({ lida: true })
@@ -80,35 +78,23 @@ export default async function AdminTicketDetailPage({
     .like('link', `%/admin/suporte/${id}%`)
 
   return (
-    <div className="space-y-5 max-w-[1400px] mx-auto">
-      <div>
-        <Link
-          href="/admin/suporte"
-          className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 mb-3"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Voltar
-        </Link>
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <TicketStatusBadge status={ticket.status} />
-          <TicketPrioridadeBadge prioridade={ticket.prioridade} />
-          <span className="text-[11px] text-slate-400">
-            <TicketCategoriaLabel categoria={ticket.categoria} />
-          </span>
-        </div>
-        <h1
-          className="font-extrabold tracking-tight text-slate-900 leading-tight"
-          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(22px, 2.4vw, 30px)' }}
-        >
-          {ticket.assunto}
-        </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          <span className="font-medium text-slate-700">{ticket.profiles?.nome ?? '—'}</span>
-          <span className="text-slate-400"> · {ticket.profiles?.email ?? '—'}</span>
-          <span className="text-slate-400"> · plano {ticket.profiles?.plano ?? '—'}</span>
-          <span className="text-slate-400"> · aberto em {formatDataHora(ticket.criado_em)}</span>
-        </p>
-      </div>
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      <Link
+        href="/admin/suporte"
+        className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Todos os tickets
+      </Link>
+
+      <TicketHero
+        assunto={ticket.assunto}
+        status={ticket.status}
+        prioridade={ticket.prioridade}
+        categoria={ticket.categoria}
+        criadoEm={ticket.criado_em}
+        usuario={ticket.profiles}
+      />
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
@@ -119,6 +105,7 @@ export default async function AdminTicketDetailPage({
             currentUserId={user.id}
             isAdminView
             templates={settings.support_templates.items}
+            userNome={ticket.profiles?.nome ?? null}
           />
         </div>
         <div className="lg:col-span-1">

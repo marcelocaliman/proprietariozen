@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LifeBuoy, Clock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { LifeBuoy, Clock, AlertCircle, CheckCircle2, ArrowRight, MessageSquare } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-server'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -50,7 +50,6 @@ export default async function AdminSuportePage({
 
   const { data: tickets } = await query as unknown as { data: TicketRow[] | null }
 
-  // Stats: contagens
   const [
     { count: countOpen },
     { count: countEmAndamento },
@@ -63,24 +62,52 @@ export default async function AdminSuportePage({
     admin.from('tickets').select('id', { count: 'exact', head: true }).eq('status', 'resolvido'),
   ])
 
+  const totalAtivos = (countOpen ?? 0) + (countEmAndamento ?? 0)
+
   return (
     <div className="space-y-7 max-w-[1400px] mx-auto">
-      <div>
-        <p className="text-sm text-slate-500 font-medium">Painel administrativo</p>
-        <h1
-          className="font-extrabold tracking-tight text-slate-900 mt-1 leading-[1.05]"
-          style={{ letterSpacing: '-0.025em', fontSize: 'clamp(28px, 3vw, 40px)' }}
+      {/* Hero */}
+      <div className="grid gap-4 lg:grid-cols-7">
+        <div
+          className="lg:col-span-3 rounded-2xl p-7 relative overflow-hidden text-white flex flex-col justify-between min-h-[200px]"
+          style={{
+            background: 'linear-gradient(135deg, #022C22 0%, #064E3B 50%, #059669 100%)',
+            boxShadow: '0 8px 32px rgba(5, 150, 105, 0.20)',
+          }}
         >
-          Tickets de suporte
-        </h1>
-      </div>
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none" style={{ background: 'rgba(110, 231, 183, 0.18)', filter: 'blur(80px)', transform: 'translate(40%, -40%)' }} />
+          <div className="relative z-10">
+            <p className="text-[11px] uppercase tracking-widest font-semibold text-emerald-200">Tickets ativos</p>
+            <p
+              className="font-extrabold leading-none mt-2 tabular-nums"
+              style={{
+                fontSize: 'clamp(48px, 5vw, 64px)',
+                background: 'linear-gradient(135deg, #FFFFFF 0%, #6EE7B7 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {totalAtivos}
+            </p>
+          </div>
+          <div className="relative z-10 mt-4">
+            <p className="text-sm text-emerald-100/80">
+              {(countOpen ?? 0) > 0
+                ? `${countOpen} aguardando triagem`
+                : 'Nada aguardando triagem'}
+              {(countAguardando ?? 0) > 0 ? ` · ${countAguardando} aguardando usuário` : ''}
+            </p>
+          </div>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Aguardando triagem" value={countOpen ?? 0} icon={LifeBuoy} color="emerald" />
-        <StatCard label="Em andamento"        value={countEmAndamento ?? 0} icon={Clock} color="blue" />
-        <StatCard label="Aguardando usuário"  value={countAguardando ?? 0} icon={AlertCircle} color="amber" />
-        <StatCard label="Resolvidos"          value={countResolvidos ?? 0} icon={CheckCircle2} color="slate" />
+        <div className="lg:col-span-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Aguardando triagem" value={countOpen ?? 0} icon={LifeBuoy} color="emerald" />
+          <StatCard label="Em andamento"        value={countEmAndamento ?? 0} icon={Clock} color="blue" />
+          <StatCard label="Aguardando usuário"  value={countAguardando ?? 0} icon={AlertCircle} color="amber" />
+          <StatCard label="Resolvidos"          value={countResolvidos ?? 0} icon={CheckCircle2} color="slate" />
+        </div>
       </div>
 
       {/* Filtros */}
@@ -106,7 +133,7 @@ export default async function AdminSuportePage({
             <Link
               key={t.id}
               href={`/admin/suporte/${t.id}`}
-              className="block rounded-2xl border border-slate-100 bg-white px-5 py-4 hover:border-emerald-200 hover:shadow-sm transition-all"
+              className="group block rounded-2xl border border-slate-100 bg-white px-5 py-4 hover:border-emerald-200 hover:shadow-md hover:-translate-y-0.5 transition-all"
             >
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="min-w-0 flex-1">
@@ -120,15 +147,19 @@ export default async function AdminSuportePage({
                       <Badge className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Atribuído</Badge>
                     )}
                   </div>
-                  <p className="text-sm font-semibold text-slate-900 truncate">{t.assunto}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    <span className="font-medium">{t.profiles?.nome ?? '—'}</span>
-                    <span className="text-slate-400"> · {t.profiles?.email ?? '—'}</span>
-                  </p>
+                  <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-emerald-700 transition-colors">{t.assunto}</p>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                    <span className="font-medium text-slate-600">{t.profiles?.nome ?? '—'}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-slate-400">{t.profiles?.email ?? '—'}</span>
+                    <span className="text-slate-300">·</span>
+                    <span className="inline-flex items-center gap-1 text-slate-400">
+                      <MessageSquare className="h-3 w-3" />
+                      {formatDataRelativa(t.atualizado_em)}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[11px] text-slate-400 whitespace-nowrap">
-                  {formatDataRelativa(t.atualizado_em)}
-                </p>
+                <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all mt-2 shrink-0" />
               </div>
             </Link>
           ))}
@@ -143,20 +174,25 @@ function StatCard({ label, value, icon: Icon, color }: {
   color: 'emerald' | 'blue' | 'amber' | 'slate'
 }) {
   const colors = {
-    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    blue:    'text-blue-600 bg-blue-50 border-blue-100',
-    amber:   'text-amber-600 bg-amber-50 border-amber-100',
-    slate:   'text-slate-600 bg-slate-50 border-slate-100',
+    emerald: 'text-emerald-600 bg-emerald-50',
+    blue:    'text-blue-600 bg-blue-50',
+    amber:   'text-amber-600 bg-amber-50',
+    slate:   'text-slate-500 bg-slate-50',
   }
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-5 flex items-center gap-3">
-      <div className={`shrink-0 h-10 w-10 rounded-xl border flex items-center justify-center ${colors[color]}`}>
-        <Icon className="h-5 w-5" />
+    <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex flex-col justify-between min-h-[110px]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 leading-tight">{label}</p>
+        <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${colors[color]}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
       </div>
-      <div>
-        <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">{label}</p>
-        <p className="text-2xl font-extrabold text-slate-900 mt-0.5 tabular-nums">{value}</p>
-      </div>
+      <p
+        className="font-extrabold text-slate-900 leading-none mt-2 tabular-nums"
+        style={{ fontSize: 'clamp(22px, 2vw, 28px)', letterSpacing: '-0.02em' }}
+      >
+        {value}
+      </p>
     </div>
   )
 }
