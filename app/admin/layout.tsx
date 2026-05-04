@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { isAdmin } from '@/lib/admin'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
+import { NotificacoesBell } from '@/components/dashboard/notificacoes-bell'
 
 export const metadata = { title: 'Painel Admin — ProprietárioZen' }
 
@@ -42,6 +43,14 @@ export default async function AdminLayout({
           <span className="inline-flex items-center rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white tracking-wide">
             ADMIN
           </span>
+          <div className="ml-auto">
+            <NotificacoesBell />
+          </div>
+        </header>
+
+        {/* Header desktop — apenas com o sino */}
+        <header className="hidden lg:flex items-center justify-end px-6 py-3 border-b bg-background">
+          <NotificacoesBell />
         </header>
 
         {/* Conteúdo */}

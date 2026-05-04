@@ -12,6 +12,7 @@ import { Sidebar } from '@/components/dashboard/sidebar'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { UnauthorizedToast } from '@/components/dashboard/unauthorized-toast'
 import { GlobalBannerView } from '@/components/dashboard/global-banner'
+import { NotificacoesBell } from '@/components/dashboard/notificacoes-bell'
 import type { Profile } from '@/types'
 import { LogoColor } from '@/components/ui/logo'
 
@@ -61,6 +62,14 @@ export default async function DashboardLayout({
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b bg-background">
           <MobileNav profile={profile as Profile | null} />
           <LogoColor iconSize={28} href="/dashboard" />
+          <div className="ml-auto">
+            <NotificacoesBell />
+          </div>
+        </header>
+
+        {/* Header desktop — apenas com o sino */}
+        <header className="hidden lg:flex items-center justify-end px-6 py-3 border-b bg-background">
+          <NotificacoesBell />
         </header>
 
         {/* Toast de acesso negado (vindo de /admin/* sem permissão) */}
