@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Send, X, Lock, Shield, MessageCircle } from 'lucide-react'
+import { Loader2, Send, X, Lock, Shield, MessageCircle, FileText, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { responderTicket, fecharTicket } from '@/app/(dashboard)/suporte/actions'
 import { responderTicketAdmin } from '@/app/admin/suporte/actions'
 import { formatDataHora } from './format'
 import type { TicketStatus } from '@/lib/suporte'
+import type { SupportTemplate } from '@/lib/system-settings'
 
 type Mensagem = {
   id: string
@@ -25,13 +26,15 @@ interface Props {
   mensagens: Mensagem[]
   currentUserId: string
   isAdminView: boolean
+  templates?: SupportTemplate[]
 }
 
 export function TicketThread({
-  ticketId, ticketStatus, mensagens, currentUserId, isAdminView,
+  ticketId, ticketStatus, mensagens, currentUserId, isAdminView, templates,
 }: Props) {
   const [conteudo, setConteudo]    = useState('')
   const [notaInterna, setNotaInterna] = useState(false)
+  const [templatesOpen, setTemplatesOpen] = useState(false)
   const [pending, startResponder]  = useTransition()
   const [pendingFechar, startFechar] = useTransition()
 
@@ -114,6 +117,39 @@ export function TicketThread({
                   <Lock className="h-3 w-3" />
                   Nota interna
                 </label>
+              )}
+              {isAdminView && templates && templates.length > 0 && (
+                <div className="relative">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTemplatesOpen(o => !o)}
+                    className="text-xs gap-1 h-7"
+                  >
+                    <FileText className="h-3 w-3" />
+                    Template
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                  {templatesOpen && (
+                    <div className="absolute bottom-full mb-1 left-0 w-72 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-xl z-10">
+                      {templates.map((t, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setConteudo(prev => (prev ? prev + '\n\n' : '') + t.conteudo)
+                            setTemplatesOpen(false)
+                          }}
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                        >
+                          <p className="text-xs font-semibold text-slate-900">{t.titulo}</p>
+                          <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{t.conteudo}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
               {!isAdminView && (
                 <Button

@@ -6,6 +6,7 @@ import { TicketThread } from '@/components/suporte/ticket-thread'
 import { TicketStatusBadge, TicketPrioridadeBadge, TicketCategoriaLabel } from '@/components/suporte/ticket-badges'
 import { formatDataHora } from '@/components/suporte/format'
 import { TicketAdminPanel } from '@/components/admin/ticket-admin-panel'
+import { getSystemSettings } from '@/lib/system-settings'
 import type { TicketStatus, TicketPrioridade, TicketCategoria } from '@/lib/suporte'
 
 export const metadata = { title: 'Ticket — Admin ProprietárioZen' }
@@ -47,7 +48,7 @@ export default async function AdminTicketDetailPage({
   if (!user) notFound()
 
   const admin = createAdminClient()
-  const [{ data: ticket }, { data: mensagens }, { data: admins }] = await Promise.all([
+  const [{ data: ticket }, { data: mensagens }, { data: admins }, settings] = await Promise.all([
     admin
       .from('tickets')
       .select('*, profiles!tickets_user_id_fkey(nome, email, plano)')
@@ -64,6 +65,8 @@ export default async function AdminTicketDetailPage({
       .from('profiles')
       .select('id, nome, email')
       .eq('role', 'admin'),
+
+    getSystemSettings(admin),
   ])
 
   if (!ticket) notFound()
@@ -115,6 +118,7 @@ export default async function AdminTicketDetailPage({
             mensagens={mensagens ?? []}
             currentUserId={user.id}
             isAdminView
+            templates={settings.support_templates.items}
           />
         </div>
         <div className="lg:col-span-1">

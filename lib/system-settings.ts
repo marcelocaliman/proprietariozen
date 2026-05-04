@@ -7,6 +7,7 @@ export type SystemSettingKey =
   | 'announcement_free'
   | 'announcement_master'
   | 'announcement_elite'
+  | 'support_templates'
 
 export type MaintenanceMode = {
   enabled: boolean
@@ -28,12 +29,22 @@ export type Announcement = {
   link_label?: string
 }
 
+export type SupportTemplate = {
+  titulo: string
+  conteudo: string
+}
+
+export type SupportTemplates = {
+  items: SupportTemplate[]
+}
+
 export type SystemSettings = {
   maintenance_mode: MaintenanceMode
   global_banner: GlobalBanner
   announcement_free: Announcement
   announcement_master: Announcement
   announcement_elite: Announcement
+  support_templates: SupportTemplates
 }
 
 const DEFAULTS: SystemSettings = {
@@ -42,6 +53,26 @@ const DEFAULTS: SystemSettings = {
   announcement_free: { enabled: false, text: '' },
   announcement_master: { enabled: false, text: '' },
   announcement_elite: { enabled: false, text: '' },
+  support_templates: {
+    items: [
+      {
+        titulo: 'Recebido — vamos analisar',
+        conteudo: 'Oi! Recebemos sua solicitação e já estamos analisando. Volto aqui em breve com novidades. Obrigado pela paciência.',
+      },
+      {
+        titulo: 'Pedindo mais detalhes',
+        conteudo: 'Pra ajudar melhor, você poderia me passar:\n\n1. Em que página/tela isso aconteceu?\n2. Que mensagem de erro apareceu (se alguma)?\n3. Se possível, um print da tela.\n\nAssim que tiver isso, sigo com a investigação.',
+      },
+      {
+        titulo: 'Bug confirmado — em correção',
+        conteudo: 'Confirmamos o problema, é um bug do nosso lado. A correção já está em andamento e te aviso assim que for ao ar. Obrigado por reportar!',
+      },
+      {
+        titulo: 'Resolvido — pode testar?',
+        conteudo: 'Tudo certo, deve estar funcionando agora. Você consegue testar e me confirmar? Qualquer coisa, é só responder aqui que reabrimos.',
+      },
+    ],
+  },
 }
 
 /** Carrega todas as configurações de sistema, com defaults para chaves não setadas. */
