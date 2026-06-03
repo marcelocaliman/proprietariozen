@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -25,7 +25,7 @@ export async function POST(
         imovel:imoveis!inner(apelido, user_id, billing_mode),
         inquilino:inquilinos(nome, email)
       `)
-      .eq('id', params.id)
+      .eq('id', (await params).id)
       .single()
 
     if (aluguelErr || !aluguelBase) {
@@ -51,7 +51,7 @@ export async function POST(
 
     if (isAutomatic && !aluguelBase.asaas_charge_id) {
       const charge = await criarCobrancaAsaasInterno(admin, {
-        aluguelId: params.id,
+        aluguelId: (await params).id,
         userId: user.id,
       })
       if (!charge.ok) {

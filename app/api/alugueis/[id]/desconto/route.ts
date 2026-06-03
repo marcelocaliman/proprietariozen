@@ -3,7 +3,7 @@ import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-se
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -22,7 +22,7 @@ export async function POST(
     const { data: aluguel } = await admin
       .from('alugueis')
       .select('id, valor, imovel:imoveis!inner(user_id)')
-      .eq('id', params.id)
+      .eq('id', (await params).id)
       .single()
 
     if (!aluguel) return NextResponse.json({ error: 'Aluguel não encontrado' }, { status: 404 })
@@ -41,7 +41,7 @@ export async function POST(
     const { error: dbErr } = await admin
       .from('alugueis')
       .update({ desconto: valorDesconto, observacao: novaObs })
-      .eq('id', params.id)
+      .eq('id', (await params).id)
 
     if (dbErr) return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 })
 

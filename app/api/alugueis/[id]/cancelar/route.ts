@@ -20,7 +20,7 @@ function decryptApiKey(enc: string): string {
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -39,7 +39,7 @@ export async function POST(
     const { data: aluguel } = await admin
       .from('alugueis')
       .select('id, asaas_charge_id, imovel:imoveis!inner(user_id)')
-      .eq('id', params.id)
+      .eq('id', (await params).id)
       .single()
 
     if (!aluguel) return NextResponse.json({ error: 'Aluguel não encontrado' }, { status: 404 })
@@ -89,7 +89,7 @@ export async function POST(
         asaas_pix_copiaecola: null,
         asaas_boleto_url: null,
       })
-      .eq('id', params.id)
+      .eq('id', (await params).id)
 
     if (dbErr) return NextResponse.json({ error: 'Erro ao salvar' }, { status: 500 })
 

@@ -5,7 +5,7 @@ import { isPlanoPago } from '@/lib/stripe'
 
 export async function POST(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createServerSupabaseClient()
@@ -22,7 +22,7 @@ export async function POST(
         imovel:imoveis!inner(apelido, endereco, user_id),
         inquilino:inquilinos(nome, email)
       `)
-      .eq('id', params.id)
+      .eq('id', (await params).id)
       .single()
 
     if (!aluguel) return NextResponse.json({ error: 'Aluguel não encontrado' }, { status: 404 })
@@ -73,7 +73,7 @@ export async function POST(
     await admin
       .from('alugueis')
       .update({ recibo_reenviado_em: new Date().toISOString() })
-      .eq('id', params.id)
+      .eq('id', (await params).id)
 
     return NextResponse.json({ ok: true })
   } catch (err) {

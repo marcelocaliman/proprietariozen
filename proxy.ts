@@ -16,7 +16,7 @@ const rotasPublicas = [
   '/api/inquilino/documento',
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Endpoints que recebem callbacks externos têm auth própria (signing
   // secret / bearer token). Pular o middleware evita o redirect 307 pra
   // /login que estava bloqueando webhook do Stripe e cron do Vercel.
