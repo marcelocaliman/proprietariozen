@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { toast } from 'sonner'
 import {
   Plus, Building2, Home, Square, Briefcase, MapPin,
@@ -15,12 +16,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ImovelModal } from '@/components/imoveis/imovel-modal'
-import { EditarContratoModal } from '@/components/imoveis/editar-contrato-modal'
-import { EncerrarContratoModal } from '@/components/imoveis/encerrar-contrato-modal'
-import { CobrancaConfigModal } from '@/components/imoveis/cobranca-config-modal'
-import { GarantiaModal } from '@/components/imoveis/garantia-modal'
-import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
+// Modais dinamicos — so carregam quando o usuario clica pra abrir
+const ImovelModal           = dynamic(() => import('@/components/imoveis/imovel-modal').then(m => ({ default: m.ImovelModal })))
+const EditarContratoModal   = dynamic(() => import('@/components/imoveis/editar-contrato-modal').then(m => ({ default: m.EditarContratoModal })))
+const EncerrarContratoModal = dynamic(() => import('@/components/imoveis/encerrar-contrato-modal').then(m => ({ default: m.EncerrarContratoModal })))
+const CobrancaConfigModal   = dynamic(() => import('@/components/imoveis/cobranca-config-modal').then(m => ({ default: m.CobrancaConfigModal })))
+const GarantiaModal         = dynamic(() => import('@/components/imoveis/garantia-modal').then(m => ({ default: m.GarantiaModal })))
+const InquilinoModal        = dynamic(() => import('@/components/inquilinos/inquilino-modal').then(m => ({ default: m.InquilinoModal })))
 import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
