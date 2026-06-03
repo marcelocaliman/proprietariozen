@@ -77,6 +77,28 @@ export type Aluguel = {
   observacao: string | null
   recibo_gerado: boolean
   criado_em: string
+  // Asaas (modo automático)
+  asaas_charge_id: string | null
+  asaas_pix_qrcode: string | null
+  asaas_pix_copiaecola: string | null
+  asaas_boleto_url: string | null
+  asaas_customer_id: string | null
+  // Campos de pagamento / parcial
+  valor_pago: number | null
+  metodo_pagamento: string | null
+  desconto: number | null
+  motivo_cancelamento: string | null
+  // Isenção
+  isento: boolean | null
+  motivo_isencao: string | null
+  // Snapshot dos encargos
+  valor_aluguel_base: number | null
+  valor_iptu: number
+  valor_condominio: number
+  valor_outros_encargos: number
+  // Timestamps de envio
+  lembrete_enviado_em: string | null
+  recibo_reenviado_em: string | null
 }
 
 export type Profile = {
@@ -89,4 +111,25 @@ export type Profile = {
   stripe_customer_id: string | null
   criado_em: string
   atualizado_em: string
+  // Asaas (subconta marketplace)
+  asaas_account_id: string | null
+  asaas_account_status: string | null
+  asaas_api_key_enc: string | null
+  asaas_wallet_id: string | null
+  asaas_customer_id: string | null
+  // Banimento
+  banned: boolean
+  banned_at: string | null
+  banned_reason: string | null
+  banned_by: string | null
+  // Override manual de plano (cortesia admin)
+  plano_override_motivo: string | null
+  plano_override_at: string | null
+  plano_override_by: string | null
+  // Stripe subscription (sync via webhook)
+  stripe_subscription_id: string | null
+  stripe_subscription_status: string | null
+  stripe_subscription_current_period_end: string | null
+  stripe_subscription_cancel_at_period_end: boolean
+  stripe_price_id: string | null
 }
