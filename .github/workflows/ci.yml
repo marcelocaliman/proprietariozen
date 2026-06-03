@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Type check + lint + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          # Stubs para o build não quebrar — não são valores reais.
+          # Configure os valores reais no Vercel/secrets do GitHub se precisar
+          # rodar com auth real (não é necessário pra type check + build).
+          NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: stub
+          SUPABASE_SERVICE_ROLE_KEY: stub
+          STRIPE_SECRET_KEY: sk_test_stub
+          STRIPE_WEBHOOK_SECRET: whsec_stub
+          RESEND_API_KEY: re_stub
+          ASAAS_API_KEY_ROOT: stub
+          ASAAS_ENCRYPTION_KEY: stubstubstubstubstubstubstubstubstubstubstub
+          ASAAS_WEBHOOK_TOKEN: stub
+          CRON_SECRET: stub
+          NEXT_PUBLIC_APP_URL: https://stub.local
+
+  audit:
+    name: Security audit (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: npm audit (production only)
+        run: npm audit --omit=dev --audit-level=high
