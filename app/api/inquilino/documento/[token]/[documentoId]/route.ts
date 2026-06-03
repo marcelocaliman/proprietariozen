@@ -1,12 +1,23 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase-server'
 import { gerarUrlAssinada } from '@/lib/storage'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
 type Params = { params: Promise<{ token: string; documentoId: string }> }
 
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest, { params }: Params) {
+  // Rate limit por IP: máx 30 reqs/min — bloqueia enumeration de tokens.
+  const ip = getClientIp(req)
+  const rl = rateLimit({ key: `inq-doc:${ip}`, windowMs: 60_000, max: 30 })
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: 'Muitas requisições. Aguarde alguns segundos.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
+    )
+  }
+
   const { token, documentoId } = await params
   if (!token || token.length !== 64)
     return NextResponse.json({ error: 'Token inválido.' }, { status: 400 })
