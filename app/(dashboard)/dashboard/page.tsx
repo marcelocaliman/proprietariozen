@@ -302,12 +302,15 @@ export default async function DashboardPage({
     const mesLabel = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d)
     const items: ItemPreview[] = (imoveisParaPreview ?? [])
       .filter(imovel => {
+        // Sem inquilino ativo, não há cobrança prevista — não gera
+        // aluguel pra esse imóvel (mesmo critério do cron).
+        if (!imovel.inquilinos?.some(i => i.ativo)) return false
         if (!imovel.data_inicio_contrato) return true
         return mes >= imovel.data_inicio_contrato.slice(0, 7)
       })
       .map(imovel => ({
         apelido:    imovel.apelido,
-        inquilino:  imovel.inquilinos?.find(i => i.ativo)?.nome ?? 'Sem inquilino',
+        inquilino:  imovel.inquilinos!.find(i => i.ativo)!.nome,
         valor:      imovel.valor_aluguel,
         dia:        imovel.dia_vencimento,
       }))
