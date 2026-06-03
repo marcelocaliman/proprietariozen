@@ -18,17 +18,23 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
+// Boundary vazio desliga a deteção de clipping-ancestor (default do
+// Floating UI). Isso evita que parents com overflow:hidden (cards
+// arredondados etc.) encolham o popup para caber dentro do parent.
+const NO_COLLISION_BOUNDARY: Element[] = []
+
 function DropdownMenuContent({
   align = "start",
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  collisionBoundary = NO_COLLISION_BOUNDARY,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
   Pick<
     MenuPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
+    "align" | "alignOffset" | "side" | "sideOffset" | "collisionBoundary"
   >) {
   return (
     <MenuPrimitive.Portal>
@@ -38,6 +44,7 @@ function DropdownMenuContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        collisionBoundary={collisionBoundary}
       >
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"

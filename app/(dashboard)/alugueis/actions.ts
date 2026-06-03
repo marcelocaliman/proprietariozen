@@ -54,6 +54,8 @@ export async function gerarAlugueisMes(
   const novos = imoveis
     .filter(imovel => {
       if (existentesSet.has(imovel.id)) return false
+      // Sem inquilino ativo, não há quem cobrar — não gerar aluguel órfão.
+      if (!imovel.inquilinos?.some(i => i.ativo)) return false
       // Não gerar aluguel antes do início do contrato
       if (imovel.data_inicio_contrato) {
         const inicioMes = imovel.data_inicio_contrato.slice(0, 7) // YYYY-MM
@@ -63,10 +65,10 @@ export async function gerarAlugueisMes(
       return true
     })
     .map(imovel => {
-      const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      const inquilinoAtivo = imovel.inquilinos!.find(i => i.ativo)!
       return {
         imovel_id: imovel.id,
-        inquilino_id: inquilinoAtivo?.id ?? null,
+        inquilino_id: inquilinoAtivo.id,
         mes_referencia: mesReferencia,
         valor: imovel.valor_aluguel,
         data_vencimento: calcularVencimento(mesReferencia, imovel.dia_vencimento),
@@ -140,14 +142,16 @@ export async function gerarAlugueisMesesAno(
   for (const mesRef of mesesRef) {
     for (const imovel of imoveis) {
       if (existentesSet.has(`${imovel.id}|${mesRef}`)) continue
+      // Sem inquilino ativo, pular — não gerar aluguel órfão.
+      if (!imovel.inquilinos?.some(i => i.ativo)) continue
       if (imovel.data_inicio_contrato) {
         const inicioMes = imovel.data_inicio_contrato.slice(0, 7)
         if (mesRef.slice(0, 7) < inicioMes) continue
       }
-      const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      const inquilinoAtivo = imovel.inquilinos.find(i => i.ativo)!
       novos.push({
         imovel_id: imovel.id,
-        inquilino_id: inquilinoAtivo?.id ?? null,
+        inquilino_id: inquilinoAtivo.id,
         mes_referencia: mesRef,
         valor: imovel.valor_aluguel,
         data_vencimento: calcularVencimento(mesRef, imovel.dia_vencimento),

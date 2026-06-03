@@ -454,7 +454,11 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                 tabIndex={0}
                 onKeyDown={e => { if (e.key === 'Enter') router.push(`/inquilinos/${inquilino.id}`) }}
                 className={cn(
-                  'bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col overflow-hidden cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
+                  // Sem overflow-hidden: o Floating UI do DropdownMenu
+                  // detecta overflow:hidden como clipping-ancestor e encolhe
+                  // o popup pra caber dentro do card. Nenhum filho ultrapassa
+                  // o rounded-2xl, então não precisamos do clip.
+                  'bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                   !inquilino.ativo && 'opacity-60',
                 )}
               >

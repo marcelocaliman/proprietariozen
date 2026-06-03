@@ -65,6 +65,10 @@ export async function GET(req: NextRequest) {
   }
 
   const imoveisValidos = imoveis.filter(imovel => {
+    // Precisa existir ao menos um inquilino ativo vinculado — sem inquilino
+    // ativo não há quem cobrar; o cron não deve gerar aluguel órfão.
+    const temInquilinoAtivo = imovel.inquilinos?.some(i => i.ativo) ?? false
+    if (!temInquilinoAtivo) return false
     if (!imovel.data_inicio_contrato) return true
     return imovel.data_inicio_contrato.slice(0, 7) <= mesStr
   })
@@ -85,14 +89,15 @@ export async function GET(req: NextRequest) {
   const novosPayload = imoveisValidos
     .filter(imovel => !existentesSet.has(imovel.id))
     .map(imovel => {
-      const inquilinoAtivo = imovel.inquilinos?.find(i => i.ativo)
+      // Garantido pelo filtro acima: existe inquilino ativo.
+      const inquilinoAtivo = imovel.inquilinos!.find(i => i.ativo)!
       const iptu = imovel.iptu_mensal ?? 0
       const condominio = imovel.condominio_mensal ?? 0
       const outros = imovel.outros_encargos ?? 0
       const valorTotal = imovel.valor_aluguel + iptu + condominio + outros
       return {
         imovel_id: imovel.id,
-        inquilino_id: inquilinoAtivo?.id ?? null,
+        inquilino_id: inquilinoAtivo.id,
         mes_referencia: mesReferencia,
         valor: valorTotal,
         valor_aluguel_base: imovel.valor_aluguel,

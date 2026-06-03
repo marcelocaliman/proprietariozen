@@ -464,12 +464,12 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                 role="button"
                 tabIndex={0}
                 onKeyDown={e => { if (e.key === 'Enter') router.push(`/imoveis/${imovel.id}`) }}
-                className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col cursor-pointer hover:border-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
 
                 {/* Header colorido — verde para ocupado, slate para vago */}
                 <div className={cn(
-                  'relative px-5 py-6 flex items-center justify-center',
+                  'relative px-5 py-6 flex items-center justify-center rounded-t-2xl',
                   ocupado ? 'bg-[#D1FAE5]' : 'bg-slate-100',
                 )}>
                   <TipoIcon className={cn('h-10 w-10', ocupado ? 'text-[#059669]' : 'text-slate-400')} />
