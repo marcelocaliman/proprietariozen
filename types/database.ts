@@ -29,6 +29,7 @@ export type Database = {
           stripe_subscription_current_period_end: string | null
           stripe_subscription_cancel_at_period_end: boolean
           stripe_price_id: string | null
+          deleted_at: string | null
         }
         Insert: {
           id: string
@@ -55,6 +56,7 @@ export type Database = {
           stripe_subscription_current_period_end?: string | null
           stripe_subscription_cancel_at_period_end?: boolean
           stripe_price_id?: string | null
+          deleted_at?: string | null
         }
         Update: {
           nome?: string
@@ -80,6 +82,7 @@ export type Database = {
           stripe_subscription_current_period_end?: string | null
           stripe_subscription_cancel_at_period_end?: boolean
           stripe_price_id?: string | null
+          deleted_at?: string | null
         }
         Relationships: []
       }

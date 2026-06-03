@@ -137,7 +137,7 @@ export function AbaSeguranca({ email }: Props) {
     if (!entendo) { toast.error('Confirme que entende a ação'); return }
     setLoadingExcluir(true)
     try {
-      const result = await excluirConta()
+      const result = await excluirConta({ confirmacao_email: emailConfirm })
       if (result.error) { toast.error(result.error); return }
       toast.success('Conta excluída.')
       router.push('/login')

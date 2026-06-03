@@ -1,8 +1,10 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { createClient as createSupabaseAdminAuthClient } from '@supabase/supabase-js'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { getStripe } from '@/lib/stripe'
+import { registrarLog } from '@/lib/log'
 import type { NotificacoesConfig } from './types'
 
 // ── Perfil ────────────────────────────────────────────────────────────────────
@@ -124,66 +126,161 @@ export async function encerrarOutrasSessoes(): Promise<{ error?: string }> {
   return {}
 }
 
-// ── Exportar dados ────────────────────────────────────────────────────────────
+// ── LGPD: Exportar dados (direito de portabilidade) ─────────────────────────
 
 export async function exportarDados(): Promise<{
-  dados?: {
-    perfil: unknown
-    imoveis: unknown[]
-    inquilinos: unknown[]
-    alugueis: unknown[]
-  }
+  dados?: Record<string, unknown>
   error?: string
 }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
+  const admin = createAdminClient()
+
   const [
-    { data: perfil },
+    { data: profile },
     { data: imoveis },
     { data: inquilinos },
     { data: alugueis },
+    { data: tokens },
+    { data: docsImovel },
+    { data: docsAluguel },
+    { data: docsInquilino },
+    { data: tickets },
+    { data: ticketMensagens },
+    { data: notificacoes },
   ] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).single(),
-    supabase.from('imoveis').select('*').eq('user_id', user.id),
-    supabase.from('inquilinos').select('*').eq('user_id', user.id),
-    supabase
-      .from('alugueis')
-      .select('*, imoveis!inner(user_id)')
-      .eq('imoveis.user_id', user.id),
+    admin.from('profiles').select('*').eq('id', user.id).single(),
+    admin.from('imoveis').select('*').eq('user_id', user.id),
+    admin.from('inquilinos').select('*').eq('user_id', user.id),
+    admin.from('alugueis').select('*, imovel:imoveis!inner(user_id)').eq('imovel.user_id', user.id),
+    admin.from('inquilino_tokens').select('*').eq('user_id', user.id),
+    admin.from('documentos_imovel').select('*').eq('user_id', user.id),
+    admin.from('documentos_aluguel').select('*').eq('user_id', user.id),
+    admin.from('documentos_inquilino').select('*').eq('user_id', user.id),
+    admin.from('tickets').select('*').eq('user_id', user.id),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (admin.from('ticket_mensagens' as any) as any)
+      .select('*, ticket:tickets!inner(user_id)')
+      .eq('ticket.user_id', user.id),
+    admin.from('notificacoes').select('*').eq('user_id', user.id),
   ])
+
+  // Profile: remove campos internos sensíveis
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileSafe: Record<string, unknown> = { ...(profile as any ?? {}) }
+  delete profileSafe.asaas_api_key_enc
+
+  await registrarLog(user.id, 'USER_EXPORTOU_DADOS', 'lgpd', undefined, {})
 
   return {
     dados: {
-      perfil,
+      exportadoEm: new Date().toISOString(),
+      versao: 1,
+      titular: { id: user.id, email: user.email },
+      perfil: profileSafe,
       imoveis: imoveis ?? [],
       inquilinos: inquilinos ?? [],
       alugueis: alugueis ?? [],
+      tokens_inquilino: tokens ?? [],
+      documentos: {
+        imovel: docsImovel ?? [],
+        aluguel: docsAluguel ?? [],
+        inquilino: docsInquilino ?? [],
+      },
+      suporte: {
+        tickets: tickets ?? [],
+        mensagens: ticketMensagens ?? [],
+      },
+      notificacoes: notificacoes ?? [],
     },
   }
 }
 
-// ── Excluir conta ─────────────────────────────────────────────────────────────
+// ── LGPD: Excluir conta (direito ao esquecimento) ──────────────────────────
+// Anonimiza dados pessoais, desativa imóveis/inquilinos, cancela
+// assinatura Stripe ativa, revoga tokens, fecha tickets, deleta auth.
+// Dados contábeis (aluguéis pagos) permanecem como exige a Receita.
 
-export async function excluirConta(): Promise<{ error?: string }> {
+export async function excluirConta(input: { confirmacao_email: string }): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
-  const { error: deleteError } = await supabase
-    .from('imoveis')
-    .delete()
+  if (input.confirmacao_email !== user.email) {
+    return { error: 'Confirmação de e-mail não confere.' }
+  }
+
+  const admin = createAdminClient()
+
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('stripe_subscription_id, stripe_subscription_status, role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role === 'admin') {
+    return { error: 'Admins não podem se excluir. Contate outro admin.' }
+  }
+
+  // 1. Cancela assinatura Stripe se ativa
+  if (
+    profile?.stripe_subscription_id &&
+    profile.stripe_subscription_status &&
+    ['active', 'trialing', 'past_due'].includes(profile.stripe_subscription_status)
+  ) {
+    try {
+      const stripe = getStripe()
+      await stripe.subscriptions.cancel(profile.stripe_subscription_id)
+    } catch (err) {
+      console.error('[excluirConta] stripe cancel falhou:', err)
+      // não bloqueia
+    }
+  }
+
+  // 2. Desativa imóveis/inquilinos (não deleta — preserva histórico contábil)
+  await admin.from('imoveis').update({ ativo: false }).eq('user_id', user.id)
+  await admin.from('inquilinos').update({ ativo: false }).eq('user_id', user.id)
+
+  // 3. Revoga tokens
+  await admin.from('inquilino_tokens').update({ ativo: false }).eq('user_id', user.id)
+
+  // 4. Fecha tickets abertos
+  await admin
+    .from('tickets')
+    .update({ status: 'fechado', closed_at: new Date().toISOString() })
     .eq('user_id', user.id)
+    .neq('status', 'fechado')
 
-  if (deleteError) return { error: deleteError.message }
+  // 5. Anonimiza profile
+  const anonId = user.id.slice(0, 8)
+  await admin
+    .from('profiles')
+    .update({
+      nome:                `Usuário removido ${anonId}`,
+      email:               `removido-${anonId}@anonimo.local`,
+      telefone:             null,
+      deleted_at:           new Date().toISOString(),
+      asaas_api_key_enc:    null,
+    })
+    .eq('id', user.id)
 
+  // 6. Log de auditoria antes do auth delete (pra ter user_id válido)
+  await registrarLog(user.id, 'USER_EXCLUIU_CONTA', 'lgpd', undefined, {})
+
+  // 7. Sign out + deleta auth user
   await supabase.auth.signOut()
-
-  // TODO (Semana 3): cancelar assinatura Stripe ativa antes de deletar
-  // if (profile.stripe_customer_id) {
-  //   await stripe.subscriptions.cancel(subscriptionId)
-  // }
+  try {
+    const authAdmin = createSupabaseAdminAuthClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    )
+    await authAdmin.auth.admin.deleteUser(user.id)
+  } catch (err) {
+    console.error('[excluirConta] auth deleteUser falhou:', err)
+  }
 
   return {}
 }

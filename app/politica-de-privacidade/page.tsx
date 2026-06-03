@@ -141,7 +141,15 @@ export default function PoliticaPrivacidadePage() {
             ))}
           </ul>
           <p className="mt-4">
-            Para exercer seus direitos, envie solicitação para{' '}
+            <strong>Exercício direto pela plataforma:</strong> Você pode exportar todos
+            os seus dados (formato JSON) ou excluir sua conta a qualquer momento em
+            {' '}<a href="/configuracoes#seguranca" className="text-emerald-700 underline underline-offset-2">Configurações → Segurança</a>.
+            A exclusão anonimiza imediatamente seus dados pessoais e cancela sua
+            assinatura ativa. Dados contábeis (aluguéis pagos, faturas) são
+            preservados pelo prazo exigido pela legislação fiscal brasileira.
+          </p>
+          <p className="mt-3">
+            Para outras solicitações, envie e-mail para{' '}
             <a href="mailto:privacidade@proprietariozen.com.br" className="text-emerald-700 underline underline-offset-2">privacidade@proprietariozen.com.br</a>.
             Responderemos em até <strong>15 dias úteis</strong>.
           </p>
