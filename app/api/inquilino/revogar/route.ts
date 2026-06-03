@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
+import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     .eq('inquilino_id', inquilinoId)
     .eq('ativo', true)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError('internal', { logContext: { route: '/api/inquilino/revogar', error } })
 
   return NextResponse.json({ ok: true })
 }

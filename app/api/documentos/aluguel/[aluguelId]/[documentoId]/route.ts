@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
+import { apiError } from '@/lib/api-error'
 import { deletarDocumento } from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
@@ -32,7 +33,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     .eq('id', documentoId)
     .eq('user_id', user.id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError('internal', { logContext: { route: '/api/documentos/aluguel/[aluguelId]/[documentoId]', error: error } })
 
   return NextResponse.json({ ok: true })
 }

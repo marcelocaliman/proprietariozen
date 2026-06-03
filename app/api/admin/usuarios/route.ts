@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminRequest } from '@/lib/admin'
 import { createAdminSupabaseClient } from '@/lib/supabase-admin'
+import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
   else query = query.order('criado_em', { ascending: false })
 
   const { data: rawProfiles, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios', error: error } })
 
   const profiles = (rawProfiles ?? []) as ProfileLite[]
   const totalCount = profiles.length

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminRequest } from '@/lib/admin'
 import { createAdminSupabaseClient } from '@/lib/supabase-admin'
 import { createClient as createSupabaseAdminAuthClient } from '@supabase/supabase-js'
+import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,7 +62,7 @@ export async function POST(
         .from('profiles')
         .update({ plano: novoPlano })
         .eq('id', targetId)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_mudar_plano',
@@ -81,7 +82,7 @@ export async function POST(
           banned_by:     adminId,
         })
         .eq('id', targetId)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_banir',
@@ -101,7 +102,7 @@ export async function POST(
           banned_by:     null,
         })
         .eq('id', targetId)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_reativar',
@@ -124,7 +125,7 @@ export async function POST(
         email: target.email,
       })
 
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_resetar_senha',
@@ -155,7 +156,7 @@ export async function POST(
           plano_override_by: adminId,
         })
         .eq('id', targetId)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_override_plano',
@@ -174,7 +175,7 @@ export async function POST(
           plano_override_by: null,
         })
         .eq('id', targetId)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      if (error) return apiError('internal', { logContext: { route: '/api/admin/usuarios/[id]/acao', error: error } })
 
       await logActivity(admin, adminId, targetId, target.email,
         'admin_remover_override_plano',

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminRequest } from '@/lib/admin'
 import { createAdminSupabaseClient } from '@/lib/supabase-admin'
+import { apiError } from '@/lib/api-error'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest) {
   listQuery = listQuery.order('mes_referencia', { ascending: false })
 
   const { data: rawAlugueis, error } = await listQuery
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return apiError('internal', { logContext: { route: '/api/admin/alugueis', error: error } })
 
   const alugueis = (rawAlugueis ?? []) as unknown as AluguelRow[]
 
