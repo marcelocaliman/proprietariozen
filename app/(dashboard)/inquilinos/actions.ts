@@ -191,3 +191,64 @@ export async function desvincularInquilino(
   revalidatePath('/dashboard')
   return { cobrancasRemovidas }
 }
+
+// Exclui inquilino permanentemente APENAS se não houver aluguéis
+// vinculados. Caso contrário, sugere desativar/desvincular.
+export async function excluirInquilino(id: string): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: inq } = await supabase
+    .from('inquilinos')
+    .select('id, nome, imovel_id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!inq) return { error: 'Inquilino não encontrado.' }
+
+  // Bloqueia se há QUALQUER aluguel com inquilino_id = id
+  const { count: countAlugueis } = await supabase
+    .from('alugueis')
+    .select('id', { count: 'exact', head: true })
+    .eq('inquilino_id', id)
+  if ((countAlugueis ?? 0) > 0) {
+    return {
+      error: `Esse inquilino tem ${countAlugueis} aluguel(éis) no histórico e não pode ser excluído. Use "Desativar" para mantê-lo no histórico ou "Desvincular" para liberá-lo do imóvel.`,
+    }
+  }
+
+  const admin = createAdminClient()
+
+  // 1. Documentos do inquilino (storage + linhas)
+  const { data: docs } = await admin
+    .from('documentos_inquilino')
+    .select('id, storage_path')
+    .eq('inquilino_id', id)
+  if (docs && docs.length > 0) {
+    const paths = docs.map(d => d.storage_path).filter(Boolean) as string[]
+    if (paths.length > 0) {
+      await admin.storage.from('documentos-inquilino').remove(paths)
+    }
+    await admin.from('documentos_inquilino').delete().eq('inquilino_id', id)
+  }
+
+  // 2. Tokens
+  await admin.from('inquilino_tokens').delete().eq('inquilino_id', id)
+
+  // 3. Inquilino
+  const { error: errDel } = await admin
+    .from('inquilinos')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (errDel) return { error: errDel.message }
+
+  await registrarLog(user.id, 'INQUILINO_EXCLUIDO', 'inquilino', id, { nome: inq.nome })
+
+  revalidatePath('/inquilinos')
+  revalidatePath('/imoveis')
+  if (inq.imovel_id) revalidatePath(`/imoveis/${inq.imovel_id}`)
+  revalidatePath('/dashboard')
+  return {}
+}

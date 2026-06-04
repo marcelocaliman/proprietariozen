@@ -8,7 +8,7 @@ import {
   Plus, Building2, Home, Square, Briefcase, MapPin,
   Zap, MoreHorizontal, LayoutGrid, List,
   CheckCircle2, Clock, AlertTriangle, Pencil, Archive, LogOut,
-  Settings2, FileText, UserPlus, AlertCircle, Send, Shield,
+  Settings2, FileText, UserPlus, AlertCircle, Send, Shield, Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,7 +23,7 @@ const EncerrarContratoModal = dynamic(() => import('@/components/imoveis/encerra
 const CobrancaConfigModal   = dynamic(() => import('@/components/imoveis/cobranca-config-modal').then(m => ({ default: m.CobrancaConfigModal })))
 const GarantiaModal         = dynamic(() => import('@/components/imoveis/garantia-modal').then(m => ({ default: m.GarantiaModal })))
 const InquilinoModal        = dynamic(() => import('@/components/inquilinos/inquilino-modal').then(m => ({ default: m.InquilinoModal })))
-import { arquivarImovel } from '@/app/(dashboard)/imoveis/actions'
+import { arquivarImovel, excluirImovel } from '@/app/(dashboard)/imoveis/actions'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { PlanoTipo } from '@/lib/stripe'
@@ -254,6 +254,17 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
     const result = await arquivarImovel(imovel.id)
     if (result.error) toast.error(result.error)
     else toast.success('Imóvel arquivado')
+  }
+
+  async function handleExcluir(imovel: Imovel) {
+    if (!confirm(
+      `Excluir "${imovel.apelido}" permanentemente?\n\n` +
+      `Isso só funciona se NÃO houver nenhum aluguel no histórico. ` +
+      `Se já houve cobrança, use Arquivar.`,
+    )) return
+    const result = await excluirImovel(imovel.id)
+    if (result.error) toast.error(result.error)
+    else toast.success('Imóvel excluído')
   }
 
   return (
@@ -509,6 +520,13 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                             className="text-[#94A3B8] focus:text-[#475569]"
                           >
                             <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleExcluir(imovel)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />Excluir permanentemente
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       )}
@@ -827,6 +845,12 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
                                 className="text-[#94A3B8] focus:text-[#475569]"
                               >
                                 <Archive className="h-3.5 w-3.5 mr-2" />Arquivar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleExcluir(imovel)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-2" />Excluir permanentemente
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           )}

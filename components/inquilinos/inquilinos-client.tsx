@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Plus, Users, Pencil, Phone, Building2,
   Search, MoreHorizontal, CheckCircle2, Clock, AlertTriangle, Paperclip,
-  Mail, ShieldOff, IdCard, AlertCircle, CalendarDays, LogOut,
+  Mail, ShieldOff, IdCard, AlertCircle, CalendarDays, LogOut, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import {
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { DocumentosInquilino } from '@/components/documentos/DocumentosInquilino'
 import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-inquilino-modal'
+import { excluirInquilino } from '@/app/(dashboard)/inquilinos/actions'
 import { formatarTelefone, formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
 import { cn } from '@/lib/utils'
@@ -243,6 +244,17 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
     } finally {
       setRevogando(null)
     }
+  }
+
+  async function handleExcluir(inquilino: InquilinoRich) {
+    if (!confirm(
+      `Excluir "${inquilino.nome}" permanentemente?\n\n` +
+      `Só funciona se NÃO houver aluguel no histórico. ` +
+      `Caso já tenha cobrança, use Desativar ou Desvincular.`,
+    )) return
+    const result = await excluirInquilino(inquilino.id)
+    if (result.error) toast.error(result.error)
+    else { toast.success('Inquilino excluído'); router.refresh() }
   }
 
   return (
@@ -654,6 +666,13 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
                             <LogOut className="h-3.5 w-3.5 mr-2" />Desvincular do imóvel
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleExcluir(inquilino)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2" />Excluir permanentemente
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

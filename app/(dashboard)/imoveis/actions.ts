@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { registrarLog } from '@/lib/log'
 
 export type ImovelInput = {
@@ -209,6 +209,85 @@ export async function arquivarImovel(id: string): Promise<{ error?: string }> {
     .eq('user_id', user.id)
   if (error) return { error: error.message }
   revalidatePath('/imoveis')
+  return {}
+}
+
+// Exclui o imóvel permanentemente APENAS se não houver aluguéis
+// vinculados (histórico contábil). Caso contrário, orienta a arquivar.
+export async function excluirImovel(id: string): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  // Verifica ownership + existência
+  const { data: imovel } = await supabase
+    .from('imoveis')
+    .select('id, apelido')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!imovel) return { error: 'Imóvel não encontrado.' }
+
+  // Bloqueia se há QUALQUER aluguel (pago, pendente, cancelado…)
+  const { count: countAlugueis } = await supabase
+    .from('alugueis')
+    .select('id', { count: 'exact', head: true })
+    .eq('imovel_id', id)
+  if ((countAlugueis ?? 0) > 0) {
+    return {
+      error: `Esse imóvel tem ${countAlugueis} aluguel(éis) no histórico e não pode ser excluído. Use "Arquivar" para mantê-lo no histórico sem aparecer na listagem ativa.`,
+    }
+  }
+
+  const admin = createAdminClient()
+
+  // 1. Apaga documentos do imóvel (storage + linhas)
+  const { data: docs } = await admin
+    .from('documentos_imovel')
+    .select('id, storage_path')
+    .eq('imovel_id', id)
+  if (docs && docs.length > 0) {
+    const paths = docs.map(d => d.storage_path).filter(Boolean) as string[]
+    if (paths.length > 0) {
+      await admin.storage.from('documentos-imovel').remove(paths)
+    }
+    await admin.from('documentos_imovel').delete().eq('imovel_id', id)
+  }
+
+  // 2. Apaga inquilinos vinculados ao imóvel (sem aluguéis, são órfãos)
+  // E seus documentos e tokens
+  const { data: inquilinos } = await admin
+    .from('inquilinos')
+    .select('id')
+    .eq('imovel_id', id)
+  const inquilinoIds = (inquilinos ?? []).map(i => i.id)
+  if (inquilinoIds.length > 0) {
+    const { data: docsInq } = await admin
+      .from('documentos_inquilino')
+      .select('id, storage_path')
+      .in('inquilino_id', inquilinoIds)
+    if (docsInq && docsInq.length > 0) {
+      const paths = docsInq.map(d => d.storage_path).filter(Boolean) as string[]
+      if (paths.length > 0) {
+        await admin.storage.from('documentos-inquilino').remove(paths)
+      }
+      await admin.from('documentos_inquilino').delete().in('inquilino_id', inquilinoIds)
+    }
+    await admin.from('inquilino_tokens').delete().in('inquilino_id', inquilinoIds)
+    await admin.from('inquilinos').delete().in('id', inquilinoIds)
+  }
+
+  // 3. Apaga o imóvel
+  const { error: errDel } = await admin
+    .from('imoveis')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (errDel) return { error: errDel.message }
+
+  revalidatePath('/imoveis')
+  revalidatePath('/inquilinos')
+  revalidatePath('/dashboard')
   return {}
 }
 
