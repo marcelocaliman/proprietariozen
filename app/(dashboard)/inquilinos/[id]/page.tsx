@@ -4,7 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase-server'
 import { InquilinoDetalheClient } from '@/components/inquilinos/inquilino-detalhe-client'
 
-export default async function InquilinoDetalhePage({ params }: { params: { id: string } }) {
+export default async function InquilinoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -24,7 +25,7 @@ export default async function InquilinoDetalhePage({ params }: { params: { id: s
         user_id
       )
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!inquilino || (inquilino.imovel as { user_id?: string } | null)?.user_id !== user.id) {
@@ -41,7 +42,7 @@ export default async function InquilinoDetalhePage({ params }: { params: { id: s
       id, valor, status, mes_referencia, data_vencimento, data_pagamento,
       valor_pago, asaas_charge_id, lembrete_enviado_em
     `)
-    .eq('inquilino_id', params.id)
+    .eq('inquilino_id', id)
     .gte('mes_referencia', inicioJanela)
     .lte('mes_referencia', fimJanela)
     .order('mes_referencia', { ascending: false })

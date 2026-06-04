@@ -6,7 +6,8 @@ import type { Imovel } from '@/types'
 import { ImovelDetalheClient } from '@/components/imoveis/imovel-detalhe-client'
 import { montarTimeline } from '@/lib/timeline'
 
-export default async function ImovelDetalhePage({ params }: { params: { id: string } }) {
+export default async function ImovelDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -17,7 +18,7 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
   const { data: imovel } = await admin
     .from('imoveis')
     .select('*, inquilinos(id, nome, cpf, telefone, email, ativo, convite_enviado_em, criado_em)')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('user_id', user.id)
     .single()
 
@@ -36,7 +37,7 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
       asaas_charge_id, asaas_pix_copiaecola, asaas_boleto_url,
       lembrete_enviado_em, recibo_gerado, desconto, isento, motivo_cancelamento
     `)
-    .eq('imovel_id', params.id)
+    .eq('imovel_id', id)
     .gte('mes_referencia', inicioJanela)
     .lte('mes_referencia', fimJanela)
     .order('mes_referencia', { ascending: false })
@@ -48,7 +49,7 @@ export default async function ImovelDetalhePage({ params }: { params: { id: stri
     .from('activity_logs')
     .select('action, details, created_at')
     .eq('entity_type', 'imovel')
-    .eq('entity_id', params.id)
+    .eq('entity_id', id)
     .in('action', ['CONTRATO_RENOVADO', 'CONTRATO_ENCERRADO'])
     .order('created_at', { ascending: false })
 
