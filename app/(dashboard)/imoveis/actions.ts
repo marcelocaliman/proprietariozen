@@ -212,14 +212,19 @@ export async function arquivarImovel(id: string): Promise<{ error?: string }> {
   return {}
 }
 
-// Exclui o imóvel permanentemente APENAS se não houver aluguéis
-// vinculados (histórico contábil). Caso contrário, orienta a arquivar.
-export async function excluirImovel(id: string): Promise<{ error?: string }> {
+// Exclusão "limpa" do imóvel: deleta o imóvel + aluguéis sem valor
+// contábil (pendentes/atrasados/cancelados/estornados) + inquilinos
+// vinculados sem histórico próprio + documentos + tokens.
+// BLOQUEIA se houver pelo menos 1 aluguel PAGO (recibo emitido, valor
+// contábil pra IR). Nesse caso, retorna requiresHardDelete com info.
+export async function excluirImovel(id: string): Promise<{
+  error?: string
+  requiresHardDelete?: { apelido: string; countPagos: number; valorTotal: number }
+}> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
 
-  // Verifica ownership + existência
   const { data: imovel } = await supabase
     .from('imoveis')
     .select('id, apelido')
@@ -228,38 +233,125 @@ export async function excluirImovel(id: string): Promise<{ error?: string }> {
     .maybeSingle()
   if (!imovel) return { error: 'Imóvel não encontrado.' }
 
-  // Bloqueia se há QUALQUER aluguel (pago, pendente, cancelado…)
-  const { count: countAlugueis } = await supabase
+  // Verifica aluguéis PAGOS — se houver, bloqueia exclusão simples
+  const { data: pagos } = await supabase
     .from('alugueis')
-    .select('id', { count: 'exact', head: true })
+    .select('valor_pago, valor')
     .eq('imovel_id', id)
-  if ((countAlugueis ?? 0) > 0) {
+    .eq('status', 'pago')
+  const countPagos = pagos?.length ?? 0
+  if (countPagos > 0) {
+    const valorTotal = pagos!.reduce((s, a) => s + (a.valor_pago ?? a.valor ?? 0), 0)
     return {
-      error: `Esse imóvel tem ${countAlugueis} aluguel(éis) no histórico e não pode ser excluído. Use "Arquivar" para mantê-lo no histórico sem aparecer na listagem ativa.`,
+      requiresHardDelete: {
+        apelido: imovel.apelido,
+        countPagos,
+        valorTotal,
+      },
     }
   }
 
+  // Sem aluguel pago: pode apagar limpo (cascade dos rascunhos e relacionados)
+  return cascadeDeleteImovel(id, user.id)
+}
+
+// Exclusão DESTRUTIVA: apaga imóvel mesmo com aluguéis pagos.
+// Exige confirmação digitando o apelido. Loga em activity_logs.
+export async function excluirImovelComHistorico(input: {
+  id: string
+  confirmacao_apelido: string
+}): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: imovel } = await supabase
+    .from('imoveis')
+    .select('id, apelido')
+    .eq('id', id_safe(input.id))
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!imovel) return { error: 'Imóvel não encontrado.' }
+
+  if (input.confirmacao_apelido.trim() !== imovel.apelido) {
+    return { error: `Digite exatamente "${imovel.apelido}" para confirmar.` }
+  }
+
+  // Pré-log: captura quantidade de aluguéis pagos pra registrar na auditoria
+  const { count: countPagos } = await supabase
+    .from('alugueis')
+    .select('id', { count: 'exact', head: true })
+    .eq('imovel_id', input.id)
+    .eq('status', 'pago')
+
+  await registrarLog(user.id, 'IMOVEL_EXCLUIDO_COM_HISTORICO', 'imovel', input.id, {
+    apelido: imovel.apelido,
+    alugueis_pagos_descartados: countPagos ?? 0,
+  })
+
+  return cascadeDeleteImovel(input.id, user.id, { incluirHistorico: true })
+}
+
+function id_safe(s: string): string { return s }
+
+// Cascade interno — apaga documentos, inquilinos vinculados, aluguéis
+// (opcional) e por fim o imóvel. Usado pelas duas funções acima.
+async function cascadeDeleteImovel(
+  imovelId: string,
+  userId: string,
+  opts: { incluirHistorico?: boolean } = {},
+): Promise<{ error?: string }> {
   const admin = createAdminClient()
 
-  // 1. Apaga documentos do imóvel (storage + linhas)
+  // 1. Documentos do imóvel
   const { data: docs } = await admin
     .from('documentos_imovel')
     .select('id, storage_path')
-    .eq('imovel_id', id)
+    .eq('imovel_id', imovelId)
   if (docs && docs.length > 0) {
     const paths = docs.map(d => d.storage_path).filter(Boolean) as string[]
     if (paths.length > 0) {
       await admin.storage.from('documentos-imovel').remove(paths)
     }
-    await admin.from('documentos_imovel').delete().eq('imovel_id', id)
+    await admin.from('documentos_imovel').delete().eq('imovel_id', imovelId)
   }
 
-  // 2. Apaga inquilinos vinculados ao imóvel (sem aluguéis, são órfãos)
-  // E seus documentos e tokens
+  // 2. Aluguéis do imóvel (rascunhos sempre; pagos só se incluirHistorico)
+  if (opts.incluirHistorico) {
+    // Documentos de aluguel antes
+    const { data: alugueisIds } = await admin
+      .from('alugueis')
+      .select('id')
+      .eq('imovel_id', imovelId)
+    const ids = (alugueisIds ?? []).map(a => a.id)
+    if (ids.length > 0) {
+      const { data: docsAlu } = await admin
+        .from('documentos_aluguel')
+        .select('id, storage_path')
+        .in('aluguel_id', ids)
+      if (docsAlu && docsAlu.length > 0) {
+        const paths = docsAlu.map(d => d.storage_path).filter(Boolean) as string[]
+        if (paths.length > 0) {
+          await admin.storage.from('documentos-aluguel').remove(paths)
+        }
+        await admin.from('documentos_aluguel').delete().in('aluguel_id', ids)
+      }
+      await admin.from('alugueis').delete().in('id', ids)
+    }
+  } else {
+    // Apaga só aluguéis sem valor contábil (rascunhos)
+    await admin
+      .from('alugueis')
+      .delete()
+      .eq('imovel_id', imovelId)
+      .in('status', ['pendente', 'atrasado', 'cancelado', 'estornado'])
+  }
+
+  // 3. Inquilinos vinculados (sem aluguéis após o passo 2 — órfãos)
   const { data: inquilinos } = await admin
     .from('inquilinos')
     .select('id')
-    .eq('imovel_id', id)
+    .eq('imovel_id', imovelId)
   const inquilinoIds = (inquilinos ?? []).map(i => i.id)
   if (inquilinoIds.length > 0) {
     const { data: docsInq } = await admin
@@ -277,17 +369,18 @@ export async function excluirImovel(id: string): Promise<{ error?: string }> {
     await admin.from('inquilinos').delete().in('id', inquilinoIds)
   }
 
-  // 3. Apaga o imóvel
+  // 4. Imóvel
   const { error: errDel } = await admin
     .from('imoveis')
     .delete()
-    .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('id', imovelId)
+    .eq('user_id', userId)
   if (errDel) return { error: errDel.message }
 
   revalidatePath('/imoveis')
   revalidatePath('/inquilinos')
   revalidatePath('/dashboard')
+  revalidatePath('/alugueis')
   return {}
 }
 

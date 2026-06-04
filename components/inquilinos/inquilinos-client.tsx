@@ -21,7 +21,8 @@ import {
 import { InquilinoModal } from '@/components/inquilinos/inquilino-modal'
 import { DocumentosInquilino } from '@/components/documentos/DocumentosInquilino'
 import { DesvincularInquilinoModal } from '@/components/inquilinos/desvincular-inquilino-modal'
-import { excluirInquilino } from '@/app/(dashboard)/inquilinos/actions'
+import { excluirInquilino, excluirInquilinoComHistorico } from '@/app/(dashboard)/inquilinos/actions'
+import { ExcluirComHistoricoModal } from '@/components/excluir-com-historico-modal'
 import { formatarTelefone, formatarMoeda, formatarData } from '@/lib/helpers'
 import type { Inquilino } from '@/types'
 import { cn } from '@/lib/utils'
@@ -163,6 +164,10 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
   const [convidando, setConvidando] = useState<string | null>(null)
   const [revogando, setRevogando]   = useState<string | null>(null)
   const [desvinculando, setDesvinculando] = useState<{ id: string; nome: string; imovelApelido?: string | null } | null>(null)
+  const [excluirHistorico, setExcluirHistorico] = useState<
+    | null
+    | { id: string; nome: string; countPagos: number; valorTotal: number }
+  >(null)
 
   const aluguelMap = Object.fromEntries(
     alugueisMes.map(a => [a.inquilino_id, a])
@@ -249,12 +254,22 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
   async function handleExcluir(inquilino: InquilinoRich) {
     if (!confirm(
       `Excluir "${inquilino.nome}" permanentemente?\n\n` +
-      `Só funciona se NÃO houver aluguel no histórico. ` +
-      `Caso já tenha cobrança, use Desativar ou Desvincular.`,
+      `Rascunhos (aluguéis pendentes/cancelados) serão apagados. ` +
+      `Se houver aluguel pago, vamos pedir uma confirmação adicional.`,
     )) return
     const result = await excluirInquilino(inquilino.id)
-    if (result.error) toast.error(result.error)
-    else { toast.success('Inquilino excluído'); router.refresh() }
+    if (result.error) { toast.error(result.error); return }
+    if (result.requiresHardDelete) {
+      setExcluirHistorico({
+        id: inquilino.id,
+        nome: result.requiresHardDelete.nome,
+        countPagos: result.requiresHardDelete.countPagos,
+        valorTotal: result.requiresHardDelete.valorTotal,
+      })
+      return
+    }
+    toast.success('Inquilino excluído')
+    router.refresh()
   }
 
   return (
@@ -697,6 +712,21 @@ export function InquilinosClient({ inquilinos, imoveis, imoveisVagos, alugueisMe
         inquilino={desvinculando}
         imovelApelido={desvinculando?.imovelApelido}
       />
+
+      {excluirHistorico && (
+        <ExcluirComHistoricoModal
+          open={!!excluirHistorico}
+          onOpenChange={v => { if (!v) setExcluirHistorico(null) }}
+          tipo="inquilino"
+          nome={excluirHistorico.nome}
+          countPagos={excluirHistorico.countPagos}
+          valorTotal={excluirHistorico.valorTotal}
+          onConfirm={async (confirmacao) =>
+            excluirInquilinoComHistorico({ id: excluirHistorico.id, confirmacao_nome: confirmacao })
+          }
+          onSuccess={() => router.refresh()}
+        />
+      )}
 
       {/* Sheet de documentos do inquilino */}
       <Sheet open={!!docInquilino} onOpenChange={(o) => { if (!o) setDocInquilino(null) }}>

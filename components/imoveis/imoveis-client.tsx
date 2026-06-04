@@ -23,7 +23,8 @@ const EncerrarContratoModal = dynamic(() => import('@/components/imoveis/encerra
 const CobrancaConfigModal   = dynamic(() => import('@/components/imoveis/cobranca-config-modal').then(m => ({ default: m.CobrancaConfigModal })))
 const GarantiaModal         = dynamic(() => import('@/components/imoveis/garantia-modal').then(m => ({ default: m.GarantiaModal })))
 const InquilinoModal        = dynamic(() => import('@/components/inquilinos/inquilino-modal').then(m => ({ default: m.InquilinoModal })))
-import { arquivarImovel, excluirImovel } from '@/app/(dashboard)/imoveis/actions'
+import { arquivarImovel, excluirImovel, excluirImovelComHistorico } from '@/app/(dashboard)/imoveis/actions'
+import { ExcluirComHistoricoModal } from '@/components/excluir-com-historico-modal'
 import { formatarMoeda, formatarData } from '@/lib/helpers'
 import { LIMITES_PLANO } from '@/lib/stripe'
 import type { PlanoTipo } from '@/lib/stripe'
@@ -203,6 +204,11 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
   const [vinculandoImovel, setVinculandoImovel] = useState<Imovel | null>(null)
   const [upgradeOpen, setUpgradeOpen]           = useState(false)
   const [view, setView]                         = useState<'grid' | 'list'>('grid')
+  // Modal de exclusão destrutiva (com histórico de pagos)
+  const [excluirHistorico, setExcluirHistorico] = useState<
+    | null
+    | { id: string; apelido: string; countPagos: number; valorTotal: number }
+  >(null)
 
   // Persistir preferência de view
   useEffect(() => {
@@ -259,12 +265,22 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
   async function handleExcluir(imovel: Imovel) {
     if (!confirm(
       `Excluir "${imovel.apelido}" permanentemente?\n\n` +
-      `Isso só funciona se NÃO houver nenhum aluguel no histórico. ` +
-      `Se já houve cobrança, use Arquivar.`,
+      `Rascunhos (aluguéis pendentes/cancelados) serão apagados. ` +
+      `Se houver aluguel pago, vamos pedir uma confirmação adicional.`,
     )) return
     const result = await excluirImovel(imovel.id)
-    if (result.error) toast.error(result.error)
-    else toast.success('Imóvel excluído')
+    if (result.error) { toast.error(result.error); return }
+    if (result.requiresHardDelete) {
+      // Abre modal de confirmação destrutiva
+      setExcluirHistorico({
+        id: imovel.id,
+        apelido: result.requiresHardDelete.apelido,
+        countPagos: result.requiresHardDelete.countPagos,
+        valorTotal: result.requiresHardDelete.valorTotal,
+      })
+      return
+    }
+    toast.success('Imóvel excluído')
   }
 
   return (
@@ -908,6 +924,20 @@ export function ImoveisClient({ imoveis, plano, alugueisMes, alugueisHistorico }
         reason="limite_imoveis"
         description={`O plano Grátis permite apenas ${limite} ${limite === 1 ? 'imóvel' : 'imóveis'}. Faça upgrade para cadastrar mais e desbloquear cobrança automática, recibos PDF e alertas inteligentes.`}
       />
+
+      {excluirHistorico && (
+        <ExcluirComHistoricoModal
+          open={!!excluirHistorico}
+          onOpenChange={v => { if (!v) setExcluirHistorico(null) }}
+          tipo="imovel"
+          nome={excluirHistorico.apelido}
+          countPagos={excluirHistorico.countPagos}
+          valorTotal={excluirHistorico.valorTotal}
+          onConfirm={async (confirmacao) =>
+            excluirImovelComHistorico({ id: excluirHistorico.id, confirmacao_apelido: confirmacao })
+          }
+        />
+      )}
     </>
   )
 }

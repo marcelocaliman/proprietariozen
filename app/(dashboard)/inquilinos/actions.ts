@@ -192,9 +192,13 @@ export async function desvincularInquilino(
   return { cobrancasRemovidas }
 }
 
-// Exclui inquilino permanentemente APENAS se não houver aluguéis
-// vinculados. Caso contrário, sugere desativar/desvincular.
-export async function excluirInquilino(id: string): Promise<{ error?: string }> {
+// Exclusão "limpa": deleta inquilino + tokens + documentos + aluguéis
+// sem valor contábil (pendentes/atrasados/cancelados/estornados).
+// BLOQUEIA se houver aluguel PAGO — retorna requiresHardDelete.
+export async function excluirInquilino(id: string): Promise<{
+  error?: string
+  requiresHardDelete?: { nome: string; countPagos: number; valorTotal: number }
+}> {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autorizado' }
@@ -207,48 +211,126 @@ export async function excluirInquilino(id: string): Promise<{ error?: string }> 
     .maybeSingle()
   if (!inq) return { error: 'Inquilino não encontrado.' }
 
-  // Bloqueia se há QUALQUER aluguel com inquilino_id = id
-  const { count: countAlugueis } = await supabase
+  const { data: pagos } = await supabase
     .from('alugueis')
-    .select('id', { count: 'exact', head: true })
+    .select('valor_pago, valor')
     .eq('inquilino_id', id)
-  if ((countAlugueis ?? 0) > 0) {
-    return {
-      error: `Esse inquilino tem ${countAlugueis} aluguel(éis) no histórico e não pode ser excluído. Use "Desativar" para mantê-lo no histórico ou "Desvincular" para liberá-lo do imóvel.`,
-    }
+    .eq('status', 'pago')
+  const countPagos = pagos?.length ?? 0
+  if (countPagos > 0) {
+    const valorTotal = pagos!.reduce((s, a) => s + (a.valor_pago ?? a.valor ?? 0), 0)
+    return { requiresHardDelete: { nome: inq.nome, countPagos, valorTotal } }
   }
 
+  return cascadeDeleteInquilino(id, user.id, inq.nome, inq.imovel_id)
+}
+
+// Exclusão DESTRUTIVA: apaga inquilino mesmo com aluguéis pagos.
+// Exige confirmação digitando o nome. Loga em activity_logs.
+export async function excluirInquilinoComHistorico(input: {
+  id: string
+  confirmacao_nome: string
+}): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autorizado' }
+
+  const { data: inq } = await supabase
+    .from('inquilinos')
+    .select('id, nome, imovel_id')
+    .eq('id', input.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+  if (!inq) return { error: 'Inquilino não encontrado.' }
+
+  if (input.confirmacao_nome.trim() !== inq.nome) {
+    return { error: `Digite exatamente "${inq.nome}" para confirmar.` }
+  }
+
+  const { count: countPagos } = await supabase
+    .from('alugueis')
+    .select('id', { count: 'exact', head: true })
+    .eq('inquilino_id', input.id)
+    .eq('status', 'pago')
+
+  await registrarLog(user.id, 'INQUILINO_EXCLUIDO_COM_HISTORICO', 'inquilino', input.id, {
+    nome: inq.nome,
+    alugueis_pagos_descartados: countPagos ?? 0,
+  })
+
+  return cascadeDeleteInquilino(input.id, user.id, inq.nome, inq.imovel_id, { incluirHistorico: true })
+}
+
+async function cascadeDeleteInquilino(
+  inquilinoId: string,
+  userId: string,
+  nome: string,
+  imovelId: string | null,
+  opts: { incluirHistorico?: boolean } = {},
+): Promise<{ error?: string }> {
   const admin = createAdminClient()
 
-  // 1. Documentos do inquilino (storage + linhas)
+  // 1. Aluguéis vinculados — rascunhos sempre, pagos só se incluirHistorico
+  if (opts.incluirHistorico) {
+    const { data: alugueisIds } = await admin
+      .from('alugueis')
+      .select('id')
+      .eq('inquilino_id', inquilinoId)
+    const ids = (alugueisIds ?? []).map(a => a.id)
+    if (ids.length > 0) {
+      const { data: docsAlu } = await admin
+        .from('documentos_aluguel')
+        .select('id, storage_path')
+        .in('aluguel_id', ids)
+      if (docsAlu && docsAlu.length > 0) {
+        const paths = docsAlu.map(d => d.storage_path).filter(Boolean) as string[]
+        if (paths.length > 0) {
+          await admin.storage.from('documentos-aluguel').remove(paths)
+        }
+        await admin.from('documentos_aluguel').delete().in('aluguel_id', ids)
+      }
+      await admin.from('alugueis').delete().in('id', ids)
+    }
+  } else {
+    await admin
+      .from('alugueis')
+      .delete()
+      .eq('inquilino_id', inquilinoId)
+      .in('status', ['pendente', 'atrasado', 'cancelado', 'estornado'])
+  }
+
+  // 2. Documentos do inquilino
   const { data: docs } = await admin
     .from('documentos_inquilino')
     .select('id, storage_path')
-    .eq('inquilino_id', id)
+    .eq('inquilino_id', inquilinoId)
   if (docs && docs.length > 0) {
     const paths = docs.map(d => d.storage_path).filter(Boolean) as string[]
     if (paths.length > 0) {
       await admin.storage.from('documentos-inquilino').remove(paths)
     }
-    await admin.from('documentos_inquilino').delete().eq('inquilino_id', id)
+    await admin.from('documentos_inquilino').delete().eq('inquilino_id', inquilinoId)
   }
 
-  // 2. Tokens
-  await admin.from('inquilino_tokens').delete().eq('inquilino_id', id)
+  // 3. Tokens
+  await admin.from('inquilino_tokens').delete().eq('inquilino_id', inquilinoId)
 
-  // 3. Inquilino
+  // 4. Inquilino
   const { error: errDel } = await admin
     .from('inquilinos')
     .delete()
-    .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('id', inquilinoId)
+    .eq('user_id', userId)
   if (errDel) return { error: errDel.message }
 
-  await registrarLog(user.id, 'INQUILINO_EXCLUIDO', 'inquilino', id, { nome: inq.nome })
+  if (!opts.incluirHistorico) {
+    await registrarLog(userId, 'INQUILINO_EXCLUIDO', 'inquilino', inquilinoId, { nome })
+  }
 
   revalidatePath('/inquilinos')
   revalidatePath('/imoveis')
-  if (inq.imovel_id) revalidatePath(`/imoveis/${inq.imovel_id}`)
+  if (imovelId) revalidatePath(`/imoveis/${imovelId}`)
   revalidatePath('/dashboard')
+  revalidatePath('/alugueis')
   return {}
 }
