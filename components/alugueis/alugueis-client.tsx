@@ -9,7 +9,7 @@ import {
   Calendar, Filter, MoreHorizontal, X, CheckCheck,
   AlertCircle, TrendingUp, Zap, Loader2, Paperclip,
   Mail, Tag, SplitSquareHorizontal, Ban, Gift, QrCode, Info,
-  LayoutList, CalendarDays,
+  LayoutList, CalendarDays, Download,
 } from 'lucide-react'
 import { DocumentosAluguel } from '@/components/documentos/DocumentosAluguel'
 import { toast } from 'sonner'
@@ -789,6 +789,49 @@ export function AlugueisClient({
               )}
             </div>
           )}
+
+          {/* Export CSV — sempre visível */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors">
+              <Download className="h-3.5 w-3.5" />
+              Exportar
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                onClick={() => {
+                  const [ano, mes] = mesSelecionado.split('-')
+                  const ultimoDia = new Date(parseInt(ano), parseInt(mes), 0).getDate()
+                  const from = `${ano}-${mes}-01`
+                  const to = `${ano}-${mes}-${String(ultimoDia).padStart(2, '0')}`
+                  window.location.href = `/api/alugueis/export?from=${from}&to=${to}`
+                }}
+                className="cursor-pointer"
+              >
+                <CalendarDays className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                Mês de {labelMes(mesSelecionado).toLowerCase()}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  const ano = mesSelecionado.slice(0, 4)
+                  window.location.href = `/api/alugueis/export?from=${ano}-01-01&to=${ano}-12-31`
+                }}
+                className="cursor-pointer"
+              >
+                <Calendar className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                Ano de {mesSelecionado.slice(0, 4)}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  window.location.href = '/api/alugueis/export?from=2000-01-01&to=2099-12-31'
+                }}
+                className="cursor-pointer"
+              >
+                <FileText className="h-3.5 w-3.5 mr-2 text-slate-500" />
+                Histórico completo
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* View toggle — lista / calendário anual */}
           <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5 gap-0.5">
